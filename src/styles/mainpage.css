@@ -1,0 +1,97 @@
+:root{
+  --ink:#1e2f2a; /* header/body text */
+  --muted:#51625c;
+}
+
+/* App background (tiling paper) */
+.cc-app {
+  min-height:100dvh;
+  color:var(--ink);
+  font-family:"Epilogue", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: url("/cc/bg-paper.png");
+  background-size:256px 256px;
+}
+
+/* Layout */
+.cc-wrap     { max-width:1120px; margin:0 auto; padding:24px clamp(16px,3vw,40px); position:relative; z-index:1; }
+.cc-header   { display:flex; align-items:center; justify-content:space-between; gap:24px; }
+.cc-brand    { display:flex; align-items:center; gap:12px; }
+.cc-brand h1 { font-weight:800; letter-spacing:-0.01em; font-size:28px; margin:0; }
+
+.cc-nav { display:flex; gap:32px; font-weight:700; color:#2f463f; }
+.cc-nav a { text-decoration:none; color:#28433b; opacity:.85 }
+.cc-nav a:hover, .cc-nav a.active { opacity:1 }
+
+.cc-right { display:flex; align-items:center; gap:12px; }
+
+/* Decorative leaves (identical placement) */
+.cc-tl, .cc-br { position:fixed; pointer-events:none; z-index:0; }
+.cc-tl { top:-12px; left:-8px; width:210px; }
+.cc-br { right:-18px; bottom:-16px; width:260px; }
+
+/* Two-column grid */
+.cc-grid { display:grid; gap:40px; grid-template-columns:1fr; }
+@media (min-width:1024px){ .cc-grid { grid-template-columns:2fr 1fr; } }
+
+/* Cards */
+.cc-card {
+  background: rgba(255,255,255,.6);
+  border:1px solid rgba(28,61,52,.10);
+  border-radius:16px;
+  box-shadow:0 10px 30px rgba(0,0,0,.05);
+}
+
+/* Quick Actions uses a painted frame (9-slice) */
+.cc-frame {
+  padding:20px;
+  border:16px solid transparent;
+  border-image-source: url("/cc/frame-quick-actions.png");
+  border-image-slice: 32 fill;    /* fill keeps the center translucent */
+  border-image-repeat: stretch;
+  border-radius:24px;             /* rounded corners match image */
+  background: transparent;
+}
+
+/* Headings */
+.cc-h2 {
+  margin:0 0 8px;
+  font-size: clamp(32px,4vw,48px);
+  font-weight:900;
+  letter-spacing:-0.02em;
+}
+.cc-sub { color:var(--muted); }
+
+/* Progress */
+.cc-progress { position:relative; height:16px; width:100%; border-radius:999px; overflow:hidden; }
+.cc-progress .track { position:absolute; inset:0; background:url("/cc/progress-track.png") 0 0/100% 100% no-repeat; }
+.cc-progress .fill  { position:absolute; inset:0; width:0%; background:url("/cc/progress-fill.png") 0 0/100% 100% no-repeat; transition:width .35s ease; }
+
+/* Buttons use PNG skins for exact look */
+.cc-btn {
+  height:56px; width:100%;
+  border:none; outline:none;
+  border-radius:16px;
+  font-weight:900; font-size:18px; letter-spacing:.01em;
+  color:#ffffff; /* overridden for soft btn */
+  text-shadow: 0 1px 0 rgba(0,0,0,.15);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer;
+}
+.cc-btn-solid { background:url("/cc/btn-solid.png") center/100% 100% no-repeat; }
+.cc-btn-soft  { background:url("/cc/btn-soft.png")  center/100% 100% no-repeat; color:#2a3a34; }
+
+.cc-list { display:grid; gap:12px; }
+.cc-item {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 18px; border-radius:16px;
+  background: rgba(255,255,255,.6);
+  border:1px solid rgba(28,61,52,.10);
+}
+.cc-kcal { font-weight:800; color:#2a3a34; }
+
+/* Avatar */
+.cc-avatar { width:44px; height:44px; border-radius:50%; background-size:cover; background-position:center; border:1px solid rgba(0,0,0,.06); }
+
+/* Minor spacing */
+.cc-mutedrow { display:flex; justify-content:space-between; color:var(--muted); font-size:14px; margin-top:8px; }
+.cc-space-24 { margin-top:24px; }
