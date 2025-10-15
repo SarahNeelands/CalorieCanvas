@@ -6,7 +6,9 @@ import Meals from "./pages/Meals";
 import Exercises from "./pages/Exercises";
 import Progress from "./pages/Progress";
 import Profile from "./pages/Profile";
-
+import NewIngredient from "./pages/NewIngredient";
+import LogMeal from "./pages/LogMeal";
+import SnackDetails  from "./pages/SnackDetails";
 // Example: this would come from your DB call in a real app
 const mockUser = {
   avatar: "/cc/avatar.png",
@@ -33,6 +35,14 @@ export default function App() {
         <Route path="/exercises/log" element={<Exercises />} />
         <Route path="/progress" element={<Progress />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/meals/log" element={<LogMeal />} />
+        <Route path="/ingredients/new" element={<NewIngredient/>} />
+        <Route path="/meals" element={<Meals />} />
+        <Route path="/meals/log" element={<LogMeal />} />         {/* existing builder */}
+        <Route path="/meals/new" element={<LogMeal />} />         {/* create new meal via details flow */}
+        <Route path="/ingredients/new" element={<NewIngredient />} />
+        <Route path="/snacks/new" element={<SnackDetails />} />
+
       </Routes>
     </BrowserRouter>
   );
