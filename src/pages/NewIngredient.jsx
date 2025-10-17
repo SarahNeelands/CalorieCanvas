@@ -2,12 +2,12 @@
  * Simple form to create a new ingredient in the catalog (stub for DB).
  */
 
-
+import NavBar from "../components/NavBar";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 // import { createIngredient } from "../utils/db";
 
-export default function NewIngredientPage() {
+export default function NewIngredientPage({ user }) {
   const [name, setName] = useState("");
   const [calories, setCalories] = useState("");
   const navigate = useNavigate();

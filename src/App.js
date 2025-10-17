@@ -9,9 +9,10 @@ import Profile from "./pages/Profile";
 import NewIngredient from "./pages/NewIngredient";
 import LogMeal from "./pages/LogMeal";
 import SnackDetails  from "./pages/SnackDetails";
+import DefaultImage from "./components/images/defaultprofile.png"
 // Example: this would come from your DB call in a real app
 const mockUser = {
-  avatar: "/cc/avatar.png",
+  avatar: DefaultImage,
   dailyGoal: 2000,
   today: {
     kcalEaten: 1200,
@@ -29,19 +30,19 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Dashboard user={mockUser} />} />
-        <Route path="/meals" element={<Meals />} />
-        <Route path="/meals/log" element={<Meals />} />
-        <Route path="/exercises" element={<Exercises />} />
-        <Route path="/exercises/log" element={<Exercises />} />
-        <Route path="/progress" element={<Progress />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/meals/log" element={<LogMeal />} />
-        <Route path="/ingredients/new" element={<NewIngredient/>} />
-        <Route path="/meals" element={<Meals />} />
-        <Route path="/meals/log" element={<LogMeal />} />         {/* existing builder */}
-        <Route path="/meals/new" element={<LogMeal />} />         {/* create new meal via details flow */}
-        <Route path="/ingredients/new" element={<NewIngredient />} />
-        <Route path="/snacks/new" element={<SnackDetails />} />
+        <Route path="/meals" element={<Meals user={mockUser} />} />
+        <Route path="/meals/log" element={<Meals user={mockUser} />} />
+        <Route path="/exercises" element={<Exercises user={mockUser}/>} />
+        <Route path="/exercises/log" element={<Exercises user={mockUser} />} />
+        <Route path="/progress" element={<Progress user={mockUser} />} />
+        <Route path="/profile" element={<Profile user={mockUser} />} />
+        <Route path="/meals/log" element={<LogMeal user={mockUser} />} />
+        <Route path="/ingredients/new" element={<NewIngredient user={mockUser} />} />
+        <Route path="/meals" element={<Meals user={mockUser} />} />
+        <Route path="/meals/log" element={<LogMeal user={mockUser} />} />         {/* existing builder */}
+        <Route path="/meals/new" element={<LogMeal user={mockUser} />} />         {/* create new meal via details flow */}
+        <Route path="/ingredients/new" element={<NewIngredient user={mockUser} />} />
+        <Route path="/snacks/new" element={<SnackDetails user={mockUser} />} />
 
       </Routes>
     </BrowserRouter>

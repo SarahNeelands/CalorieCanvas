@@ -1,7 +1,9 @@
 import React from "react";
 import { NavLink, Link } from "react-router-dom";
 
-export default function NavBar({ logoSrc, profileImageSrc }) {
+
+export default function NavBar({ profileImageSrc }) {
+    const logoSrc = "/cc/logo-mark.png";
   return (
     <header className="cc-header cc-container" style={{ position: "relative", zIndex: 1 }}>
       <div className="cc-brand">

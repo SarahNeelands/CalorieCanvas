@@ -4,15 +4,17 @@
  * Renders two tabs: Meals and Snacks, plus a "New" launcher to create new Meal/Snack.
  */
 import React, { useState } from "react";
-import MealsList from "../components/MealsList.jsx";
-import SnacksList from "../components/SnacksList.jsx";
+import MealsList from "../components/calories/MealsList.jsx";
+import SnacksList from "../components/calories/SnacksList.jsx";
 import NewEntryLauncher from "../components/NewEntryLauncher.jsx";
+import NavBar from "../components/NavBar";
 
-export default function Meals() {
+export default function Meals({ user }) {
   const [active, setActive] = useState("meals"); // 'meals' | 'snacks'
 
   return (
     <main className="meals-page">
+      <NavBar profileImageSrc={user.avatar}/>
       <header className="row-between">
         <h1>Meals</h1>
         <NewEntryLauncher />

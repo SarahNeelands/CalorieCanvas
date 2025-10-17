@@ -13,14 +13,18 @@ import TypeBreakdownPie from '../components/exercise/charts/TypeBreakdownPie.jsx
 
 // UI (note the capital U in Ui)
 import Card from '../components/ui/Card.jsx';
+import NavBar from "../components/NavBar";
 
-
-export default function Exercises() {
-return (
-<ExerciseProvider>
-<ExercisePageInner />
-</ExerciseProvider>
-);
+export default function Exercises({ user }) {
+    return (
+        <div>
+            <NavBar profileImageSrc={user.avatar}/>
+            <ExerciseProvider>
+            <ExercisePageInner />
+            </ExerciseProvider>
+        </div>
+        
+    );
 }
 
 

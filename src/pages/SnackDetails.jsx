@@ -3,10 +3,11 @@
  * Page to create a new snack in the catalog (name + either kcal/100g or kcal/unit).
  * Hook this to your DB and then redirect back to MealsPage.
  */
+import NavBar from "../components/NavBar";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-export default function SnackDetails() {
+export default function SnackDetails({ user }) {
   const [name, setName] = useState("");
   const [mode, setMode] = useState("per100g"); // 'per100g' | 'perUnit'
   const [kcal, setKcal] = useState("");

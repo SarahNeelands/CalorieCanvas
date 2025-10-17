@@ -1,8 +1,8 @@
 import React from "react";
 import NavBar from "../components/NavBar";
-import CalorieSummary from "../components/CalorieSummary";
+import CalorieSummary from "../components/calories/CalorieSummary";
 import QuickActions from "../components/QuickActions";
-import RecentMeals from "../components/RecentMeals";
+import RecentMeals from "../components/calories/RecentMeals";
 
 
 export default function Dashboard({ user }) {
