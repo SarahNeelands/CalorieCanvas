@@ -1,5 +1,7 @@
 // src/App.jsx
 import React from "react";
+import "./App.css";
+import "./index.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import Meals from "./pages/Meals";
@@ -10,6 +12,7 @@ import NewIngredient from "./pages/NewIngredient";
 import LogMeal from "./pages/LogMeal";
 import SnackDetails  from "./pages/SnackDetails";
 import DefaultImage from "./components/images/defaultprofile.png"
+
 // Example: this would come from your DB call in a real app
 const mockUser = {
   avatar: DefaultImage,
@@ -27,8 +30,10 @@ const mockUser = {
 
 export default function App() {
   return (
+    
     <BrowserRouter>
       <Routes>
+        
         <Route path="/" element={<Dashboard user={mockUser} />} />
         <Route path="/meals" element={<Meals user={mockUser} />} />
         <Route path="/meals/log" element={<Meals user={mockUser} />} />
