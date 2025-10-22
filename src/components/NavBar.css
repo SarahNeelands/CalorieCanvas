@@ -1,99 +1,126 @@
-.brand {
-  align-items: flex-end;
-  font-family: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  color: #243E2D;
-  font-size: 1.5rem; /* adjust for your layout */
-  display: flex;
-}
-
-.header {
-  display: flex;
-  align-items: center; /* vertically center everything */
-  justify-content: space-between; /* space between brand and links */
-  padding: 0.75rem 2rem;
-  background-color: #FAF9F5; /* optional */
-  font-family: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
-}
-
-.brand img {
-  width: 50px;     /* adjust to taste */
-  height: auto;    /* keeps proportions */
-}
+/* ---- theme vars ---- */
 :root{
-  --cc-ink: #163227;
-  --vine-h: 28px;        /* adjust to your PNG look */
-  --vine-dur: .55s;
+  --cc-ink:#163227;
+
+  /* speed + animation */
+  --vine-dur:.28s;            /* faster transform */
+  --vine-move:.22s;           /* faster left/width/top */
+  --vine-fade:.18s;
+  --vine-offset: 40px; 
+
+  /* responsive type */
+  --fs-brand: clamp(18px, 1.1vw + 14px, 28px);
+  --fs-link:  clamp(20px, 0.6vw + 12px, 18px);
+
+  /* underline */
+  --vine-h:62px;              /* adjust 22–26px to hug text baseline */
 }
 
-/* Nav & links */
+/* ---- layout ---- */
+.header{
+  display:flex;
+  align-items:center;
+  gap:clamp(12px, 2vw, 24px);
+  padding: clamp(.5rem, 1.2vw, .9rem) clamp(1rem, 3vw, 2rem);
+
+}
+
+/* brand */
+.brand{
+  display:flex;
+  align-items:flex-end;
+  gap:.5rem;
+  color:#243E2D;
+  font-family:"Inter","Helvetica Neue",Helvetica,Arial,sans-serif;
+  font-weight:700;
+  letter-spacing:.01em;
+  white-space:nowrap;
+}
+.brand .logo{ width:50px; height:auto; }
+.brand-text{ font-size:var(--fs-brand); }
+
+/* nav occupies the middle */
 .nav{
-  position: relative;
-  display: flex;
-  gap: 24px;
-  align-items: center;
-  overflow: visible;      /* allow underline below nav */
-}
-nav a {
-  font-family: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-weight: 500;
-  letter-spacing: 0.01em;
-  color: #243E2D;
-  text-decoration: none;
-  transition: color 0.2s ease;
+  position:relative;         /* anchor for the underline */
+  flex:1;
+  display:flex;
+  justify-content:space-evenly;
+  align-items:center;
+  overflow:visible;
 }
 
-nav a:hover,
-nav a.active {
-  color: #4F6B50;
+/* right side — only bell */
+.right{
+  margin-left:auto;
+  display:flex;
+  align-items:center;
 }
-/* === PNG vine underline that scales from center and slides === */
+
+/* bell button */
+.bell{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:36px; height:36px;
+  border:1px solid rgba(0,0,0,.15);
+  border-radius:6px;
+  background:#fff;
+  cursor:pointer;
+}
+
+/* ---- links (responsive font) ---- */
+.nav a{
+  font-family:"Inter","Helvetica Neue",Helvetica,Arial,sans-serif;
+  font-weight:500;
+  letter-spacing:.01em;
+  color:#243E2D;
+  text-decoration:none;
+  transition:color .15s ease;           /* snappier color change */
+  padding-bottom:6px;                    /* room for the underline */
+  line-height:1.1;
+  position:relative;
+  z-index:1;                             /* text above the vine */
+  font-size:var(--fs-link);
+}
+.nav a:hover,
+.nav a.active{ color:#4F6B50; }
+
+/* ---- vine underline (faster slide-in) ---- */
 .vine-photo-underline{
-  position: absolute;
-  height: var(--vine-h);
-  pointer-events: none;
-  z-index: 0;
+  position:absolute;
+  height:var(--vine-h);
+  pointer-events:none;
+  z-index:0;
 
-  /* image controlled from React via --vine-img */
-  background-image: var(--vine-img);
-  background-repeat: no-repeat;
-  background-position: center bottom;
-  background-size: 100% auto; /* stretch to link width, keep aspect */
+  background-image:var(--vine-img);
+  background-repeat:no-repeat;
+  background-position:center bottom;
+  background-size:100% auto;
 
-  /* start hidden */
-  transform-origin: center center;
-  transform: scaleX(0) translateY(4px);
-  opacity: 0;
+  transform-origin:center center;
+  transform:scaleX(0);
+  opacity:0;
 
-  /* smooth slide when active tab changes (left/width/top set inline) */
+  /* faster movement + reveal */
   transition:
-    left .35s cubic-bezier(.2,.8,.2,1),
-    width .35s cubic-bezier(.2,.8,.2,1),
-    top .20s ease,
-    transform var(--vine-dur) cubic-bezier(.2,.8,.2,1),
-    opacity  .25s ease;
+    left var(--vine-move) cubic-bezier(.25,.9,.25,1),
+    width var(--vine-move) cubic-bezier(.25,.9,.25,1),
+    top   calc(var(--vine-move) - .06s) ease,
+    transform var(--vine-dur) cubic-bezier(.25,.9,.25,1),
+    opacity  var(--vine-fade) ease;
+  will-change: left, width, top, transform, opacity;
 }
 
-/* when React sets style="opacity: 1" we reveal + scale to full width */
+/* shown state */
 .vine-photo-underline[style*="opacity: 1"]{
-  transform: scaleX(1) translateY(0);
-  opacity: 1;
+  transform:scaleX(1);
+  opacity:1;
 }
 
-/* accessibility */
+/* motion-safe */
 @media (prefers-reduced-motion: reduce){
   .vine-photo-underline{
-    transition: left .2s ease, width .2s ease, top .2s ease, opacity .2s ease;
-    transform: none;
+    transition: left .15s ease, width .15s ease, top .15s ease, opacity .15s ease;
+    transform:none;
   }
 }
-
-/* ===== REMOVE the following from your file (SVG version) =====
-.vine-stroke { ... }
-.vine-leaves path { ... }
-.vine-underline { ... }
-.vine-svg { ... }
-@keyframes vine-draw { ... }
-@keyframes vineCenterOut { ... }  (no longer needed)
-=============================================================== */

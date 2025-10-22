@@ -1,0 +1,37 @@
+.frame {
+  background: rgba(255,255,255,0.85);
+  border: 2px solid rgba(139, 92, 246, 0.15);
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  backdrop-filter: blur(6px);
+}
+
+.btn {
+  padding: 12px 0;
+  border-radius: 12px;
+  font-weight: 700;
+  text-align: center;
+  transition: all 0.25s ease;
+}
+
+.btn-solid {
+  background: linear-gradient(90deg, #4F6B50, #4F6B50);
+  color: white;
+  box-shadow: 0 2px 6px rgba(139,92,246,0.3);
+}
+
+.btn-solid:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(139,92,246,0.4);
+}
+
+.btn-soft {
+  background: rgba(139,92,246,0.08);
+  color: #4F6B50;
+  border: 1px solid rgba(139,92,246,0.25);
+}
+
+.btn-soft:hover {
+  background: rgba(139,92,246,0.15);
+}

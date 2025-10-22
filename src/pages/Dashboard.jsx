@@ -3,6 +3,7 @@ import NavBar from "../components/NavBar";
 import CalorieSummary from "../components/calories/CalorieSummary";
 import QuickActions from "../components/QuickActions";
 import RecentMeals from "../components/calories/RecentMeals";
+import "./Dashboard.css";
 
 
 export default function Dashboard({ user }) {
@@ -13,14 +14,14 @@ export default function Dashboard({ user }) {
   const logo = "/cc/logo-mark.png";
 
   return (
-    <div className="cc-app">
-      <img src="/cc/leaves-tl.png" alt="" className="cc-tl" />
-      <img src="/cc/leaves-br.png" alt="" className="cc-br" />
+    <div className="app">
+      <img src="/cc/leaves-tl.png" alt="" className="tl" />
+      <img src="/cc/leaves-br.png" alt="" className="br" />
 
-      <NavBar logoSrc={logo} profileImageSrc={avatar} />
+      <NavBar profileImageSrc={avatar} />
 
-      <main className="cc-container">
-        <div className="cc-grid">
+      <main className="container">
+        <div className="grid">
           <div>
             <CalorieSummary goal={goal} eaten={eaten} />
             <div style={{ marginTop: 26 }}>
