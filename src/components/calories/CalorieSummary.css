@@ -2,7 +2,7 @@
   background: rgba(255, 255, 255, 0.85);
   border-radius: 18px;
   padding: 24px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 8px rgba(79, 107, 80, 0.25);
   backdrop-filter: blur(6px);
   border: 1px solid rgba(255,255,255,0.5);
 }
@@ -23,7 +23,7 @@
   position: relative;
   height: 12px;
   border-radius: 999px;
-  background-color: rgba(180, 150, 220, 0.15);color:#4F6B50; 
+  background-color: rgba(79, 107, 80, 0.15);
   overflow: hidden;
   margin-top: 16px;
 }
