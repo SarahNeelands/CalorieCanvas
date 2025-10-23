@@ -1,12 +1,10 @@
-/** Ingredients.jsx
- * Displays current ingredients; provides "Search Ingredient" (with + to add)
- * and "New Ingredient" navigation to create a catalog item.
+/**
+ * Shows current ingredients + Search / New buttons.
  */
-
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import IngredientSearch from "./IngredientSearch";
+import "./Ingredients.css";
 
 export default function Ingredients({ onIngredientsChange }) {
   const [ingredients, setIngredients] = useState([]);
@@ -21,37 +19,31 @@ export default function Ingredients({ onIngredientsChange }) {
   };
 
   return (
-    <section className="ingredients">
-      <div className="row-between">
-        <h3>Ingredients</h3>
-        <div className="actions gap-8">
-          <button type="button" onClick={() => setShowSearch(true)}>
-            Search Ingredient
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate("/ingredients/new")}
-            aria-label="Create a new ingredient"
-          >
+    <section className="ing-root">
+      <header className="ing-head row-between">
+        <h3>Add to Meal</h3>
+        <div className="ing-actions">
+          <button className="btn" onClick={() => setShowSearch(true)}>Search</button>
+          <button className="btn btn--ghost" onClick={() => navigate("/ingredients/new")}>
             New Ingredient
           </button>
         </div>
-      </div>
+      </header>
 
-      <ul className="ingredient-list">
+      <ul className="ing-list">
         {ingredients.map((ing, i) => (
-          <li key={`${ing.id ?? ing.name}-${i}`} className="ingredient-item">
-            <span className="name">{ing.name}</span>
-            <span className="meta">{Math.round(ing.calories)} kcal</span>
+          <li key={`${ing.id ?? ing.name}-${i}`} className="ing-item">
+            <div className="ing-name">{ing.name}</div>
+            <div className="ing-meta">{Math.round(ing.calories)} kcal</div>
           </li>
         ))}
+        {ingredients.length === 0 && (
+          <li className="ing-empty">No ingredients yet — add some above.</li>
+        )}
       </ul>
 
       {showSearch && (
-        <IngredientSearch
-          onSelect={handleAdd}
-          onClose={() => setShowSearch(false)}
-        />
+        <IngredientSearch onSelect={handleAdd} onClose={() => setShowSearch(false)} />
       )}
     </section>
   );

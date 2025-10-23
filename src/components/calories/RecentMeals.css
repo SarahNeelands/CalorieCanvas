@@ -2,18 +2,33 @@
   display: grid;
   gap: 12px;
 }
-
 .item {
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(253, 249, 238,0.85);
   border-radius: 14px;
   padding: 14px 18px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border: 1px solid rgba(139,92,246,0.1);
   box-shadow: 0 1px 5px rgba(0,0,0,0.03);
-  transition: transform 0.15s ease;
+  position: relative;          /* needed for the overlay */
 }
+
+.item__content {               /* keep content above the frame */
+  position: relative;
+  z-index: 2;
+}
+
+.item--framed::before {
+  content: "";
+  position: absolute;
+  inset: -10px;                /* expand the frame beyond the box if you want */
+  pointer-events: none;
+  z-index: 1;
+  
+  /* optional: make it pop a bitbackground: url("../images/Frame.png") center / 100% 100% no-repeat; */
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.12));
+}
+
 
 .item:hover {
   transform: translateY(-2px);

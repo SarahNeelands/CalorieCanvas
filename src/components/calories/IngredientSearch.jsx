@@ -5,18 +5,18 @@
 
 
 import React, { useEffect, useRef, useState } from "react";
+import "./IngredientSearch.css";
 
-/** Replace with your real backend call (e.g., Supabase RPC) */
+/* mock search */
 async function searchIngredients(query) {
   if (!query?.trim()) return [];
-  // Mock results for wiring:
   const pool = [
-    { id: "1", name: "Cooked Pasta", calories: 220 },
-    { id: "2", name: "Olive Oil", calories: 240 },
-    { id: "3", name: "Parmesan Cheese", calories: 110 },
-    { id: "4", name: "Chicken Breast (diced)", calories: 130 },
+    { id:"1", name:"Protein Powder", calories:120 },
+    { id:"2", name:"Banana", calories:105 },
+    { id:"3", name:"Almond Milk", calories:30 },
+    { id:"4", name:"Chicken Breast (diced)", calories:130 },
   ];
-  return pool.filter((x) => x.name.toLowerCase().includes(query.toLowerCase()));
+  return pool.filter(x => x.name.toLowerCase().includes(query.toLowerCase()));
 }
 
 export default function IngredientSearch({ onSelect, onClose }) {
@@ -33,20 +33,19 @@ export default function IngredientSearch({ onSelect, onClose }) {
 
   const doSearch = async () => {
     setLoading(true);
-    const data = await searchIngredients(q);
-    setResults(data);
+    setResults(await searchIngredients(q));
     setLoading(false);
   };
 
   return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true">
-      <div className="modal-card" ref={boxRef}>
+    <div className="is-backdrop" role="dialog" aria-modal="true">
+      <div className="is-card" ref={boxRef}>
         <header className="row-between">
           <h4>Find an ingredient</h4>
-          <button onClick={onClose} aria-label="Close search">✕</button>
+          <button className="linklike" onClick={onClose} aria-label="Close">✕</button>
         </header>
 
-        <div className="search-row">
+        <div className="is-row">
           <input
             autoFocus
             type="search"
@@ -54,36 +53,24 @@ export default function IngredientSearch({ onSelect, onClose }) {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && doSearch()}
-            aria-label="Ingredient search"
           />
-          <button onClick={doSearch} disabled={loading}>
+          <button className="btn" onClick={doSearch} disabled={loading}>
             {loading ? "Searching…" : "Search"}
           </button>
         </div>
 
-        <div className="results">
+        <div className="is-results">
           {loading && <p className="muted">Searching…</p>}
-
-          {!loading && q && results.length === 0 && (
-            <p className="muted">No results for “{q}”.</p>
-          )}
-
+          {!loading && q && results.length === 0 && <p className="muted">No results for “{q}”.</p>}
           {!loading && results.length > 0 && (
-            <ul className="result-list">
+            <ul className="is-list">
               {results.map((r) => (
-                <li key={r.id} className="result-item">
+                <li key={r.id}>
                   <div className="col">
                     <span className="name">{r.name}</span>
                     <span className="meta">{Math.round(r.calories)} kcal</span>
                   </div>
-                  <button
-                    className="add-btn"
-                    aria-label={`Add ${r.name}`}
-                    onClick={() => onSelect?.(r)}
-                    title="Add"
-                  >
-                    +
-                  </button>
+                  <button className="add" onClick={() => onSelect?.(r)} title="Add">+</button>
                 </li>
               ))}
             </ul>
