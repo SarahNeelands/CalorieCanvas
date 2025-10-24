@@ -24,8 +24,8 @@
   inset: -10px;                /* expand the frame beyond the box if you want */
   pointer-events: none;
   z-index: 1;
-  
-  /* optional: make it pop a bitbackground: url("../images/Frame.png") center / 100% 100% no-repeat; */
+  background: url("../images/WideFrame.png") center / 100% 100% no-repeat;
+  /* optional: make it pop a bit */
   filter: drop-shadow(0 2px 4px rgba(0,0,0,.12));
 }
 

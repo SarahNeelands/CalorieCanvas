@@ -1,0 +1,39 @@
+/* src/pages/Exercises.css */
+@import "../styles/cc-theme.css";
+
+.ex-page{
+  background: var(--cc-bg);
+  min-height: 100vh;
+}
+
+.ex-container{
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 28px 24px 64px;
+}
+
+.ex-grid{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.ex-hint{
+  margin-top: 8px;
+  font-size: 0.875rem;
+  color: var(--cc-green-400);
+}
+
+/* gentle leafy edges (optional – remove if you don’t use images) */
+.ex-page::before,
+.ex-page::after{
+  content:"";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  background-size: 520px;
+  opacity: .35;
+}
+.ex-page::before{ background-image: url("/cc/leaves-tl.png"); background-position: left -80px top -60px; }
+.ex-page::after{  background-image: url("/cc/leaves-br.png"); background-position: right -60px bottom -40px; }

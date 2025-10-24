@@ -1,0 +1,30 @@
+/* src/components/ui/SegmentedControl.css */
+@import "../../styles/cc-theme.css";
+
+.seg{
+  display:inline-flex;
+  background: var(--cc-olive-200);
+  padding: 6px;
+  gap: 6px;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px rgba(22,50,39,.06);
+}
+
+.seg-btn{
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-weight: 600;
+  color: var(--cc-ink);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background .2s ease, color .2s ease, transform .05s ease;
+}
+.seg-btn:hover{ background: rgba(255,255,255,.45); }
+.seg-btn:active{ transform: translateY(1px); }
+
+.seg-btn.active{
+  background: #fff;
+  color: var(--cc-ink);
+  box-shadow: var(--cc-shadow);
+}
