@@ -2,7 +2,6 @@
 import React, { useMemo } from "react";
 import { ResponsiveContainer, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Bar } from "recharts";
 import { useExercise } from "../context/ExerciseContext.jsx";
-import "./DailyMinutesChart.css";
 
 export default function DailyMinutesChart({ range, onSelectDate }) {
   const { state, helpers } = useExercise();

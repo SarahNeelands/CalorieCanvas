@@ -15,9 +15,7 @@ export default function Dashboard({ user }) {
 
   return (
     <div className="app">
-      <img src="/cc/leaves-tl.png" alt="" className="tl" />
-      <img src="/cc/leaves-br.png" alt="" className="br" />
-
+    
       <NavBar profileImageSrc={avatar} />
 
       <main className="container">

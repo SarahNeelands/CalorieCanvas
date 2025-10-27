@@ -1,5 +1,5 @@
 /* src/components/ui/Card.css */
-@import "../../styles/cc-theme.css";
+@import "../../styles/theme.css";
 
 .cc-card{
   background: var(--cc-card);

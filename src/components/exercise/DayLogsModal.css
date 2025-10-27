@@ -1,5 +1,5 @@
 /* src/components/exercise/DayLogsModal.css */
-@import "../../styles/cc-theme.css";
+@import "../../styles/theme.css";
 
 .ex-logs-modal .modal-surface{
   background: var(--cc-card);

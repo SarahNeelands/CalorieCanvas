@@ -1,5 +1,5 @@
 /* src/components/ui/SegmentedControl.css */
-@import "../../styles/cc-theme.css";
+@import "../../styles/theme.css";
 
 .seg{
   display:inline-flex;

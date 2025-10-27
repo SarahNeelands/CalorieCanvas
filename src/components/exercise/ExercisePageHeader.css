@@ -1,5 +1,5 @@
 /* src/components/exercise/ExercisePageHeader.css */
-@import "../../../styles/cc-theme.css";
+@import "../../styles/theme.css";
 
 .ex-header{
   display:flex;

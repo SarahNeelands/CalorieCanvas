@@ -1,42 +1,82 @@
+.recent-meals__title {
+  font-weight: 800;
+  font-size: 1.25rem;
+  margin-bottom: 12px;
+}
+
 .list {
   display: grid;
   gap: 12px;
 }
+
+/* Each meal card is the positioning context */
 .item {
-  background: rgba(253, 249, 238,0.85);
+  position: relative;                  /* ← important */
+  background: rgba(255, 255, 255, 0.85);
+  padding: 12px 14px;
   border-radius: 14px;
-  padding: 14px 18px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-shadow: 0 1px 5px rgba(0,0,0,0.03);
-  position: relative;          /* needed for the overlay */
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+  overflow: visible;
 }
 
-.item__content {               /* keep content above the frame */
+.item__content {
   position: relative;
-  z-index: 2;
+  z-index: 2;                          /* content above vines */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
-.item--framed::before {
-  content: "";
+.item__title { font-weight: 800; }
+.item__time  { font-size: 14px; opacity: .7; }
+.kcal { font-weight: 600; }
+
+/* Vines on EACH item */
+.vine {
   position: absolute;
-  inset: -10px;                /* expand the frame beyond the box if you want */
   pointer-events: none;
   z-index: 1;
-  background: url("../images/WideFrame.png") center / 100% 100% no-repeat;
-  /* optional: make it pop a bit */
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,.12));
+  width: auto;
+  height: auto;
+  max-width: 15px;                     /* small & delicate */
 }
 
+/* Fine placements around a single card (tweak as you like) */
+.vine--1 { bottom:  70%; left: 91%; transform: rotate(91deg) scale(2.3); }
+.vine--2 { bottom:  -12%; left: 30%; transform: rotate(30deg) scale(1.7);}
 
-.item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(139,92,246,0.15);
+.vine--3 { bottom: -40%; left: 77%; transform: rotate(273deg) scale(1.2); }
+
+.vine--4 { bottom: -6%; left: 0%; transform: rotate(6deg) scale(1.8); }
+
+.vine--5 { bottom: 37%; left: 1%; transform: rotate(900deg) scale(1.9); }
+.vine--6 { bottom: 49%; right: 45%; transform: rotate(94deg); }
+
+/* Make them a touch smaller on tight screens */
+@media (max-width: 480px) {
+  .vine { max-width: 22px; }
+}
+/* Limit how wide the list can get */
+.list {
+  width: clamp(280px, 60vw, 520px);  /* caps width on big monitors */
+  margin: 0 auto;
 }
 
-.kcal {
-  font-weight: 800;
-  font-size: 1.1rem;
-  color: var(--ink, #5B21B6);
+/* Slightly scale up vines on wider screens so spacing feels right */
+@media (min-width: 900px) {
+  .vine {
+    transform: scale(1.2) translate(0, 0);  /* gentle overall enlargement */
+    transform-origin: center;
+  }
+}
+
+/* On very large monitors, reduce card width and prevent vine spacing from breaking */
+@media (min-width: 1200px) {
+  .list {
+    width: 520px;   /* fixed limit — cards stop expanding */
+  }
+  .vine {
+    max-width: 18px; /* keep vines crisp */
+  }
 }

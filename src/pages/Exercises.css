@@ -1,5 +1,5 @@
 /* src/pages/Exercises.css */
-@import "../styles/cc-theme.css";
+@import "../styles/theme.css";
 
 .ex-page{
   background: var(--cc-bg);
@@ -35,5 +35,3 @@
   background-size: 520px;
   opacity: .35;
 }
-.ex-page::before{ background-image: url("/cc/leaves-tl.png"); background-position: left -80px top -60px; }
-.ex-page::after{  background-image: url("/cc/leaves-br.png"); background-position: right -60px bottom -40px; }
