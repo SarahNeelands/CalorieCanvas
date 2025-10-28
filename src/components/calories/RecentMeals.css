@@ -5,19 +5,25 @@
 }
 
 .list {
+  width: 100%;       /* ← was clamp(...); now matches CalorieSummary */
+  margin: 0;
   display: grid;
   gap: 12px;
 }
 
+
 /* Each meal card is the positioning context */
 .item {
-  position: relative;                  /* ← important */
+  position: relative;
   background: rgba(255, 255, 255, 0.85);
   padding: 12px 14px;
   border-radius: 14px;
   box-shadow: 0 1px 3px rgba(0,0,0,.06);
   overflow: visible;
+
+  container-type: inline-size;   /* ← added: lets vines size with card */
 }
+
 
 .item__content {
   position: relative;
@@ -37,10 +43,13 @@
   position: absolute;
   pointer-events: none;
   z-index: 1;
-  width: auto;
-  height: auto;
-  max-width: 15px;                     /* small & delicate */
+
+  width: clamp(10px, 4cqi, 22px); /* ← scale by card width */
+  height: auto;                   /* ← preserve aspect ratio */
+  object-fit: contain;            /* ← avoid distortion */
+  image-rendering: auto;
 }
+
 
 /* Fine placements around a single card (tweak as you like) */
 .vine--1 { bottom:  70%; left: 91%; transform: rotate(91deg) scale(2.3); }
@@ -55,21 +64,16 @@
 
 /* Make them a touch smaller on tight screens */
 @media (max-width: 480px) {
-  .vine { max-width: 22px; }
+  .vine { width: clamp(10px, 5cqi, 20px); }
 }
+
 /* Limit how wide the list can get */
 .list {
   width: clamp(280px, 60vw, 520px);  /* caps width on big monitors */
   margin: 0 auto;
 }
 
-/* Slightly scale up vines on wider screens so spacing feels right */
-@media (min-width: 900px) {
-  .vine {
-    transform: scale(1.2) translate(0, 0);  /* gentle overall enlargement */
-    transform-origin: center;
-  }
-}
+
 
 /* On very large monitors, reduce card width and prevent vine spacing from breaking */
 @media (min-width: 1200px) {

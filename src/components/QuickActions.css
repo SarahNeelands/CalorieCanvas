@@ -1,37 +1,53 @@
 .frame {
-  background: rgba(253, 249, 238,0.85);
-  border-radius: 18px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(79, 107, 80, 0.25);
-  backdrop-filter: blur(6px);
-  border: 1px solid rgba(255,255,255,0.5);
+  background-image: url("./images/QuickActionFrame.png");
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  
+  display: flex;                     /* enables centering */
+  flex-direction: column;            /* stack heading + buttons vertically */
+  align-items: center;               /* horizontal center */
+  justify-content: center;           /* vertical center */
+
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  
+  width: 100%;
+  height: 100%;                      /* make sure parent gives it a height */
+  text-align: center;
 }
 
+/* Buttons */
 .btn {
   padding: 12px 0;
+  width: 160px;                      /* keeps button widths consistent */
   border-radius: 12px;
   font-weight: 700;
   text-align: center;
   transition: all 0.25s ease;
+  text-decoration: none;             /* remove link underline */
+  display: block;
+  margin: 8px 0;                     /* add space between buttons */
 }
 
 .btn-solid {
-  background: linear-gradient(90deg, #4F6B50, #4F6B50);
+  background: #4F6B50;
   color: white;
-  box-shadow: 0 2px 6px rgba(79, 107, 80, 0.3);;
+  box-shadow: 0 2px 6px rgba(79, 107, 80, 0.3);
 }
 
 .btn-solid:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(139,92,246,0.4);
+  box-shadow: 0 4px 12px rgba(79, 107, 80, 0.4);
 }
 
 .btn-soft {
-  background: rgba(139,92,246,0.08);
+  background: rgba(79, 107, 80, 0.08);
   color: #4F6B50;
-  border: 1px solid rgba(139,92,246,0.25);
+  border: 1px solid rgba(79, 107, 80, 0.25);
 }
 
 .btn-soft:hover {
-  background: rgba(139,92,246,0.15);
+  background: rgba(79, 107, 80, 0.15);
 }

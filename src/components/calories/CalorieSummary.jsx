@@ -9,7 +9,7 @@ export default function CalorieSummary({ goal, eaten }) {
     <section className="card" style={{ padding: 24 }}>
       <div style={{ display: "flex", justifyContent: "space-between", gap: 16 }}>
         <div>
-          <h2 className="h2">Today’s Canvas</h2>
+          <h2 className="h2">Today’s Calories</h2>
           <p className="sub">Your daily calorie summary.</p>
         </div>
         <div style={{ textAlign: "right" }}>

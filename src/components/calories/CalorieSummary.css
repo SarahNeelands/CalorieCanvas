@@ -1,11 +1,11 @@
+@import url('https://fonts.googleapis.com/css2?family=Epilogue:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
 .card {
-  background: rgba(253, 249, 238, 0.85);
-  border-radius: 10px;
-  padding: 10px;
-  box-shadow: 0 2px 8px rgba(79, 107, 80, 0.25);
-  backdrop-filter: blur(6px);
-  border: 1px solid rgba(255,255,255,0.5);
+  width: 100%;                  /* ← added */
+  background: transparent;
+  border-color: transparent;
 }
+
 
 .h2 {
   font-size: 1.75rem;
@@ -23,7 +23,7 @@
   position: relative;
   height: 22px;
   border-radius: 999px;
-  background-color: rgba(79, 107, 80, 0.15);
+  background-color: rgba(130, 201, 132, 0.15);
   overflow: hidden;
   margin-top: 16px;
 }
