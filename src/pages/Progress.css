@@ -1,0 +1,49 @@
+/* Styles for the Progress page */
+
+.progress-container {
+  /* Limit width and center the content */
+  width: min(100%, 90vw);
+  margin: 0 auto;
+  padding: 2rem 0.75rem 4rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* Large headline for the page title */
+.progress-title {
+  font-family: var(--cc-serif, 'Georgia', serif);
+  font-size: 2.5rem;
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--cc-ink, #163227);
+  margin-bottom: 1.5rem;
+}
+
+/* Spacing for the tabs */
+.progress-tabs {
+  margin-bottom: 1.5rem;
+}
+
+/* Grid layout for the trend cards */
+.trend-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+/* At medium widths place the first two cards side‑by‑side and let the exercise card span full width */
+@media (min-width: 768px) {
+  .trend-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .trend-grid .exercise-card {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Increase the title size on larger screens */
+@media (min-width: 1024px) {
+  .progress-title {
+    font-size: 3rem;
+  }
+}
