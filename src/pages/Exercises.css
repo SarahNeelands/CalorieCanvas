@@ -7,7 +7,7 @@
 }
 
 .ex-container{
-  max-width: 75rem; /* 1200px -> 75rem */
+ width: min(100%, 90vw); /* allow container to expand on large screens */*/
   margin: 0 auto;
   padding: 1.75rem 1.5rem 4rem; /* 28px 24px 64px */
 }
