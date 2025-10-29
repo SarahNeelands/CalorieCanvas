@@ -24,8 +24,7 @@
   justify-content:center;
 }
 
-.logmeal-grid{
-  width:min(70rem, 96vw); /* 1120px -> 70rem */
+width: min(100%, 95vw); /* allow grid to expand on large screens */ */
   display:grid;
   grid-template-columns: 1fr 22.5rem; /* 360px -> 22.5rem */
   gap:1.5rem; /* 24px -> 1.5rem */
