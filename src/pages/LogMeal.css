@@ -25,28 +25,28 @@
 }
 
 .logmeal-grid{
-  width:min(1120px, 96vw);
+  width:min(70rem, 96vw); /* 1120px -> 70rem */
   display:grid;
-  grid-template-columns: 1fr 360px;
-  gap:24px;
-  padding:28px 16px 24px;
+  grid-template-columns: 1fr 22.5rem; /* 360px -> 22.5rem */
+  gap:1.5rem; /* 24px -> 1.5rem */
+  padding:1.75rem 1rem 1.5rem; /* 28px 16px 24px */
 }
 
 .card{
   background:var(--cc-surface);
   border:1px solid var(--cc-border);
-  border-radius:16px;
-  box-shadow:0 1px 2px rgba(0,0,0,.04);
+  border-radius:1rem; /* 16px */
+  box-shadow:0 0.0625rem 0.125rem rgba(0,0,0,.04); /* 1px/2px -> rems */
 }
 
-.card--details{ padding:20px; }
+.card--details{ padding:1.25rem; }
 .card--ingredients{ padding:0; }
-.card--summary{ padding:20px; position:relative; }
+.card--summary{ padding:1.25rem; position:relative; }
 
 .left-col{
   display:grid;
   grid-template-rows: auto 1fr;
-  gap:24px;
+  gap:1.5rem;
   min-height:0;               /* enables children overflow-y */
 }
 
@@ -54,13 +54,13 @@
 .card--ingredients,
 .card--summary{
   overflow:auto;
-  max-height: calc(100vh - 120px); /* fits under NavBar comfortably */
+  max-height: calc(100vh - 7.5rem); /* 120px -> 7.5rem; fits under NavBar comfortably */
 }
 
 /* general utilities shared by components */
-.row-between{ display:flex; justify-content:space-between; align-items:center; gap:12px; }
-.row-end{ display:flex; justify-content:flex-end; gap:12px; }
-.col{ display:flex; flex-direction:column; gap:2px; }
+.row-between{ display:flex; justify-content:space-between; align-items:center; gap:0.75rem; }
+.row-end{ display:flex; justify-content:flex-end; gap:0.75rem; }
+.col{ display:flex; flex-direction:column; gap:0.125rem; }
 .muted{ color: #5f6a61; }
 
 /* responsive tweak */

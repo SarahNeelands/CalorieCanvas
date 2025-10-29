@@ -16,6 +16,12 @@
   --cc-olive-300:#c9d1b4;
   --cc-olive-200:#d9e0c7;
 
-  --cc-radius-xl: 18px;
-  --cc-shadow: 0 10px 30px rgba(22,50,39,.10);
+  --cc-radius-xl: 1.125rem;
+  --cc-shadow: 0 0.625rem 1.875rem rgba(22,50,39,.10);
+}
+
+/* Prefer rem-based tokens so they scale with the root font-size. Keep the
+   original px values as comments for reference. */
+:root {
+  --cc-radius-xl-rem: 1.125rem; /* 18px */
 }

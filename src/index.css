@@ -3,3 +3,7 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* Responsive root font-size so the whole UI (rem-based sizes) scales smoothly
+  with viewport. Minimum 14px, grow with viewport, cap at 20px. */
+html { font-size: clamp(14px, 0.8vw + 12px, 20px); }
