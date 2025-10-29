@@ -24,11 +24,12 @@
   justify-content:center;
 }
 
-width: min(100%, 95vw); /* allow grid to expand on large screens */ */
-  display:grid;
+.logmeal-grid {
+  width: min(100%, 95vw); /* allow grid to expand on large screens */
+  display: grid;
   grid-template-columns: 1fr 22.5rem; /* 360px -> 22.5rem */
-  gap:1.5rem; /* 24px -> 1.5rem */
-  padding:1.75rem 1rem 1.5rem; /* 28px 16px 24px */
+  gap: 1.5rem; /* 24px -> 1.5rem */
+  padding: 1.75rem 1rem 1.5rem; /* 28px 16px 24px */
 }
 
 .card{
