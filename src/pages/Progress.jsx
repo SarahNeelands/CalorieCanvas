@@ -19,7 +19,7 @@ export default function Progress({ user }) {
   return (
     <div className="progress-container">
       <NavBar profileImageSrc={user?.avatar} />
-      <h1 c className="progress->title"Progress</h1>
+            <h1 className="progress-title">Progress</h1>
       <div className="progress-tabs">
         <ProgressTabs scope={scope} onChange={setScope} />
       </div>
