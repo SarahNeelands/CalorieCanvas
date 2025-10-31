@@ -7,9 +7,27 @@
   --gap: 2.5rem;        /* 40px */
 }
 
+
+
+/* Keep the grid definition */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr var(--right-w);
+  gap: 2rem;
+}
+
+
+
+.dashboard-container {
+  width: 100%;
+  max-width: 1200px;      /* clamp the overall width for desktops */
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
 .container {
   /* Make the container responsive: grow with viewport but cap at --stage-w */
-width: min(100%, 90vw); /* allow container to expand on large screens */
+  width: min(100%, var(--stage-w));/* allow container to expand on large screens */
   margin: 0 auto;
   
   position: relative;
@@ -63,4 +81,30 @@ body { font-size: 1rem; line-height: 1.5; }
   .container { width: min(100%, calc(100vw - 1.5rem)); }
   .grid { grid-template-columns: 1fr; gap: 1.5rem; }
   .grid > * { width: 100%; max-width: 100%; }
+}
+/* Desktop-only adjustments: clamp overall width and scale elements */
+@media (min-width: 1280px) {
+  .dashboard-container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .summary-card {
+    padding: 3rem;
+  }
+  .summary-card h1 {
+    font-size: 3.25rem;
+  }
+  .kcal-left {
+    font-size: 3.5rem;
+  }
+  .recent-meals-section {
+    font-size: 1.125rem;
+  }
+  .quick-actions-container {
+    padding: 2.5rem 2rem;
+  }
+  .quick-button {
+    font-size: 1.4rem;
+    padding: 1.2rem;
+  }
 }

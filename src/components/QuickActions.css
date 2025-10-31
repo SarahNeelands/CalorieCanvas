@@ -1,3 +1,13 @@
+:root {
+  --right-w: clamp(22rem, 25vw, 28rem); /* adjust min/max values as desired */
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr var(--right-w);
+  gap: 2rem;
+}
+
 .frame {
   position: relative;
   width: 100%;
@@ -83,3 +93,14 @@
     padding: 1.5rem 0.75rem;
   }
 }
+/* Enlarge quick actions area and buttons on large screens */
+@media (min-width: 1280px) {
+  .quick-actions-container {
+    padding: 2.5rem 2rem;
+  }
+  .quick-button {
+    font-size: 1.4rem;
+    padding: 1.2rem;
+  }
+}
+

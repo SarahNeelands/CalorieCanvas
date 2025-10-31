@@ -131,3 +131,9 @@
     font-size: 1.1rem;
   }
 }
+/* Increase font size for recent meals on desktops */
+@media (min-width: 1280px) {
+  .recent-meals-section {
+    font-size: 1.125rem;
+  }
+}

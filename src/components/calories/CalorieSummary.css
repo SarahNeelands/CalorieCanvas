@@ -81,3 +81,16 @@
   font-size: 0.9rem;
   color: #666;
 }
+
+/* Increase padding and font sizes for large screens */
+@media (min-width: 1280px) {
+  .summary-card {
+    padding: 3rem;
+  }
+  .summary-card h1 {
+    font-size: 3.25rem;
+  }
+  .kcal-left {
+    font-size: 3.5rem;
+  }
+}
