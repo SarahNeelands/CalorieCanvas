@@ -9,9 +9,9 @@
 
 .container {
   /* Make the container responsive: grow with viewport but cap at --stage-w */
-wwidth: min(100%, 90vw); /* allow container to expand on large screens */
+width: min(100%, 90vw); /* allow container to expand on large screens */
   margin: 0 auto;
-  padding: 2rem 0.75rem; /* 32px 12px */
+  
   position: relative;
   z-index: 1;          /* above decorative leaves */
 }

@@ -7,7 +7,6 @@ import vine4 from "../images/vines/vine4.png";
 import vine5 from "../images/vines/vine5.png";
 import vine6 from "../images/vines/vine6.png";
 
-
 const VINES = [vine1, vine2, vine3, vine4, vine5, vine6];
 
 export default function RecentMeals({ meals = [] }) {
@@ -26,10 +25,13 @@ export default function RecentMeals({ meals = [] }) {
             ))}
 
             <div className="item__content">
-              <div>
-                <div className="item__title">{m.title}</div>
-                <div className="item__time">{m.time}</div>
+              <div className="item__left">
+                <div className="meal-row">
+                  <div className="item__title">{m.title}</div>
+                  <div className="item__time">{m.time}</div>
+                </div>
               </div>
+
               <div className="kcal">
                 {m.kcal} <span>kcal</span>
               </div>
