@@ -20,7 +20,7 @@
 /* row 1 left */
 .summary-grid h1 {
   font-family: 'Georgia', serif;
-  font-size: 2.5rem;
+  font-size: 1.5rem;
   margin: 0;
   color: #143d33;
   line-height: 1.1;
@@ -30,7 +30,7 @@
 
 /* row 1 right */
 .kcal-left {
-  font-size: 3rem;
+
   font-weight: 700;
   color: #143d33;
   line-height: 1.1;
@@ -63,8 +63,8 @@
 /* --- PROGRESS BAR + STATS (unchanged) --- */
 .progress-bar {
   position: relative;
-  height: 1rem;
-  border-radius: 0.5rem;
+  height: 1.5rem;
+  border-radius: 1.5rem;
   background: #e6ead0;
   overflow: hidden;
 }
@@ -72,7 +72,7 @@
 .progress-bar .fill {
   height: 100%;
   background: #214f3d;
-  border-radius: 0.5rem;
+  border-radius: 1.5rem;
 }
 
 .summary-stats {
@@ -85,12 +85,12 @@
 /* Increase padding and font sizes for large screens */
 @media (min-width: 1280px) {
   .summary-card {
-    padding: 3rem;
+    padding: 1rem;
   }
   .summary-card h1 {
-    font-size: 3.25rem;
+    font-size: 2.5rem;
   }
   .kcal-left {
-    font-size: 3.5rem;
+    font-size: 2.5rem;
   }
 }

@@ -22,7 +22,7 @@ export default function Dashboard({ user }) {
         <div className="grid">
           <div>
             <CalorieSummary goal={goal} eaten={eaten} />
-            <div style={{ marginTop: 26 }}>
+            <div >
               <RecentMeals meals={meals} />
             </div>
           </div>

@@ -2,7 +2,7 @@
 .recent-meals {
   max-width: 1100px;          /* ✅ line up with Calorie Canvas width */
   margin: 0 auto;
-  padding: 2rem 1.5rem;
+  padding-left:  1.5rem;
 }
 
 .recent-meals__title {
@@ -10,7 +10,7 @@
   font-size: 1.5rem;
   font-weight: 700;
   color: #143d33;
-  margin: 0 0 1rem 0;
+  margin: 0 0 0.5rem 0;
 }
 
 /* list wrapper */
@@ -27,7 +27,7 @@
   box-shadow: 0 2px 8px rgba(79, 107, 80, 0.15);
 
   /* if you had a border-top/bottom line in the mock, add here if desired */
-  padding: 1rem 1.5rem 1.25rem;
+  padding: 0.75rem 1.75rem 0.75rem;
   overflow: hidden; /* hide vines overflow if they bleed */
 }
 
