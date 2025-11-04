@@ -1,0 +1,106 @@
+:root {
+  --right-w: clamp(22rem, 25vw, 28rem); /* adjust min/max values as desired */
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr var(--right-w);
+  gap: 2rem;
+}
+
+.frame {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem 1rem;
+  box-sizing: border-box;
+}
+
+/* watercolor frame image */
+.frame-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;  /* show whole image */
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* keep content above background */
+.frame-title,
+.btn-container {
+  position: relative;
+  z-index: 1;
+}
+
+.frame-title {
+  font-weight: 800;
+  font-size: 1.25rem;
+  margin-bottom: 12px;
+}
+
+/* button layout */
+.btn-container {
+  display: grid;
+  gap: 14px;
+}
+
+/* Buttons */
+.btn {
+  padding: 0.75rem 0;
+  width: 10rem;
+  border-radius: 0.75rem;
+  font-weight: 700;
+  text-align: center;
+  transition: all 0.25s ease;
+  text-decoration: none;
+  display: block;
+  margin: 0.5rem auto;
+}
+
+.btn-solid {
+  background: #4F6B50;
+  color: white;
+  box-shadow: 0 0.125rem 0.375rem rgba(79, 107, 80, 0.3);
+}
+.btn-solid:hover {
+  transform: translateY(-0.125rem);
+  box-shadow: 0 0.25rem 0.75rem rgba(79, 107, 80, 0.4);
+}
+
+.btn-soft {
+  background: rgba(79, 107, 80, 0.08);
+  color: #4F6B50;
+  border: 0.0625rem solid rgba(79, 107, 80, 0.25);
+}
+.btn-soft:hover {
+  background: rgba(79, 107, 80, 0.15);
+}
+
+/* responsive tweak */
+@media (max-width: 600px) {
+  .btn {
+    width: 8.5rem;
+  }
+  .frame {
+    padding: 1.5rem 0.75rem;
+  }
+}
+/* Enlarge quick actions area and buttons on large screens */
+@media (min-width: 1280px) {
+  .quick-actions-container {
+    padding: 2.5rem 2rem;
+  }
+  .quick-button {
+    font-size: 1.4rem;
+    padding: 1.2rem;
+  }
+}
+

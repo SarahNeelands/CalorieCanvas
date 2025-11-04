@@ -1,0 +1,139 @@
+/* whole section */
+.recent-meals {
+  max-width: 1100px;          /* ✅ line up with Calorie Canvas width */
+  margin: 0 auto;
+  padding-left:  1.5rem;
+}
+
+.recent-meals__title {
+  font-family: 'Georgia', serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #143d33;
+  margin: 0 0 0.5rem 0;
+}
+
+/* list wrapper */
+.list {
+  display: grid;
+  gap: 1rem;
+}
+
+/* individual meal card */
+.item {
+  position: relative;
+  background: #fffdf8;
+  border-radius: 1rem;
+  box-shadow: 0 2px 8px rgba(79, 107, 80, 0.15);
+
+  /* if you had a border-top/bottom line in the mock, add here if desired */
+  padding: 0.75rem 1.75rem 0.75rem;
+  overflow: hidden; /* hide vines overflow if they bleed */
+}
+
+/* vines */
+.vine {
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+  width: auto;
+  height: auto;
+  max-width: 120px;
+  max-height: 60px;
+  /* you already position each vine with vine--1, vine--2, etc in your CSS */
+}
+
+/* Layout of content inside the card:
+   [ left chunk      ][   kcal ]
+*/
+.item__content {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  column-gap: 1rem;
+  z-index: 1; /* above vines */
+}
+
+/* left side (title + time row) */
+.item__left {
+  flex: 1;
+  min-width: 0; /* allows long names to wrap without pushing kcal offscreen */
+}
+
+/* row with meal title and meal time */
+.meal-row {
+  display: flex;
+  flex-wrap: wrap;     /* allows it to wrap on tiny screens */
+  align-items: baseline;
+  column-gap: 1rem;
+  row-gap: 0.25rem;
+}
+
+/* meal name */
+.item__title {
+  font-family: 'Georgia', serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #000;
+  line-height: 1.4;
+  margin: 0;
+  white-space: nowrap;
+}
+
+/* time (now inline with name) */
+.item__time {
+  font-size: 0.95rem;
+  color: #555;
+  line-height: 1.4;
+  margin: 0;
+  white-space: nowrap;
+}
+
+/* kcal on the far right */
+.kcal {
+  font-family: 'Georgia', serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #000;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.kcal span {
+  font-weight: 400;
+  margin-left: 0.25rem;
+  font-size: 1rem;
+  color: #000;
+}
+
+/* ------------ RESPONSIVE ------------ */
+@media (max-width: 600px) {
+  .item__content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .kcal {
+    margin-top: 0.5rem;
+  }
+
+  .meal-row {
+    flex-wrap: wrap;
+    column-gap: 0.5rem;
+  }
+
+  .item__title {
+    font-size: 1.1rem;
+  }
+
+  .kcal {
+    font-size: 1.1rem;
+  }
+}
+/* Increase font size for recent meals on desktops */
+@media (min-width: 1280px) {
+  .recent-meals-section {
+    font-size: 1.125rem;
+  }
+}

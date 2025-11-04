@@ -1,0 +1,141 @@
+/* ==== DESKTOP: lock the stage ==== */
+:root {
+  /* Use rem-based tokens so these scale with the root font-size */
+  --stage-w: 87.5rem;   /* 1400px */
+  --left-w: 48.75rem;   /* 780px */
+  --right-w: 22.5rem;   /* 360px */
+  --gap: 1.0rem;        /* 40px */
+}
+
+
+
+/* Keep the grid definition */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr var(--right-w);
+  gap: 1rem;
+  max-height: 100vh;;
+  row-gap: 0.5rem;
+}
+
+
+
+.dashboard-container {
+  width: 100%;
+  max-width: 1200px;      /* clamp the overall width for desktops */
+  margin: 0 auto;
+  padding: 1rem 1rem;
+}
+
+.container {
+  /* Make the container responsive: grow with viewport but cap at --stage-w */
+  width: min(100%, var(--stage-w));/* allow container to expand on large screens */
+  margin: 0 auto;
+  
+  position: relative;
+  z-index: 1;          /* above decorative leaves */
+
+}
+
+.grid {
+  display: grid;
+  /* Let the left column expand to fill available space while keeping the right
+     column at a predictable width. This keeps the page feeling "filled" on
+     large screens without breaking the Quick Actions column. */
+  grid-template-columns: 1fr var(--right-w);
+  gap: var(0.5);
+  align-items: start;
+  
+}
+
+/* Cap the actual cards so they never stretch past the designed widths */
+.grid > :first-child,
+.calorie-summary,
+.recent-meals {
+  /* Allow these to fill the available left column width instead of hard-capping
+     them. Cards will now expand with the left column on large screens. */
+  width: 100%;
+  max-width: none;
+  flex-shrink: 0; 
+  
+}
+
+.calorie-summary {
+  margin-bottom: 0.5rem;   /* reduce or remove space below summary */
+  padding-bottom: 0;       /* ensure no internal gap */
+}
+
+.recent-meals {
+  margin-top: 0;           /* remove default top margin */
+  padding-top: 0;          /* clean transition */
+}
+
+.grid > :last-child,
+.quick-actions,
+.frame {
+  width: var(--right-w);
+  max-width: var(--right-w);
+}
+
+/* Decorative leaves stay out of layout and scale gently */
+.tl, .br {
+  position: fixed;
+  pointer-events: none;
+  z-index: 0;
+}
+.tl { top: 0; left: 0; width: clamp(11.25rem, 22vw, 20rem); }
+.br { right: 0; bottom: 0; width: clamp(12.5rem, 26vw, 23.75rem); transform: scaleX(-1); }
+
+/* Typography: fixed on desktop (no vw) for identical look */
+/* Typography uses rems so it scales with the responsive root font-size */
+
+body { font-size: 1rem; line-height: 1.5; }
+
+/* ==== BELOW TABLET: switch to the responsive stack ==== */
+@media (max-width: 980px) {
+  .container { width: min(100%, calc(100vw - 1.5rem)); }
+  .grid { grid-template-columns: 1fr; gap: 1.5rem; }
+  .grid > * { width: 100%; max-width: 100%; }
+}
+/* Desktop-only adjustments: clamp overall width and scale elements */
+@media (min-width: 1280px) {
+  .dashboard-container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .summary-card {
+    padding: 1rem;
+  }
+
+  .recent-meals-section {
+    font-size: 1.125rem;
+  }
+  .quick-actions-container {
+    padding: 2.5rem 2rem;
+  }
+  .quick-button {
+    font-size: 1.4rem;
+    padding: 1.2rem;
+  }
+}
+@media (min-width: 1920px) {
+  .dashboard-container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .summary-card {
+    padding: 1rem;
+  }
+
+  .recent-meals-section {
+    font-size: 1.125rem;
+  }
+  .quick-actions-container {
+    padding: 2.5rem 2rem;
+  }
+  .quick-button {
+    font-size: 1.4rem;
+    padding: 1.2rem;
+  }
+}
+

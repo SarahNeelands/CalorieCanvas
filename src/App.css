@@ -1,9 +1,19 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+
 .App {
   text-align: center;
 }
+body {
+  /* Use cover so the background fills without stretching in odd ways */
+  background: url('./images/DesktopBackground.png') center / cover no-repeat fixed;
+}
+
 
 .App-logo {
-  height: 40vmin;
+  /* Use rems so logo scales with root font-size */
+  height: 10rem; /* 160px */
+  max-height: 28vh;
   pointer-events: none;
 }
 
@@ -12,16 +22,19 @@
     animation: App-logo-spin infinite 20s linear;
   }
 }
-
+.App, .App-header {
+  background: transparent;
+}
 .App-header {
-  background-color: #282c34;
+
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  /* Use rem-based typography for stability across viewports */
+  font-size: 1rem;
+
 }
 
 .App-link {

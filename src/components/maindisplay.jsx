@@ -18,9 +18,6 @@ export default function CalorieCanvas() {
   return (
     <div className="cc-app">
       {/* Decorative leaves (identical placement) */}
-      <img src="/cc/leaves-tl.png" alt="" className="cc-tl" />
-      <img src="/cc/leaves-br.png" alt="" className="cc-br" />
-
       <div className="cc-wrap">
         {/* Header */}
         <header className="cc-header">

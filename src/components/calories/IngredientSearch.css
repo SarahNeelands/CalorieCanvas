@@ -1,0 +1,33 @@
+.is-backdrop{
+  position:fixed; inset:0; background:rgba(22,50,39,.28);
+  display:grid; place-items:center; z-index:50;
+}
+.is-card{
+  width:min(640px, 92vw); background:#fff; border:1px solid var(--cc-border);
+  border-radius:16px; padding:16px; box-shadow:0 8px 24px rgba(0,0,0,.18);
+}
+.is-card h4{ margin:0; color:var(--cc-ink); font-weight:800; }
+.linklike{ background:none; border:0; color:var(--cc-accent); cursor:pointer; }
+
+.is-row{ display:grid; grid-template-columns:1fr auto; gap:10px; margin:12px 0 8px; }
+.is-row input{
+  height:40px; border:1px solid var(--cc-border); border-radius:10px; padding:0 12px;
+}
+.is-row input:focus{ border-color:var(--cc-accent); box-shadow:0 0 0 3px var(--cc-focus); }
+
+.btn{ height:40px; padding:0 16px; border-radius:10px; border:1px solid var(--cc-accent); color:#fff; background:var(--cc-accent); }
+.btn:disabled{ opacity:.6; }
+
+.is-results{ max-height:48vh; overflow:auto; }
+.is-list{ list-style:none; margin:0; padding:0; display:grid; gap:8px; }
+.is-list li{
+  display:grid; grid-template-columns:1fr auto; align-items:center;
+  border:1px solid var(--cc-border); border-radius:12px; padding:10px 12px;
+}
+.is-list .name{ font-weight:700; color:var(--cc-ink); }
+.is-list .meta{ color:#4a564d; font-size:13px; }
+.add{
+  width:36px; height:36px; border-radius:10px; border:1px solid var(--cc-accent);
+  background:#fff; color:var(--cc-accent); font-size:20px; line-height:0;
+}
+.add:hover{ background:var(--cc-accent); color:#fff; }

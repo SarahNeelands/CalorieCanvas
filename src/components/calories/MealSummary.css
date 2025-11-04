@@ -1,0 +1,32 @@
+.ms-root{ display:flex; flex-direction:column; gap:14px; height:100%; }
+.ms-title{ font-size:18px; font-weight:800; color:var(--cc-ink); margin:0; }
+
+.ms-items{
+  list-style:none; margin:0; padding:0; display:grid; gap:8px;
+  overflow:auto; max-height:38vh;
+}
+.ms-items li{
+  display:grid; grid-template-columns: 1fr auto; align-items:center;
+  padding:10px 12px; border:1px solid var(--cc-border); border-radius:12px;
+}
+.ms-items .name{ font-weight:700; color:var(--cc-ink); }
+.ms-items .meta{ color:#4a564d; }
+.ms-empty{ text-align:center; color:#667268; padding:16px 0; }
+
+.ms-totals{
+  margin-top:4px; border-top:1px solid var(--cc-border); padding-top:12px;
+  display:grid; grid-template-columns: 1fr auto auto; align-items:end; gap:8px;
+}
+.ms-totals .label{ color:#5a665d; }
+.ms-totals .value{ font-size:28px; font-weight:800; color:var(--cc-accent); }
+.ms-totals .sub{ font-weight:700; color:var(--cc-ink); }
+
+.ms-meta{ display:flex; gap:16px; color:#4a564d; }
+
+.ms-actions{ display:grid; gap:10px; margin-top:auto; }
+.btn{
+  height:44px; border-radius:12px; border:1px solid var(--cc-accent); cursor:pointer;
+}
+.btn.save{ background:var(--cc-accent); color:#fff; }
+.btn.save:hover{ background:var(--cc-accent-2); border-color:var(--cc-accent-2); }
+.btn.ghost{ background:#fff; color:var(--cc-accent); }

@@ -1,0 +1,21 @@
+/* src/components/ui/Card.css */
+@import "../../styles/theme.css";
+
+.cc-card{
+  background: var(--cc-card);
+  border-radius: var(--cc-radius-xl-rem, 1.125rem);
+  box-shadow: var(--cc-shadow);
+  padding: 1.125rem;
+  border: 1px solid var(--cc-green-200);
+
+}
+
+.cc-card-title{
+  color: var(--cc-ink);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  margin: 0.125rem 0.125rem 0.875rem;
+  font-size: 1.25rem;
+}
+
+.cc-card-footer{ margin-top: 0.75rem; }

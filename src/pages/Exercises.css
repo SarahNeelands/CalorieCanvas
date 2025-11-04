@@ -1,0 +1,37 @@
+/* src/pages/Exercises.css */
+@import "../styles/theme.css";
+
+.ex-page{
+  background: var(--cc-bg);
+  min-height: 100vh;
+}
+
+.ex-container{
+width: min(100%, 90vw); /* allow container to expand on large screens */
+  margin: 0 auto;
+  padding: 1.75rem 1.5rem 4rem; /* 28px 24px 64px */
+}
+
+.ex-grid{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.ex-hint{
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--cc-green-400);
+}
+
+/* gentle leafy edges (optional – remove if you don’t use images) */
+.ex-page::before,
+.ex-page::after{
+  content:"";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  background-size: 32.5rem; /* 520px -> 32.5rem */
+  opacity: .35;
+}

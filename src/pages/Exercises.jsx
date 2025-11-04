@@ -1,4 +1,6 @@
+// src/pages/Exercises.jsx
 import React, { useState } from "react";
+
 // Context
 import { ExerciseProvider } from '../components/exercise/context/ExerciseContext.jsx';
 
@@ -11,53 +13,55 @@ import LogExerciseModal from '../components/exercise/LogExerciseModal.jsx';
 import DailyMinutesChart from '../components/exercise/charts/DailyMinutesChart.jsx';
 import TypeBreakdownPie from '../components/exercise/charts/TypeBreakdownPie.jsx';
 
-// UI (note the capital U in Ui)
+// UI
 import Card from '../components/ui/Card.jsx';
 import NavBar from "../components/NavBar";
 
+import "./Exercises.css";
+
 export default function Exercises({ user }) {
-    return (
-        <div>
-            <NavBar profileImageSrc={user.avatar}/>
-            <ExerciseProvider>
-            <ExercisePageInner />
-            </ExerciseProvider>
-        </div>
-        
-    );
+  return (
+    <div className="ex-page">
+      <NavBar profileImageSrc={user?.avatar}/>
+      <ExerciseProvider>
+        <ExercisePageInner />
+      </ExerciseProvider>
+    </div>
+  );
 }
 
-
 function ExercisePageInner() {
-const [range, setRange] = useState("7");
-const [selectedDate, setSelectedDate] = useState(null);
-const [logOpen, setLogOpen] = useState(false);
+  const [range, setRange] = useState("7");
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [logOpen, setLogOpen] = useState(false);
 
+  return (
+    <div className="ex-container">
+      <ExercisePageHeader
+        range={range}
+        onChangeRange={setRange}
+        onLog={() => setLogOpen(true)}
+      />
 
-return (
-<div className="p-6 max-w-6xl mx-auto">
-<ExercisePageHeader range={range} onChangeRange={setRange} onLog={() => setLogOpen(true)} />
+      <div className="ex-grid">
+        <Card title={`Minutes per day (last ${range} days)`}>
+          <DailyMinutesChart range={range} onSelectDate={(d) => setSelectedDate(d)} />
+          <p className="ex-hint">Click a bar to view that day’s logs.</p>
+        </Card>
 
+        <Card title={`By type (last ${range} days)`}>
+          <TypeBreakdownPie range={range} />
+        </Card>
+      </div>
 
-<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-<Card title={`Minutes per day (last ${range} days)`}>
-<DailyMinutesChart range={range} onSelectDate={(d) => setSelectedDate(d)} />
-<p className="text-sm text-gray-500 mt-2">Click a bar to view that day’s logs.</p>
-</Card>
+      {selectedDate && (
+        <DayLogsModal
+          dateStr={selectedDate}
+          onClose={() => setSelectedDate(null)}
+        />
+      )}
 
-
-<Card title={`By type (last ${range} days)`}>
-<TypeBreakdownPie range={range} />
-</Card>
-</div>
-
-
-{selectedDate && (
-<DayLogsModal dateStr={selectedDate} onClose={() => setSelectedDate(null)} />
-)}
-
-
-{logOpen && <LogExerciseModal onClose={() => setLogOpen(false)} />}
-</div>
-);
+      {logOpen && <LogExerciseModal onClose={() => setLogOpen(false)} />}
+    </div>
+  );
 }

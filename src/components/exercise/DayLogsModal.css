@@ -1,0 +1,15 @@
+/* src/components/exercise/DayLogsModal.css */
+@import "../../styles/theme.css";
+
+.ex-logs-modal .modal-surface{
+  background: var(--cc-card);
+  border-radius: var(--cc-radius-xl);
+  box-shadow: var(--cc-shadow);
+  border: 1px solid rgba(22,50,39,.06);
+}
+
+.ex-logs-modal h2{ color: var(--cc-ink); }
+.ex-logs-modal .log-row{
+  display:flex; align-items:center; justify-content:space-between;
+}
+.ex-logs-modal .log-row .when{ color: var(--cc-green-400); font-size:.8rem; }

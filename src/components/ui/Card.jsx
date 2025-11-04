@@ -1,12 +1,13 @@
+// src/components/ui/Card.jsx
 import React from "react";
-export function Card({ title, children, actions }) {
-return (
-<div className="rounded-2xl border border-gray-200 shadow-sm p-4 bg-white">
-<div className="flex items-center justify-between mb-2">
-<h2 className="font-medium">{title}</h2>
-{actions}
-</div>
-{children}
-</div>
-);
-}export default Card;
+import "./Card.css";
+
+export default function Card({ title, children, footer }) {
+  return (
+    <section className="cc-card">
+      {title && <h3 className="cc-card-title">{title}</h3>}
+      <div className="cc-card-body">{children}</div>
+      {footer && <div className="cc-card-footer">{footer}</div>}
+    </section>
+  );
+}
