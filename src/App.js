@@ -12,7 +12,9 @@ import NewIngredient from "./pages/NewIngredient";
 import LogMeal from "./pages/LogMeal";
 import SnackDetails  from "./pages/SnackDetails";
 import DefaultImage from "./components/images/defaultprofile.png"
-
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import ProfileSetup from './pages/ProfileSetup';
 // Example: this would come from your DB call in a real app
 const mockUser = {
   avatar: DefaultImage,
@@ -48,6 +50,9 @@ export default function App() {
         <Route path="/meals/new" element={<LogMeal user={mockUser} />} />         {/* create new meal via details flow */}
         <Route path="/ingredients/new" element={<NewIngredient user={mockUser} />} />
         <Route path="/snacks/new" element={<SnackDetails user={mockUser} />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/profile-setup" element={<ProfileSetup />} />
 
       </Routes>
     </BrowserRouter>

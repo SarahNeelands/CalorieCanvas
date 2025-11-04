@@ -2,14 +2,13 @@
 @import "../styles/theme.css";
 
 .ex-page{
-  background: var(--cc-bg);
+
   min-height: 100vh;
 }
 
 .ex-container{
 width: min(100%, 90vw); /* allow container to expand on large screens */
   margin: 0 auto;
-  padding: 1.75rem 1.5rem 4rem; /* 28px 24px 64px */
 }
 
 .ex-grid{
