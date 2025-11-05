@@ -6,9 +6,16 @@
   --right-w: 22.5rem;   /* 360px */
   --gap: 1.0rem;        /* 40px */
 }
-
-
-
+.app{
+position:absolute;
+  inset:0;
+  background: url('../../images/DesktopBackground.png') center / 100% 100% no-repeat; /* stretch like your mock */
+  z-index:0;
+  --stage-w: 87.5rem;   /* 1400px */
+  --left-w: 48.75rem;   /* 780px */
+  --right-w: 22.5rem;   /* 360px */
+  --gap: 1.0rem;     
+}
 /* Keep the grid definition */
 .dashboard-grid {
   display: grid;

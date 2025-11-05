@@ -1,10 +1,10 @@
 import React, { useMemo, useState } from 'react';
-import ProgressTabs from '../components/progress/ProgressTabs.jsx';
-import WeightTrend from '../components/progress/WeightTrend.jsx';
-import CalorieTrend from '../components/progress/CalorieTrend.jsx';
-import ExerciseTrend from '../components/progress/ExerciseTrend.jsx';
-import DayDetailModal from '../components/progress/DayDetailModal.jsx';
-import NavBar from "../components/NavBar";
+import ProgressTabs from '../../components/progress/ProgressTabs.jsx';
+import WeightTrend from '../../components/progress/WeightTrend.jsx';
+import CalorieTrend from '../../components/progress/CalorieTrend.jsx';
+import ExerciseTrend from '../../components/progress/ExerciseTrend.jsx';
+import DayDetailModal from '../../components/progress/DayDetailModal.jsx';
+import NavBar from "../../components/NavBar";
 import './Progress.css';
 
 export default function Progress({ user }) {

@@ -2,7 +2,7 @@
  * Simple form to create a new ingredient in the catalog (stub for DB).
  */
 
-import NavBar from "../components/NavBar";
+import NavBar from "../../components/NavBar";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 // import { createIngredient } from "../utils/db";

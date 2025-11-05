@@ -1,15 +1,25 @@
 /* src/pages/Exercises.css */
-@import "../styles/theme.css";
+@import "../../styles/theme.css";
 
 .ex-page{
-  background: var(--cc-bg);
+
   min-height: 100vh;
 }
 
+.exercise-back{
+  position:absolute;
+  inset:0;
+  background: url('../../images/DesktopBackground.png') center / 100% 100% no-repeat; /* stretch like your mock */
+  z-index:0;
+  --stage-w: 87.5rem;   /* 1400px */
+  --left-w: 48.75rem;   /* 780px */
+  --right-w: 22.5rem;   /* 360px */
+  --gap: 1.0rem;     
+}
 .ex-container{
 width: min(100%, 90vw); /* allow container to expand on large screens */
   margin: 0 auto;
-  padding: 1.75rem 1.5rem 4rem; /* 28px 24px 64px */
+  margin-top: 3vw;
 }
 
 .ex-grid{
