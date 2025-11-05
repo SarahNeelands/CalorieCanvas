@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import NavBar from "../components/NavBar";
-import MealDetails from "../components/calories/MealDetails";
-import Ingredients from "../components/calories/Ingredients";
-import MealSummary from "../components/calories/MealSummary";
+import NavBar from "../../components/NavBar";
+import MealDetails from "../../components/calories/MealDetails";
+import Ingredients from "../../components/calories/Ingredients";
+import MealSummary from "../../components/calories/MealSummary";
 import "./LogMeal.css";
 
 export default function LogMeal({ user }) {

@@ -3,18 +3,22 @@ import React from "react";
 import "./App.css";
 import "./index.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Dashboard from "./pages/Dashboard";
-import Meals from "./pages/Meals";
-import Exercises from "./pages/Exercises";
-import Progress from "./pages/Progress";
-import Profile from "./pages/Profile";
-import NewIngredient from "./pages/NewIngredient";
-import LogMeal from "./pages/LogMeal";
-import SnackDetails  from "./pages/SnackDetails";
+import Dashboard from "./pages/Dashboard/Dashboard";
+import Meals from "./pages/Meals/Meals";
+import Exercises from "./pages/Excercise/Exercises";
+import Progress from "./pages/Progress/Progress";
+import Profile from "./pages/Profile/Profile";
+import NewIngredient from "./pages/Meals/NewIngredient";
+import LogMeal from "./pages/Meals/LogMeal";
+import SnackDetails  from "./pages/Meals/SnackDetails";
 import DefaultImage from "./components/images/defaultprofile.png"
-import Login from './pages/Login';
-import Signup from './pages/Signup';
-import ProfileSetup from './pages/ProfileSetup';
+import Login from './pages/Authentication/Login';
+import Signup from './pages/Authentication/Signup';
+import ProfileSetup from './pages/ProfileSetup/ProfileSetup';
+import ProfileSetup2 from './pages/ProfileSetup/ProfileSetup2';
+import ProfileSetup3 from './pages/ProfileSetup/ProfileSetup3';
+import ProfileSetup4 from './pages/ProfileSetup/ProfileSetup4';
+
 // Example: this would come from your DB call in a real app
 const mockUser = {
   avatar: DefaultImage,
@@ -53,7 +57,9 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/profile-setup" element={<ProfileSetup />} />
-
+        <Route path="/profile-setup-2" element={<ProfileSetup2 />} />
+        <Route path="/profile-setup-3" element={<ProfileSetup3 />} />
+        <Route path="/profile-setup-4" element={<ProfileSetup4 />} />
       </Routes>
     </BrowserRouter>
   );

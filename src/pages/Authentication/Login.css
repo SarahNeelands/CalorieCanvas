@@ -10,7 +10,7 @@ html, body, #root { height: 100%; margin: 0; background: none !important; }
   position:absolute;
   inset:0;
   z-index:0;
-  background: url('../images/LoginBackground.png') center / 100% 100% no-repeat; /* stretch */
+  background: url('../../images/LoginBackground.png') center / 100% 100% no-repeat; /* stretch */
 }
 /* canvas */
 .login-wrap{
@@ -74,7 +74,7 @@ html, body, #root { height: 100%; margin: 0; background: none !important; }
 .frame-img{
   position:absolute;
   inset:0;
-  background:url('../images/LoginSignupFrame.png') center/contain no-repeat;
+  background:url('../../images/LoginSignupFrame.png') center/contain no-repeat;
   pointer-events:none;
 }
 .card-inner{
