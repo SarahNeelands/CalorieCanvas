@@ -7,10 +7,10 @@
 .md-field > span{ font-size:12px; color:#4a564d; }
 
 .md-field input{
-  height:44px;
-  padding:0 12px;
+  height:1rem;
+  padding:0 0.50rem;
   border:1px solid var(--cc-border);
-  border-radius:10px;
+  border-radius:1rem;
   background:#fff;
   color:var(--cc-ink);
   outline:none;

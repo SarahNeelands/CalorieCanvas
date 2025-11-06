@@ -25,7 +25,7 @@
 
 .ms-actions{ display:grid; gap:10px; margin-top:auto; }
 .btn{
-  height:44px; border-radius:12px; border:1px solid var(--cc-accent); cursor:pointer;
+  height:2rem; border-radius:12px; border:1px solid var(--cc-accent); cursor:pointer;
 }
 .btn.save{ background:var(--cc-accent); color:#fff; }
 .btn.save:hover{ background:var(--cc-accent-2); border-color:var(--cc-accent-2); }
