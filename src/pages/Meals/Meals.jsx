@@ -4,13 +4,17 @@
  * Renders two tabs: Meals and Snacks, plus a "New" launcher to create new Meal/Snack.
  */
 import React, { useState } from "react";
-import MealsList from "../../components/calories/MealsList.jsx";
-import SnacksList from "../../components/calories/SnacksList.jsx";
+import LogMealModal from "../../components/Meals/LogMealModal.jsx";
+import MealsList from "../../components/Meals/MealsList.jsx";
+import SnacksList from "../../components/Meals/SnacksList.jsx";
 import NewEntryLauncher from "../../components/NewEntryLauncher.jsx";
 import NavBar from "../../components/NavBar";
 
 export default function Meals({ user }) {
   const [active, setActive] = useState("meals"); // 'meals' | 'snacks'
+  const [logOpen, setLogOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const onSelectToLog = (item) => { setSelectedItem(item); setLogOpen(true); };
 
   return (
     <main className="meals-page">
@@ -36,8 +40,9 @@ export default function Meals({ user }) {
       </div>
 
       <section className="tab-body">
-        {active === "meals" ? <MealsList /> : <SnacksList />}
+        {active === "meals" ? <MealsList userId={user?.id} onLogClick={onSelectToLog} /> : <SnacksList userId={user?.id} onLogClick={onSelectToLog} />}
       </section>
+      <LogMealModal open={logOpen} onClose={() => setLogOpen(false)} userId={user?.id} item={selectedItem} />
     </main>
   );
 }
