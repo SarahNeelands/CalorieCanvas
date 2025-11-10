@@ -28,6 +28,12 @@ width: min(100%, 90vw); /* allow container to expand on large screens */
   gap: 1.5rem;
 }
 
+@media (max-width: 720px){
+  .ex-grid{ grid-template-columns: 1fr; }
+  .ex-container{ margin-top: 1.5rem; padding: 1rem; }
+  .exercise-back{ background: url('../../components/images/PhoneBackground.png') center / cover no-repeat; }
+}
+
 .ex-hint{
   margin-top: 0.5rem;
   font-size: 0.875rem;

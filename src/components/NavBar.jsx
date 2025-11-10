@@ -3,6 +3,7 @@ import { NavLink, Link, useLocation } from "react-router-dom";
 import "./NavBar.css";
 import underlineImg from "../images/VineUnderline.png";
 import logoSrc from "../images/IconBackground.png";
+import menuIcon from "./images/Menu.png";
 
 export default function NavBar() {
   const navRef  = useRef(null);
@@ -11,8 +12,10 @@ export default function NavBar() {
 
   const [box, setBox] = useState({ left: 0, width: 0, top: 0 });
   const [visible, setVisible] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const lastBox = useRef(box);
   const raf = useRef(0);
+  const mobileRef = useRef(null);
 
   const setIfChanged = (next) => {
     const prev = lastBox.current;
@@ -68,6 +71,15 @@ export default function NavBar() {
 
   useEffect(() => { document.fonts?.ready?.then(measure); }, []);
 
+  useEffect(() => {
+    function onDoc(e){
+      if (!mobileRef.current) return;
+      if (!mobileRef.current.contains(e.target)) setMobileOpen(false);
+    }
+    document.addEventListener('pointerdown', onDoc);
+    return () => document.removeEventListener('pointerdown', onDoc);
+  }, []);
+
   return (
     <header className="header" role="banner">
       <div className="brand">
@@ -95,6 +107,27 @@ export default function NavBar() {
       {/* RIGHT SIDE: only the bell */}
       <div className="right">
         <button className="bell" aria-label="Notifications">🔔</button>
+
+        {/* mobile menu toggle (visible only on narrow screens) */}
+        <div className="nav-mobile" ref={mobileRef}>
+          <button
+            className="nav-toggle"
+            aria-label="Open navigation"
+            aria-expanded={mobileOpen}
+            onClick={() => setMobileOpen((s) => !s)}
+          >
+            <img src={menuIcon} alt="Menu" />
+          </button>
+
+          {mobileOpen && (
+            <div className="nav-mobile-menu" role="menu">
+              <NavLink to="/" end className={({isActive})=>isActive?"active":''} onClick={()=>setMobileOpen(false)}>Dashboard</NavLink>
+              <NavLink to="/meals" className={({isActive})=>isActive?"active":''} onClick={()=>setMobileOpen(false)}>Meals</NavLink>
+              <NavLink to="/exercises" className={({isActive})=>isActive?"active":''} onClick={()=>setMobileOpen(false)}>Exercises</NavLink>
+              <NavLink to="/progress" className={({isActive})=>isActive?"active":''} onClick={()=>setMobileOpen(false)}>Progress</NavLink>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );

@@ -1,5 +1,6 @@
 import React from "react";
 import { supabase } from "../../supabaseClient";
+import Modal from '../ui/Modal.jsx';
 import { resolveToGrams, unitOptionsForFood } from "../../utils/units";
 import { computeTotalsFrom100g } from "../../utils/nutrients";
 
@@ -67,41 +68,38 @@ export default function LogMealModal({ open, onClose, userId, item }) {
   }
 
   return (
-    <div className="modal-overlay">
-      <div className="modal frame">
-        <h3 style={{ marginTop: 0 }}>Log “{item.title}”</h3>
-        <form onSubmit={handleSave} className="grid" style={{ gap: 12 }}>
-          <label>
-            <div className="label">Date & Time</div>
-            <input
-              type="datetime-local"
-              value={new Date(whenAt).toISOString().slice(0,16)}
-              onChange={(e) => {
-                const local = e.target.value;
-                const iso = new Date(local).toISOString();
-                setWhenAt(iso);
-              }}
-            />
+    <Modal title={`Log "${item.title}"`} onClose={onClose}>
+      <form onSubmit={handleSave} className="grid" style={{ gap: 12 }}>
+        <label>
+          <div className="label">Date & Time</div>
+          <input
+            type="datetime-local"
+            value={new Date(whenAt).toISOString().slice(0,16)}
+            onChange={(e) => {
+              const local = e.target.value;
+              const iso = new Date(local).toISOString();
+              setWhenAt(iso);
+            }}
+          />
+        </label>
+        <div style={{ display: "flex", gap: 8 }}>
+          <label style={{ flex: 1 }}>
+            <div className="label">Amount</div>
+            <input type="number" min={0} step="any" value={qty} onChange={(e) => setQty(Number(e.target.value))} />
           </label>
-          <div style={{ display: "flex", gap: 8 }}>
-            <label style={{ flex: 1 }}>
-              <div className="label">Amount</div>
-              <input type="number" min={0} step="any" value={qty} onChange={(e) => setQty(Number(e.target.value))} />
-            </label>
-            <label style={{ width: 160 }}>
-              <div className="label">Unit</div>
-              <select value={unit} onChange={(e) => setUnit(e.target.value)}>
-                {availableUnits.map((u) => (<option key={u} value={u}>{u}</option>))}
-              </select>
-            </label>
-          </div>
-          {error && <div style={{ color: "#b00020" }}>{String(error.message || error)}</div>}
-          <div className="row-between" style={{ gap: 8, marginTop: 8 }}>
-            <button type="button" className="btn" onClick={onClose} disabled={saving}>Cancel</button>
-            <button type="submit" className="btn btn-solid" disabled={saving}>{saving ? "Saving…" : "Log"}</button>
-          </div>
-        </form>
-      </div>
-    </div>
+          <label style={{ width: 160 }}>
+            <div className="label">Unit</div>
+            <select value={unit} onChange={(e) => setUnit(e.target.value)}>
+              {availableUnits.map((u) => (<option key={u} value={u}>{u}</option>))}
+            </select>
+          </label>
+        </div>
+        {error && <div style={{ color: "#b00020" }}>{String(error.message || error)}</div>}
+        <div className="row-between" style={{ gap: 8, marginTop: 8 }}>
+          <button type="button" className="btn" onClick={onClose} disabled={saving}>Cancel</button>
+          <button type="submit" className="btn btn-solid" disabled={saving}>{saving ? "Saving…" : "Log"}</button>
+        </div>
+      </form>
+    </Modal>
   );
 }

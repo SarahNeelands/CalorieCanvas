@@ -68,6 +68,26 @@
   cursor:pointer;
 }
 
+/* mobile menu toggle - hidden on larger screens */
+.nav-mobile{ display:none; position:relative; }
+.nav-toggle{ background:transparent; border:none; margin-left:8px; padding:4px; border-radius:6px; cursor:pointer; }
+.nav-toggle img{ width:36px; height:36px; display:block; }
+.nav-mobile-menu{
+  position:absolute;
+  right:0;
+  top:48px;
+  background:#fff;
+  border-radius:10px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+  padding:8px 10px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  z-index:80;
+}
+.nav-mobile-menu a{ color:var(--cc-ink); text-decoration:none; padding:8px 12px; border-radius:8px; font-weight:700; }
+.nav-mobile-menu a.active, .nav-mobile-menu a:hover{ background: rgba(79,107,80,0.06); color:#4F6B50; }
+
 /* ---- links (responsive font) ---- */
 .nav a{
   font-family:"Inter","Helvetica Neue",Helvetica,Arial,sans-serif;
@@ -123,4 +143,10 @@
     transition: left .15s ease, width .15s ease, top .15s ease, opacity .15s ease;
     transform:none;
   }
+}
+
+/* hide the normal center nav on very small viewports and show the toggle */
+@media (max-width: 720px){
+  .nav{ display:none; }
+  .nav-mobile{ display:block; }
 }

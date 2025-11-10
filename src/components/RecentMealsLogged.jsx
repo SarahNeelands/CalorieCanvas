@@ -1,12 +1,12 @@
 import React from "react";
 import { supabase } from "../supabaseClient";
 import "../components/calories/RecentMeals.css";
-import vine1 from "../images/vines/vine1.png";
-import vine2 from "../images/vines/vine2.png";
-import vine3 from "../images/vines/vine3.png";
-import vine4 from "../images/vines/vine4.png";
-import vine5 from "../images/vines/vine5.png";
-import vine6 from "../images/vines/vine6.png";
+import vine1 from "./images/vines/vine1.png";
+import vine2 from "./images/vines/vine2.png";
+import vine3 from "./images/vines/vine3.png";
+import vine4 from "./images/vines/vine4.png";
+import vine5 from "./images/vines/vine5.png";
+import vine6 from "./images/vines/vine6.png";
 
 const VINES = [vine1, vine2, vine3, vine4, vine5, vine6];
 

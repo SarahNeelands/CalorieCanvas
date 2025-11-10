@@ -130,6 +130,10 @@
   .kcal {
     font-size: 1.1rem;
   }
+  /* add spacing from right edge on phones */
+  .recent-meals { padding-right: 1rem; }
+  .recent-meals__title { font-size: 1.6rem; }
+  .item__title { font-size: 1.25rem; }
 }
 /* Increase font size for recent meals on desktops */
 @media (min-width: 1280px) {

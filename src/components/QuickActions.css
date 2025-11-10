@@ -92,6 +92,60 @@
   .frame {
     padding: 1.5rem 0.75rem;
   }
+
+  /* On small screens, hide the full desktop quick actions and show a compact button */
+
+  .qa-mobile { display: flex; align-items: center; justify-content: center; position: relative; width:100%; }
+
+  .qa-mobile-btn{
+    background: transparent;
+    border: none;
+    padding: 0.25rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .qa-mobile-btn img{ width:48px; height:48px; display:block; }
+
+  .qa-mobile-menu{
+    position: absolute;
+    bottom: 56px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: #fff;
+    border-radius: 12px;
+    padding: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    min-width: 160px;
+    right: 12px;
+    z-index: 30;
+  }
+  .qa-mobile-item{
+    padding: 8px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #243E2D;
+    background: transparent;
+    font-weight:700;
+  }
+  .qa-mobile-item:hover{ background: rgba(79,107,80,0.06); }
+}
+
+/* Floating quick actions (global) */
+.qa-floating{ position:fixed; right:18px; bottom:18px; z-index:120; }
+.qa-floating-btn{ width:64px; height:64px; border-radius:999px; border:none; background:#fff; box-shadow:0 12px 28px rgba(0,0,0,0.18); display:inline-flex; align-items:center; justify-content:center; cursor:pointer; }
+.qa-floating-btn img{ width:44px; height:44px; }
+.qa-floating-menu{ position:absolute; right:0; bottom:78px; background:#fff; padding:8px; border-radius:12px; box-shadow:0 12px 36px rgba(0,0,0,0.14); display:flex; flex-direction:column; gap:8px; }
+.qa-floating-item{ border:none; background:transparent; padding:8px 12px; text-align:left; font-weight:700; cursor:pointer; }
+
+/* ensure floating button visible on desktop and phone */
+@media (max-width: 420px){
+  .qa-floating{ right:12px; bottom:12px; }
+  .qa-floating-btn{ width:56px; height:56px; }
 }
 /* Enlarge quick actions area and buttons on large screens */
 @media (min-width: 1280px) {

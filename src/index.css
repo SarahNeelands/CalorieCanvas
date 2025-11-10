@@ -7,3 +7,13 @@ code {
 /* Responsive root font-size so the whole UI (rem-based sizes) scales smoothly
   with viewport. Minimum 14px, grow with viewport, cap at 20px. */
 html { font-size: clamp(14px, 0.8vw + 12px, 20px); }
+
+/* Phone-specific background and slightly larger fonts + spacing to improve readability */
+@media (max-width: 720px){
+  html { font-size: clamp(16px, 1.4vw + 12px, 20px); }
+  body{ background: url('./components/images/PhoneBackground.png') center / cover no-repeat; }
+  /* ensure main app content gets padding so components don't touch edges */
+  .container, .ex-container, .progress-container { padding-left: 0.875rem; padding-right: 0.875rem; }
+  /* keep quick actions floating on top */
+  .qa-floating{ z-index:140; }
+}

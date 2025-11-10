@@ -1,55 +1,56 @@
-// TODO: swap these stubs with real DB calls.
-// Return arrays like [{ date: '2025-10-12', label: 'Sun', value: 73.2, extra: {...}}]
+import { supabase } from '../supabaseClient';
+
+// Helpers: normalize to array of { date, label, value, extra }
+function dayLabel(iso) {
+  try{ const d = new Date(iso); return d.toLocaleDateString(undefined, { weekday: 'short' }); }catch(e){ return iso; }
+}
 
 export async function fetchWeightSeries(userId, scope = 'all') {
-  // scope: 'all' | 'month' | 'week'
-  // Weight won't have weekly if you truly don't want it—just return [] for 'week'.
-  if (scope === 'week') return []; // per your note
-  // Demo data
-  const base = [
-    { date: '2025-10-01', label: 'Wed', value: 201.2 },
-    { date: '2025-10-02', label: 'Thu', value: 200.9 },
-    { date: '2025-10-03', label: 'Fri', value: 200.1 },
-    { date: '2025-10-04', label: 'Sat', value: 199.8 },
-    { date: '2025-10-05', label: 'Sun', value: 199.5 },
-    { date: '2025-10-06', label: 'Mon', value: 199.4 },
-    { date: '2025-10-07', label: 'Tue', value: 199.1 },
-  ];
-  if (scope === 'month') return base;
-  if (scope === 'all') return base; // return longer range in real code
-  return [];
+  try{
+    if (!userId) return [];
+    // scope not used for now; return last 60 weights for all
+    const { data, error } = await supabase.from('weights').select('date,value,unit').eq('user_id', userId).order('date', { ascending: false }).limit(365);
+    if (error) throw error;
+    return (data || []).map(d => ({ date: d.date, label: dayLabel(d.date), value: Number(d.value) }));
+  }catch(e){
+    console.warn('fetchWeightSeries failed', e);
+    return [];
+  }
 }
 
 export async function fetchCalorieSeries(userId, scope = 'all') {
-  // value = total calories
-  const week = [
-    { date: '2025-10-01', label: 'Mon', value: 1500, extra: { calories: 1500 } },
-    { date: '2025-10-02', label: 'Tue', value: 1750, extra: { calories: 1750 } },
-    { date: '2025-10-03', label: 'Wed', value: 1400, extra: { calories: 1400 } },
-    { date: '2025-10-04', label: 'Thu', value: 1600, extra: { calories: 1600 } },
-    { date: '2025-10-05', label: 'Fri', value: 1900, extra: { calories: 1900 } },
-    { date: '2025-10-06', label: 'Sat', value: 1200, extra: { calories: 1200 } },
-    { date: '2025-10-07', label: 'Sun', value: 1650, extra: { calories: 1650 } },
-  ];
-  if (scope === 'week') return week;
-  if (scope === 'month') return week; // demo
-  if (scope === 'all') return week;   // demo
-  return [];
+  try{
+    if (!userId) return [];
+    // Aggregate meal_logs by date
+    const { data, error } = await supabase.rpc('daily_calorie_totals', { p_user_id: userId });
+    // If RPC not available, fallback to client-side aggregate
+    if (error || !data) {
+      const { data: rows, error: e2 } = await supabase.from('meal_logs').select('logged_at,kcal').eq('user_id', userId);
+      if (e2) throw e2;
+      const byDate = {};
+      (rows || []).forEach(r => {
+        const d = r.logged_at ? r.logged_at.slice(0,10) : (new Date()).toISOString().slice(0,10);
+        byDate[d] = (byDate[d] || 0) + Number(r.kcal || 0);
+      });
+      return Object.keys(byDate).sort().map(d => ({ date: d, label: dayLabel(d), value: byDate[d], extra: { calories: byDate[d] } }));
+    }
+    return (data || []).map(d => ({ date: d.date, label: dayLabel(d.date), value: Number(d.total_kcal), extra: { calories: Number(d.total_kcal) } }));
+  }catch(e){ console.warn('fetchCalorieSeries failed', e); return []; }
 }
 
 export async function fetchExerciseSeries(userId, scope = 'all') {
-  // value = total minutes; extra.types = breakdown
-  const week = [
-    { date: '2025-10-01', label: 'Mon', value: 45, extra: { types: [{name:'Running', minutes:20},{name:'Yoga', minutes:25}] } },
-    { date: '2025-10-02', label: 'Tue', value: 30, extra: { types: [{name:'Strength', minutes:30}] } },
-    { date: '2025-10-03', label: 'Wed', value: 0,  extra: { types: [] } },
-    { date: '2025-10-04', label: 'Thu', value: 60, extra: { types: [{name:'Cycling', minutes:60}] } },
-    { date: '2025-10-05', label: 'Fri', value: 15, extra: { types: [{name:'Walking', minutes:15}] } },
-    { date: '2025-10-06', label: 'Sat', value: 50, extra: { types: [{name:'Swimming', minutes:50}] } },
-    { date: '2025-10-07', label: 'Sun', value: 25, extra: { types: [{name:'Yoga', minutes:25}] } },
-  ];
-  if (scope === 'week') return week;
-  if (scope === 'month') return week; // demo
-  if (scope === 'all') return week;   // demo
-  return [];
+  try{
+    if (!userId) return [];
+    const { data, error } = await supabase.from('exercise_logs').select('timestamp_iso,minutes,type_id').eq('user_id', userId);
+    if (error) throw error;
+    const byDate = {};
+    (data || []).forEach(r => {
+      const d = r.timestamp_iso ? r.timestamp_iso.slice(0,10) : (new Date()).toISOString().slice(0,10);
+      byDate[d] = byDate[d] || { total: 0, types: {} };
+      byDate[d].total += Number(r.minutes || 0);
+      const t = r.type_id || 'other';
+      byDate[d].types[t] = (byDate[d].types[t] || 0) + Number(r.minutes || 0);
+    });
+    return Object.keys(byDate).sort().map(d => ({ date: d, label: dayLabel(d), value: byDate[d].total, extra: { types: Object.entries(byDate[d].types).map(([name, minutes]) => ({ name, minutes })) } }));
+  }catch(e){ console.warn('fetchExerciseSeries failed', e); return []; }
 }

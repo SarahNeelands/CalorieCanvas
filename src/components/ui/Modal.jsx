@@ -8,9 +8,9 @@ return () => document.removeEventListener("keydown", onKey);
 
 
 return (
-<div className="fixed inset-0 z-50 flex items-center justify-center">
+<div className="fixed inset-0 z-[9999] flex items-center justify-center">
 <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-<div className="relative z-10 w-[95vw] max-w-xl rounded-2xl bg-white p-5 shadow-xl">
+<div className="relative z-[10000] w-[95vw] max-w-xl rounded-2xl bg-white p-5 shadow-xl">
 {(title || onClose) && (
 <div className="flex items-center justify-between mb-3">
 <h3 className="text-lg font-semibold">{title}</h3>

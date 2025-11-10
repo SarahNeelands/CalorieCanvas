@@ -27,7 +27,7 @@ export default function ExerciseTrend({ userId, scope, onDayClick }) {
 
   return (
     <TrendCard title="Exercise Minutes" subtitle={scopeLabel(scope)} averageText={avg ?? ''}>
-      <div style={{ height: 260 }}>
+      <div className="trend-chart">
         <ResponsiveContainer>
           <AreaChart
             data={data}

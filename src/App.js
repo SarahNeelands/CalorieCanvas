@@ -18,6 +18,7 @@ import ProfileSetup from './pages/ProfileSetup/ProfileSetup';
 import ProfileSetup2 from './pages/ProfileSetup/ProfileSetup2';
 import ProfileSetup3 from './pages/ProfileSetup/ProfileSetup3';
 import ProfileSetup4 from './pages/ProfileSetup/ProfileSetup4';
+import QuickActionsFloating from './components/QuickActionsFloating';
 
 // Example: this would come from your DB call in a real app
 const mockUser = {
@@ -36,8 +37,9 @@ const mockUser = {
 
 export default function App() {
   return (
-    
     <BrowserRouter>
+      {/* floating quick actions live across all pages */}
+      <QuickActionsFloating />
       <Routes>
         
         <Route path="/" element={<Dashboard user={mockUser} />} />

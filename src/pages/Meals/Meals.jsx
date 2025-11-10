@@ -3,7 +3,8 @@
  * High-level page for the Meals section.
  * Renders two tabs: Meals and Snacks, plus a "New" launcher to create new Meal/Snack.
  */
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useLocation, useNavigate } from 'react-router-dom';
 import LogMealModal from "../../components/Meals/LogMealModal.jsx";
 import MealsList from "../../components/Meals/MealsList.jsx";
 import SnacksList from "../../components/Meals/SnacksList.jsx";
@@ -15,6 +16,15 @@ export default function Meals({ user }) {
   const [logOpen, setLogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const onSelectToLog = (item) => { setSelectedItem(item); setLogOpen(true); };
+
+  const location = useLocation();
+  const navigate = useNavigate();
+  useEffect(()=>{
+    if(location?.state?.openLogMeal){
+      setLogOpen(true);
+      try{ navigate(location.pathname, { replace: true, state: {} }); }catch(e){}
+    }
+  }, [location, navigate]);
 
   return (
     <main className="meals-page">

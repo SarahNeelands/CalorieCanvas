@@ -10,7 +10,7 @@ export default function ExercisePageHeader({ range, onChangeRange, onLog }) {
       <div className="ex-actions">
         <SegmentedControl
           value={range}
-          options={[{ value: "7", label: "7 days" }, { value: "30", label: "30 days" }]}
+          options={[{ value: "7", label: "7 days" }, { value: "30", label: "30 days" }, { value: "all", label: "All time" }]}
           onChange={onChangeRange}
         />
         <button className="ex-log-btn" onClick={onLog}>Log exercise</button>

@@ -1,28 +1,38 @@
 /* Styles for the Progress page */
 
-.progress-container {
-  /* Limit width and center the content */
-  width: min(100%, 90vw);
-  margin: 0 auto;
-  padding: 2rem 0.75rem 4rem;
-  position: relative;
-  z-index: 1;
+.progress-back {
+  position:absolute;
+  inset:0;
+  background: url('../../images/DesktopBackground.png') center / 100% 100% no-repeat; /* stretch like your mock */
+  z-index:0;
+  --stage-w: 87.5rem;   /* 1400px */
+  --left-w: 48.75rem;   /* 780px */
+  --right-w: 22.5rem;   /* 360px */
+  --gap: 1.0rem;     
 }
+
+.progress-container {
+
+  width: min(100%, 90vw); /* allow container to expand on large screens */
+  margin: 0 auto;
+  margin-top: -3vw;
+}
+
+
 
 /* Large headline for the page title */
 .progress-title {
-  font-family: var(--cc-serif, 'Georgia', serif);
   font-size: 2.5rem;
   line-height: 1.1;
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--cc-ink, #163227);
-  margin-bottom: 1.5rem;
+
 }
 
 /* Spacing for the tabs */
 .progress-tabs {
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.5rem;
 }
 
 /* Grid layout for the trend cards */
@@ -30,6 +40,9 @@
   display: grid;
   gap: 1.5rem;
 }
+
+.trend-chart{ height:220px; }
+@media (max-width: 720px){ .trend-chart{ height:160px; } }
 
 /* At medium widths place the first two cards side‑by‑side and let the exercise card span full width */
 @media (min-width: 768px) {
@@ -44,6 +57,6 @@
 /* Increase the title size on larger screens */
 @media (min-width: 1024px) {
   .progress-title {
-    font-size: 3rem;
+    font-size: 2.5rem;
   }
 }

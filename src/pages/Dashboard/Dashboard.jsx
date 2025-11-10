@@ -2,7 +2,7 @@ import React from "react";
 import NavBar from "../../components/NavBar";
 import CalorieSummary from "../../components/calories/CalorieSummary";
 import QuickActions from "../../components/QuickActions";
-import RecentMeals from "../../components/calories/RecentMeals";
+import RecentMealsLogged from "../../components/RecentMealsLogged";
 import "./Dashboard.css";
 
 
@@ -23,7 +23,7 @@ export default function Dashboard({ user }) {
           <div>
             <CalorieSummary goal={goal} eaten={eaten} />
             <div >
-              <RecentMeals meals={meals} />
+              <RecentMealsLogged userId={user?.id} />
             </div>
           </div>
           <div>

@@ -22,7 +22,7 @@ export default function WeightTrend({ userId, scope }) {
 
   return (
     <TrendCard title="Weight" subtitle={scopeLabel(scope)} averageText={avg ? `${avg} lbs` : ''}>
-      <div style={{ height: 260 }}>
+      <div className="trend-chart">
         <ResponsiveContainer>
           <AreaChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
             <XAxis dataKey="label" />
