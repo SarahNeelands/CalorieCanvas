@@ -32,9 +32,9 @@ export default function QuickActions() {
       <div className="qa-desktop">
         <h3 className="frame-title">Quick Actions</h3>
         <div className="btn-container">
-          <Link to="/meals/log" className="btn btn-solid text-center">
+          <button className="btn btn-soft text-center" onClick={() => navigate('/meals/log')}>
             Log Meal
-          </Link>
+          </button>
           <button className="btn btn-soft text-center" onClick={() => navigate('/exercises', { state: { openLog: true } })}>
             Log Exercise
           </button>

@@ -1,0 +1,6 @@
+mockDatabase.js
+  - users (user profile)
+  - meals (all meals for all users)
+  - dailySummaries (optional)
+  - exercises (optional)
+  - settings (optional)
