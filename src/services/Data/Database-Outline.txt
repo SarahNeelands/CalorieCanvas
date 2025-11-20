@@ -4,3 +4,74 @@ mockDatabase.js
   - dailySummaries (optional)
   - exercises (optional)
   - settings (optional)
+
+users
+- id: String
+- name: String
+- birthday: "YYYY-MM-DD"
+- heightUnit: String
+- height: Double
+- weightUnit: String
+- weight: Double
+
+dailyTotals
+- date: "YYYY-MM-DD"
+- totalMacros: List
+    - calories: Double
+    - protein: Double
+    - carbs: Double
+    - fat: Double
+- totalMicros: List
+    - iron: Double
+    - potassium: Double
+    - sodium: Double
+    - calcium: Double
+    - vitaminA: Double
+    - vitaminC: Double
+    - fiber: Double
+    - sugar: Double
+
+mealsStats
+- id String
+- userId String
+- dateTime: "YYYY-MM-DD"
+- name: String
+- servingSize: List
+    - [unit: String, portion: Int]
+- macros: List
+    - calories: Double
+    - protein: Double
+    - carbs: Double
+    - fat: Double
+- micros: List
+    - iron: Double
+    - potassium: Double
+    - sodium: Double
+    - calcium: Double
+    - vitaminA: Double
+    - vitaminC: Double
+    - fiber: Double
+    - sugar: Double
+
+
+meal
+- id: String
+- mealname: String
+- userId: String
+- dateTime: "YYYY-MM-DDTHH:MM:SS"
+- name: String
+- servingSize: Int
+- macros: List
+    - calories: Double
+    - protein: Double
+    - carbs: Double
+    - fat: Double
+- micros: List
+    - iron: Double
+    - potassium: Double
+    - sodium: Double
+    - calcium: Double
+    - vitaminA: Double
+    - vitaminC: Double
+    - fiber: Double
+    - sugar: Double

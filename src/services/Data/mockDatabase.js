@@ -245,3 +245,7 @@ export const mockUsers = [
   }
 ];
 
+export const mockDailyTotals =[
+    
+]
+
