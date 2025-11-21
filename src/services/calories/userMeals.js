@@ -36,3 +36,17 @@ export function saveDailyTotals(userId, dateStr, totals){
     dailyTotals.push(newEntry);
     return newEntry;
 }
+
+export function saveMealToDailyLog(userId, mealEntry){
+    const id = uuid();
+    const duplicate = mockMealsLog.findIndex(
+    meal => meal.userId === userId && meal.id === id);
+    while (duplicate !== -1) {
+        id = uuid();
+        duplicate = mockMealsLog.findIndex(
+        meal => meal.userId === userId && meal.id === id);
+    }
+    mealEntry.mealId = id;
+    dailyTotals.push(mealEntry);
+    return mealEntry;;
+}

@@ -55,7 +55,7 @@ export function calculateAndSaveDaysNutritionTotals(userId, date){
     return saveDailyTotals(userId, dateStr, {totalMacros, totalMicros});
 }
 
-export function calculateAndSaveMeal(userId, mealId, unit, portion, timeStr) {
+export function calculateAndSaveMeal(userId, mealId, unit, portion, dateTimeStr) {
     const meal = findMealStatsById(userId, mealId);
     if (!meal) {
         console.warn(`Meal with id ${mealId} not found for user ${userId}`);
@@ -87,17 +87,17 @@ export function calculateAndSaveMeal(userId, mealId, unit, portion, timeStr) {
         carbs:      ((meal.macros?.carbs ?? 0)     / mealUnit) * portion,
         fats:       ((meal.macros?.fat ?? 0)       / mealUnit) * portion,
     };
-
+    const id = "0";
     // Return combined
-    const result = {
+    const resultMeal = {
+        id,
         userId,
         mealId,
-        unit,
-        portion,
-        time: timeStr,
+        dateTime: DatetimeStr,
+        mealName: meal.name,
         macros: calculatedMacros,
         micros: calculatedMicros,
     };
-
+    const result = saveMealToDailyLog(userId, resultMeal);
     return result;
 }

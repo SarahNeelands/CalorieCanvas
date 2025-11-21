@@ -56,11 +56,10 @@ mealsStats
 
 meal
 - id: String
-- mealname: String
 - userId: String
+- mealId: String
 - dateTime: "YYYY-MM-DDTHH:MM:SS"
-- name: String
-- servingSize: Int
+- mealName: String
 - macros: List
     - calories: Double
     - protein: Double
