@@ -249,3 +249,4 @@ export const mockDailyTotals =[
     
 ]
 
+export const mockMealStats=[]
