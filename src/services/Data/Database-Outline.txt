@@ -12,7 +12,11 @@ users
 - heightUnit: String
 - height: Double
 - weightUnit: String
-- weight: Double
+- goalType: Int
+- activityLevel:Int
+- weights: []
+    - date: "YYYY-MM-DD"
+    - weight: Double
 
 dailyTotals
 - date: "YYYY-MM-DD"
@@ -30,6 +34,20 @@ dailyTotals
     - vitaminC: Double
     - fiber: Double
     - sugar: Double
+
+
+exerciseTypes
+- excerciseId: String
+- name: String
+
+excercise
+- id: String
+- exerciseId: String
+- dateTime: "YYYY-MM-DDTHH:MM:SS"
+- timelength: "HH:MM:SS"
+
+
+
 
 mealsStats
 - id String
