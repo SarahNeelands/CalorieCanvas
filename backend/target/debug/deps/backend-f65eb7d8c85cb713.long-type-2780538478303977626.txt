@@ -1,0 +1,2 @@
+fn(State<{type error}>, Json<ProfileCreate>) -> impl std::future::Future<Output = Json<{type error}>> {user_api::create_profile}
+fn(State<{type error}>, Json<ProfileCreate>) -> impl std::future::Future<Output = Json<{type error}>> {user_api::create_profile}: Handler<_, _>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../supabaseClient';
 import './Login.css'; // reuse the same styles + background
+import { BACKEND_URL } from "../../config/api";
 
 export default function Signup() {
   const [email, setEmail] = useState('');
@@ -39,6 +40,7 @@ export default function Signup() {
 
     // If email confirmations are disabled, we might already have a session:
     if (data?.session) {
+      localStorage.setItem("user_id", data.user.id);
       window.location.href = '/profile-setup';
     } else {
       // Confirmations ON: user must click the email link to continue.

@@ -12,8 +12,8 @@ export default function ProfileSetup2() {
   const [weightUnit, setWeightUnit] = useState('kg'); // 'kg' | 'lb'
 
   // metric storage (what we’ll write to DB)
-  const [heightCm, setHeightCm] = useState('');
-  const [weightKg, setWeightKg] = useState('');
+  const [height, setHeightCm] = useState('');
+  const [weight, setWeightKg] = useState('');
 
   // imperial UI fields (derived)
   const [ft, setFt] = useState('');
@@ -53,77 +53,19 @@ export default function ProfileSetup2() {
   const cleanNum = (s, allowDot = true) =>
     (s ?? '').replace(allowDot ? /[^0-9.]/g : /[^0-9]/g, '');
 
-  function cmFromImperial(feetStr, inchStr) {
-    const f = parseInt(feetStr || '0', 10);
-    const i = parseFloat(inchStr || '0');
-    return (f * 12 + i) * 2.54;
-  }
-  function kgFromLb(lbStr) {
-    const v = parseFloat(lbStr || '0');
-    return v * 0.45359237;
-  }
-  function lbFromKg(kgStr) {
-    const v = parseFloat(kgStr || '0');
-    return v / 0.45359237;
-  }
-  function imperialFromCm(cmStr) {
-    const cm = parseFloat(cmStr || '0');
-    const totalIn = cm / 2.54;
-    const f = Math.floor(totalIn / 12);
-    const i = totalIn - f * 12;
-    return { f, i: Number(i.toFixed(1)) };
-  }
-
-  // sync UI when unit toggles switch
-  function onHeightUnitChange(next) {
-    if (next === 'imperial' && heightUnit !== 'imperial') {
-      // convert cm -> ft/in into UI fields
-      const { f, i } = imperialFromCm(heightCm || '0');
-      setFt(f ? String(f) : '');
-      setInch(i ? String(i) : '');
-    }
-    if (next === 'cm' && heightUnit !== 'cm') {
-      // convert ft/in -> cm into base field
-      const cm = cmFromImperial(ft, inch);
-      setHeightCm(cm ? String(Number(cm.toFixed(1))) : '');
-    }
-    setHeightUnit(next);
-  }
-
-  function onWeightUnitChange(next) {
-    if (next === 'lb' && weightUnit !== 'lb') {
-      // convert kg -> lb into UI
-      const v = lbFromKg(weightKg || '0');
-      setLb(v ? String(Number(v.toFixed(1))) : '');
-    }
-    if (next === 'kg' && weightUnit !== 'kg') {
-      // convert lb -> kg into base
-      const v = kgFromLb(lb);
-      setWeightKg(v ? String(Number(v.toFixed(1))) : '');
-    }
-    setWeightUnit(next);
-  }
 
   async function onNext(e) {
     e.preventDefault();
     setMsg(null);
 
     // finalize metric numbers from whichever UI is active
-    let finalHeightCm = heightCm;
-    let finalWeightKg = weightKg;
-
-    if (heightUnit === 'imperial') {
-      finalHeightCm = cmFromImperial(ft, inch);
-    }
-    if (weightUnit === 'lb') {
-      finalWeightKg = kgFromLb(lb);
-    }
+    let finalHeight = height;
+    let finalWeight = weight;
 
     // validate
     const h = parseFloat(clampNum(finalHeightCm));
     const w = parseFloat(clampNum(finalWeightKg));
     if (!(h > 50 && h < 300))  return setMsg('Height should be realistic (cm, e.g., 171).');
-    if (!(w > 20 && w < 500))  return setMsg('Weight should be realistic (kg, e.g., 72.5).');
 
     // Localhost preview without a session: skip DB write
     const { data: { session } } = await supabase.auth.getSession();
@@ -137,16 +79,17 @@ export default function ProfileSetup2() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setSaving(false); return setMsg('Session expired. Please log in.'); }
 
-    const { error } = await supabase
-      .from('profiles')
-      .upsert(
-        {
-          user_id: user.id,
-          height_cm: Number(h.toFixed(1)),
-          weight_kg: Number(w.toFixed(1)),
-        },
-        { onConflict: 'user_id' }
-      );
+    await fetch(`${BACKEND_URL}/add-weight-entry`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_id: user.id,
+        weight_unit: weightUnit,
+        weight: weight,
+      }),
+    });
+
+    await fetch(`${}`)
 
     setSaving(false);
     if (error) return setMsg(error.message);

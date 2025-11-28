@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../supabaseClient';
 import './ProfileSetup.css';
+import { BACKEND_URL } from '../../config/api';
 
 export default function ProfileSetup() {
   const IS_LOCAL =
@@ -16,6 +17,25 @@ export default function ProfileSetup() {
 
   useEffect(() => {
     document.title = 'Tell us about you • Calorie Canvas';
+
+
+    async function createProfile() {
+      const { data: { session } } = await supabase.auth.getUser();
+      const supabaseId = data?.user?.id;
+      if (!session && !IS_LOCAL) {
+        window.location.replace('/login');
+        return;
+      }
+
+      localStorage.setItem("user_id", supabaseId);
+
+      await fetch(`${BACKEND_URL}/create_profile`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: supabaseId }),
+      })
+    }
+    createProfile();
 
     let unsub;
     (async () => {
@@ -63,20 +83,18 @@ export default function ProfileSetup() {
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setSaving(false); return setMsg('Session expired. Please log in.'); }
-
     const { error } = await supabase
       .from('profiles')
       .upsert(
         {
           user_id: user.id,
           display_name: name.trim(),
-          dob: dob || null,          // save as date
+          dob: dob || null,
           gender: gender || null,
         },
         { onConflict: 'user_id' }
       );
 
-    setSaving(false);
     if (error) return setMsg(error.message);
 
     // ✅ Connect to Step 2
@@ -110,7 +128,7 @@ export default function ProfileSetup() {
               className="ps-input"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g., Sarah Neelands"
+              placeholder="Username"
               required
             />
 
