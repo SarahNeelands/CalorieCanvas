@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../supabaseClient';
 import './ProfileSetup.css';
+import { getCurrentSession, getCurrentUserId } from '../../services/authClient';
+import {
+  completeProfileSetup,
+  getProfileSetupState,
+  setProfileSetupStep,
+  updateProfileSetupState,
+} from '../../services/profileSetupProgress';
+import { saveLocalProfile } from '../../services/profileClient';
 
 export default function ProfileSetup4() {
-  const IS_LOCAL =
-    typeof window !== 'undefined' &&
-    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-
   const [prefs, setPrefs] = useState({
     show_calories: true,
     show_macros: true,
@@ -14,34 +18,31 @@ export default function ProfileSetup4() {
     show_exercise: true,
     show_weight: true,
   });
-
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState(null);
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
+    setProfileSetupStep('/profile-setup-4');
     document.title = 'Profile setup • Preferences • Calorie Canvas';
 
-    let unsub;
-    (async () => {
-      if (IS_LOCAL) { setChecking(false); return; }
+    const draft = getProfileSetupState();
+    setPrefs((current) => ({
+      ...current,
+      ...(draft.prefs || {}),
+    }));
 
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) { setChecking(false); return; }
+    async function checkSession() {
+      const { session } = await getCurrentSession();
+      if (session) {
+        setChecking(false);
+        return;
+      }
+      window.location.replace('/login');
+    }
 
-      const { data: sub } = supabase.auth.onAuthStateChange((_e, newSession) => {
-        if (newSession) setChecking(false);
-      });
-      unsub = () => sub.subscription.unsubscribe();
-
-      setTimeout(async () => {
-        const { data: { session: s } } = await supabase.auth.getSession();
-        if (!s) window.location.replace('/login'); else setChecking(false);
-      }, 400);
-    })();
-
-    return () => unsub && unsub();
-  }, [IS_LOCAL]);
+    checkSession();
+  }, []);
 
   function toggle(key) {
     setPrefs((p) => ({ ...p, [key]: !p[key] }));
@@ -51,34 +52,61 @@ export default function ProfileSetup4() {
     e.preventDefault();
     setMsg(null);
 
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session && IS_LOCAL) {
-      window.location.href = '/';
-      return;
-    }
+    const { session } = await getCurrentSession();
+    if (!session) return setMsg('Session expired. Please log in.');
 
     setSaving(true);
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setSaving(false); return setMsg('Session expired. Please log in.'); }
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      setSaving(false);
+      return setMsg('Session expired. Please log in.');
+    }
 
-    const { error } = await supabase
-      .from('profiles')
-      .upsert(
-        {
-          user_id: user.id,
-          pref_show_calories: prefs.show_calories,
-          pref_show_macros:   prefs.show_macros,
-          pref_show_micros:   prefs.show_micros,
-          pref_show_exercise: prefs.show_exercise,
-          pref_show_weight:   prefs.show_weight,
-        },
-        { onConflict: 'user_id' }
-      );
+    const draft = getProfileSetupState();
 
+    if (!session.local) {
+      const { error } = await supabase
+        .from('profiles')
+        .upsert(
+          {
+            user_id: userId,
+            pref_show_calories: prefs.show_calories,
+            pref_show_macros: prefs.show_macros,
+            pref_show_micros: prefs.show_micros,
+            pref_show_exercise: prefs.show_exercise,
+            pref_show_weight: prefs.show_weight,
+          },
+          { onConflict: 'user_id' }
+        );
+
+      if (error) {
+        setSaving(false);
+        return setMsg(error.message);
+      }
+    }
+
+    saveLocalProfile(userId, {
+      display_name: draft.name || null,
+      dob: draft.dob || null,
+      gender: draft.gender || null,
+      height_cm: draft.heightCm ?? null,
+      weight_kg: draft.weightKg ?? null,
+      activity_level: draft.activityLevel || 'sedentary',
+      goal_weight_intent: draft.goal || 'maintain',
+      goal_muscle_intent: draft.muscle || 'maintain',
+      target_weight_kg: draft.targetWeight ? Number(draft.targetWeight) : null,
+      target_body_fat_pct: draft.targetBf ? Number(draft.targetBf) : null,
+      pref_show_calories: prefs.show_calories,
+      pref_show_macros: prefs.show_macros,
+      pref_show_micros: prefs.show_micros,
+      pref_show_exercise: prefs.show_exercise,
+      pref_show_weight: prefs.show_weight,
+    });
+
+    updateProfileSetupState({ prefs, completed: true });
+    completeProfileSetup();
     setSaving(false);
-    if (error) return setMsg(error.message);
-
     window.location.href = '/';
   }
 
@@ -86,7 +114,7 @@ export default function ProfileSetup4() {
     return (
       <main className="ps-wrap">
         <div className="ps-bg" aria-hidden="true" />
-        <div className="ps-grid"><p style={{opacity:.75}}>Checking your session…</p></div>
+        <div className="ps-grid"><p style={{ opacity: 0.75 }}>Checking your session…</p></div>
       </main>
     );
   }
@@ -100,7 +128,7 @@ export default function ProfileSetup4() {
           <h1 className="ps-title">Features / Preferences</h1>
           <p className="ps-sub">Choose which modules to show in your dashboard. You can change these anytime.</p>
 
-          <form onSubmit={onFinish} className="ps-form" style={{gap:18}}>
+          <form onSubmit={onFinish} className="ps-form" style={{ gap: 18 }}>
             <label className="ps-label">Modules</label>
 
             <label className="remember">

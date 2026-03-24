@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../supabaseClient';
 import './Login.css';
+import { isLocalAuth } from '../../config/runtime';
+import { signIn } from '../../services/authClient';
+import { getProfileSetupResumePath } from '../../services/profileSetupProgress';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -20,17 +23,19 @@ export default function Login() {
     setLoading(true);
     setMsg(null);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password: pw,
-    });
+    const { error } = await signIn({ email, password: pw });
 
     setLoading(false);
     if (error) setMsg(error.message);
-    else window.location.href = '/'; // or your dashboard route
+    else window.location.href = getProfileSetupResumePath() || '/';
   }
 
   async function onForgot() {
+    if (isLocalAuth()) {
+      setMsg('Password reset is only wired for Supabase right now.');
+      return;
+    }
+
     if (!email) return setMsg('Enter your email above first.');
     setMsg('Sending reset email…');
     const { error } = await supabase.auth.resetPasswordForEmail(email, {

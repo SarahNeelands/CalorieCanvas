@@ -24,7 +24,7 @@ export default function Exercises({ user }) {
   return (
     <div className="ex-page">
       <NavBar profileImageSrc={user?.avatar}/>
-      <ExerciseProvider>
+      <ExerciseProvider userId={user?.id}>
         <ExercisePageInner />
       </ExerciseProvider>
     </div>

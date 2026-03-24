@@ -1,10 +1,49 @@
 import React from "react";
-import { supabase } from "../../supabaseClient";
+import { useNavigate } from "react-router-dom";
 import Modal from '../ui/Modal.jsx';
 import { resolveToGrams, unitOptionsForFood } from "../../utils/units";
-import { computeTotalsFrom100g } from "../../utils/nutrients";
+import { createMealLog } from "../../services/mealLogClient";
+
+function round2(value) {
+  return Math.round((Number(value || 0) + Number.EPSILON) * 100) / 100;
+}
+
+function scalePer100gValue(value, grams) {
+  return round2((Number(value || 0) * Number(grams || 0)) / 100);
+}
+
+function scaleNutrients(grams, per100g = {}) {
+  return {
+    calories: scalePer100gValue(per100g.calories, grams),
+    protein: scalePer100gValue(per100g.protein, grams),
+    carbs: scalePer100gValue(per100g.carbs, grams),
+    fat: scalePer100gValue(per100g.fat, grams),
+    fiber: scalePer100gValue(per100g.fiber, grams),
+    sugar: scalePer100gValue(per100g.sugar, grams),
+    cholesterol: scalePer100gValue(per100g.cholesterol, grams),
+  };
+}
+
+function scaleMicros(grams, per100g = {}) {
+  return Object.fromEntries(
+    Object.entries(per100g).map(([key, value]) => [key, scalePer100gValue(value, grams)])
+  );
+}
+
+function getMealPer100g(item) {
+  return {
+    calories: Number(item.kcal_per_100g || 0),
+    protein: Number(item.protein_g_per_100g || 0),
+    carbs: Number(item.carbs_g_per_100g || 0),
+    fat: Number(item.fat_g_per_100g || 0),
+    fiber: Number(item.unit_conversions?.macros_per_100g?.fiber || 0),
+    sugar: Number(item.unit_conversions?.macros_per_100g?.sugar || 0),
+    cholesterol: Number(item.unit_conversions?.macros_per_100g?.cholesterol || 0),
+  };
+}
 
 export default function LogMealModal({ open, onClose, userId, item }) {
+  const navigate = useNavigate();
   const [whenAt, setWhenAt] = React.useState(new Date().toISOString());
   const [qty, setQty] = React.useState(100);
   const [unit, setUnit] = React.useState("g");
@@ -32,15 +71,8 @@ export default function LogMealModal({ open, onClose, userId, item }) {
       if (!userId) throw new Error("Missing user");
 
       const grams = resolveToGrams({ unit, qty, item });
-      const totals = computeTotalsFrom100g({
-        grams,
-        per100g: {
-          kcal: Number(item.kcal_per_100g || 0),
-          protein_g: Number(item.protein_g_per_100g || 0),
-          carbs_g: Number(item.carbs_g_per_100g || 0),
-          fat_g: Number(item.fat_g_per_100g || 0),
-        },
-      });
+      const macros = scaleNutrients(grams, getMealPer100g(item));
+      const micros = scaleMicros(grams, item.unit_conversions?.micros_per_100g || {});
 
       const payload = {
         user_id: userId,
@@ -50,16 +82,20 @@ export default function LogMealModal({ open, onClose, userId, item }) {
         unit_code: unit,
         grams_resolved: grams,
         logged_at: whenAt,
-        kcal: totals.kcal,
-        protein_g: totals.protein_g,
-        carbs_g: totals.carbs_g,
-        fat_g: totals.fat_g,
+        kcal: macros.calories,
+        protein_g: macros.protein,
+        carbs_g: macros.carbs,
+        fat_g: macros.fat,
+        fiber_g: macros.fiber,
+        sugar_g: macros.sugar,
+        cholesterol_mg: macros.cholesterol,
+        micros,
       };
 
-      const { error } = await supabase.from("meal_logs").insert(payload);
-      if (error) throw error;
+      await createMealLog(payload);
       window.dispatchEvent(new CustomEvent("meal-logged", { detail: { payload } }));
       onClose?.();
+      navigate("/", { replace: false });
     } catch (e) {
       setError(e);
     } finally {

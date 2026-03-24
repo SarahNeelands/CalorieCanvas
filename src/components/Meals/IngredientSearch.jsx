@@ -1,29 +1,31 @@
-/** IngredientSearch.jsx
+/**
  * Modal/panel for searching catalog ingredients; shows results with + to add.
- * Displays "No results" when none; ESC or Close to dismiss.
+ * Displays all saved ingredients on open and filters when searching.
  */
 
-
-import React, { useEffect, useRef, useState } from "react";
+import React, { useDeferredValue, useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import "./IngredientSearch.css";
+import { getCachedCatalogItems, listCatalogItems } from "../../services/catalogClient";
 
-/* mock search */
-async function searchIngredients(query) {
-  if (!query?.trim()) return [];
-  const pool = [
-    { id:"1", name:"Protein Powder", calories:120 },
-    { id:"2", name:"Banana", calories:105 },
-    { id:"3", name:"Almond Milk", calories:30 },
-    { id:"4", name:"Chicken Breast (diced)", calories:130 },
-  ];
-  return pool.filter(x => x.name.toLowerCase().includes(query.toLowerCase()));
+function mapIngredientResult(item) {
+  return {
+    ...item,
+    name: item.title,
+    calories: item.kcal_per_100g,
+    brand: item.unit_conversions?.brand || "",
+  };
 }
 
-export default function IngredientSearch({ onSelect, onClose }) {
+export default function IngredientSearch({ onSelect, onClose, mealDraft }) {
   const [q, setQ] = useState("");
-  const [results, setResults] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const deferredQuery = useDeferredValue(q);
+  const [allResults, setAllResults] = useState(() => getCachedCatalogItems("ingredient").map(mapIngredientResult));
+  const [loading, setLoading] = useState(allResults.length === 0);
+  const [error, setError] = useState("");
   const boxRef = useRef(null);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const onKey = (e) => e.key === "Escape" && onClose?.();
@@ -31,46 +33,101 @@ export default function IngredientSearch({ onSelect, onClose }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  const doSearch = async () => {
-    setLoading(true);
-    setResults(await searchIngredients(q));
-    setLoading(false);
-  };
+  async function loadResults() {
+    if (!allResults.length) {
+      setLoading(true);
+    }
+    setError("");
+    try {
+      const data = await listCatalogItems("ingredient");
+
+      setAllResults((data || []).map(mapIngredientResult));
+    } catch (err) {
+      if (!allResults.length) {
+        setAllResults([]);
+      }
+      setError(err.message || "Failed to load ingredients.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadResults();
+  }, []);
+
+  function handleEdit(item) {
+    onClose?.();
+    navigate("/ingredients/new", {
+      state: {
+        ingredient: item,
+        mealDraft,
+        returnTo: location.pathname,
+      },
+    });
+  }
+
+  const normalizedQuery = deferredQuery.trim().toLowerCase();
+  const results = normalizedQuery
+    ? allResults.filter((item) => {
+        const haystacks = [
+          item.name,
+          item.brand,
+          item.title,
+        ];
+        return haystacks.some((value) => value?.toLowerCase().includes(normalizedQuery));
+      })
+    : allResults;
 
   return (
     <div className="is-backdrop" role="dialog" aria-modal="true">
       <div className="is-card" ref={boxRef}>
         <header className="row-between">
           <h4>Find an ingredient</h4>
-          <button className="linklike" onClick={onClose} aria-label="Close">✕</button>
+          <button className="linklike" onClick={onClose} aria-label="Close">X</button>
         </header>
 
         <div className="is-row">
           <input
             autoFocus
             type="search"
-            placeholder="Search by name…"
+            placeholder="Search by name..."
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && doSearch()}
           />
-          <button className="btn" onClick={doSearch} disabled={loading}>
-            {loading ? "Searching…" : "Search"}
+          <button className="btn" disabled={loading}>
+            {loading ? "Loading..." : "Ready"}
           </button>
         </div>
 
         <div className="is-results">
-          {loading && <p className="muted">Searching…</p>}
-          {!loading && q && results.length === 0 && <p className="muted">No results for “{q}”.</p>}
+          {loading && <p className="muted">Loading...</p>}
+          {!loading && error && <p className="muted">{error}</p>}
+          {!loading && !error && q && results.length === 0 && (
+            <p className="muted">No results for "{q}".</p>
+          )}
+          {!loading && !error && !q && results.length === 0 && (
+            <p className="muted">No ingredients yet. Add one first.</p>
+          )}
           {!loading && results.length > 0 && (
             <ul className="is-list">
               {results.map((r) => (
                 <li key={r.id}>
-                  <div className="col">
-                    <span className="name">{r.name}</span>
-                    <span className="meta">{Math.round(r.calories)} kcal</span>
+                  <div className="is-main">
+                    <div className="col">
+                      <span className="name">{r.name}</span>
+                      <span className="meta">{Math.round(r.calories)} kcal</span>
+                    </div>
+                    <div className="is-brand" title={r.brand || ""}>
+                      {r.brand || ""}
+                    </div>
                   </div>
-                  <button className="add" onClick={() => onSelect?.(r)} title="Add">+</button>
+                  <div className="is-actions">
+                    <button className="edit" onClick={() => handleEdit(r)} type="button">
+                      Edit
+                    </button>
+                    <button className="add" onClick={() => onSelect?.(r)} title="Add" type="button">+</button>
+                  </div>
                 </li>
               ))}
             </ul>

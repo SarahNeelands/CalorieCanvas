@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../../supabaseClient';
 import './Login.css'; // reuse the same styles + background
-import { BACKEND_URL } from "../../config/api";
+import { signUp } from '../../services/authClient';
+import { initializeProfileSetup } from '../../services/profileSetupProgress';
 
 export default function Signup() {
   const [email, setEmail] = useState('');
@@ -26,12 +26,10 @@ export default function Signup() {
 
     setLoading(true);
 
-    const { data, error } = await supabase.auth.signUp({
+    const { data, error } = await signUp({
       email,
       password: pw,
-      options: {
-        emailRedirectTo: `${window.location.origin}/profile-setup`,
-      },
+      emailRedirectTo: `${window.location.origin}/profile-setup`,
     });
 
     setLoading(false);
@@ -40,6 +38,7 @@ export default function Signup() {
 
     // If email confirmations are disabled, we might already have a session:
     if (data?.session) {
+      initializeProfileSetup();
       localStorage.setItem("user_id", data.user.id);
       window.location.href = '/profile-setup';
     } else {

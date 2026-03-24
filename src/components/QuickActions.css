@@ -105,6 +105,12 @@
   background: rgba(79, 107, 80, 0.15);
 }
 
+@media (max-width: 980px) {
+  .frame.quick-actions {
+    display: none;
+  }
+}
+
 /* responsive tweak */
 @media (max-width: 600px) {
   .btn {
@@ -157,15 +163,15 @@
 }
 
 /* Floating quick actions (global) */
-.qa-floating{ position:fixed; right:18px; bottom:18px; z-index:120; }
+.qa-floating{ position:fixed; left:18px; bottom:18px; z-index:120; }
 .qa-floating-btn{ width:64px; height:64px; border-radius:999px; border:none; background:#fff; box-shadow:0 12px 28px rgba(0,0,0,0.18); display:inline-flex; align-items:center; justify-content:center; cursor:pointer; }
 .qa-floating-btn img{ width:44px; height:44px; }
-.qa-floating-menu{ position:absolute; right:0; bottom:78px; background:#fff; padding:8px; border-radius:12px; box-shadow:0 12px 36px rgba(0,0,0,0.14); display:flex; flex-direction:column; gap:8px; }
+.qa-floating-menu{ position:absolute; left:0; bottom:78px; background:#fff; padding:8px; border-radius:12px; box-shadow:0 12px 36px rgba(0,0,0,0.14); display:flex; flex-direction:column; gap:8px; }
 .qa-floating-item{ border:none; background:transparent; padding:8px 12px; text-align:left; font-weight:700; cursor:pointer; }
 
 /* ensure floating button visible on desktop and phone */
 @media (max-width: 420px){
-  .qa-floating{ right:12px; bottom:12px; }
+  .qa-floating{ left:12px; bottom:12px; }
   .qa-floating-btn{ width:56px; height:56px; }
 }
 /* Enlarge quick actions area and buttons on large screens */

@@ -1,26 +1,29 @@
-// src/components/calories/CalorieSummary.jsx
-import React from 'react';
-import './CalorieSummary.css';
+import React from "react";
+import "./CalorieSummary.css";
 
 export default function CalorieSummary({ goal, eaten }) {
-  const left = goal - eaten;
-  const pct = (eaten / goal) * 100;
+  const hasGoal = Number.isFinite(goal) && goal > 0;
+  const left = hasGoal ? goal - eaten : null;
+  const pct = hasGoal ? Math.max(0, Math.min(100, (eaten / goal) * 100)) : 0;
 
   return (
     <section className="summary-card">
       <div className="summary-grid">
-        <h1>Today’s Canvas</h1>
-        <span className="kcal-left">{left}</span>
+        <h1>Today's Canvas</h1>
         <p className="summary-subtitle">Your daily calorie summary.</p>
-        <span className="unit">kcal left</span>
       </div>
 
       <div className="progress-bar">
         <div className="fill" style={{ width: `${pct}%` }} />
       </div>
 
+      <div className="summary-left-row">
+        <span className="kcal-left">{hasGoal ? left : "--"}</span>
+        <span className="unit">{hasGoal ? "kcal left" : "goal unavailable"}</span>
+      </div>
+
       <div className="summary-stats">
-        <span>Goal: {goal} kcal</span>
+        <span>Goal: {hasGoal ? `${goal} kcal` : "Unavailable"}</span>
         <span>{eaten} kcal eaten</span>
       </div>
     </section>

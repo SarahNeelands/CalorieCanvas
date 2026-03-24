@@ -1,23 +1,26 @@
 import React from 'react';
 import Card from '../ui/Card.jsx';
+import './TrendCard.css';
 
-export default function TrendCard({ title, subtitle, averageText, children }) {
+export default function TrendCard({ title, subtitle, averageText, actions, children }) {
   return (
-    <Card className="p-6">
-      <div className="flex items-center justify-between mb-4">
+    <Card>
+      <div className="trend-card__header">
         <div>
-          <h3 className="text-xl font-semibold">{title}</h3>
-          {subtitle ? <p className="text-sm opacity-70">{subtitle}</p> : null}
+          <h3 className="trend-card__title">{title}</h3>
+          {subtitle ? <p className="trend-card__subtitle">{subtitle}</p> : null}
         </div>
-        {averageText ? (
-          <div className="text-right">
-            <div className="text-sm opacity-70">Average</div>
-            <div className="text-lg font-medium">{averageText}</div>
-          </div>
-        ) : null}
+        <div className="trend-card__side">
+          {actions ? <div className="trend-card__actions">{actions}</div> : null}
+          {averageText ? (
+            <div className="trend-card__average">
+              <div className="trend-card__average-label">Average</div>
+              <div className="trend-card__average-value">{averageText}</div>
+            </div>
+          ) : null}
+        </div>
       </div>
       {children}
     </Card>
   );
 }
-

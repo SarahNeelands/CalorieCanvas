@@ -23,9 +23,44 @@
 .is-list li{
   display:grid; grid-template-columns:1fr auto; align-items:center;
   border:1px solid var(--cc-border); border-radius:12px; padding:10px 12px;
+  gap:12px;
+}
+.is-main{
+  min-width:0;
+  display:grid;
+  grid-template-columns:minmax(0, 1fr) auto;
+  align-items:center;
+  gap:12px;
 }
 .is-list .name{ font-weight:700; color:var(--cc-ink); }
 .is-list .meta{ color:#4a564d; font-size:13px; }
+.is-brand{
+  min-width:0;
+  text-align:right;
+  color:#647166;
+  font-size:13px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.is-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.edit{
+  height:36px;
+  padding:0 12px;
+  border-radius:10px;
+  border:1px solid var(--cc-border);
+  background:#fff;
+  color:var(--cc-ink);
+  font-weight:600;
+}
+.edit:hover{
+  border-color:var(--cc-accent);
+  color:var(--cc-accent);
+}
 .add{
   width:36px; height:36px; border-radius:10px; border:1px solid var(--cc-accent);
   background:#fff; color:var(--cc-accent); font-size:20px; line-height:0;

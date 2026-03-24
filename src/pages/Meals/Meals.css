@@ -1,0 +1,147 @@
+.meals-page {
+  min-height: 100vh;
+  background: url('../../images/DesktopBackground.png') center / 100% 100% no-repeat;
+}
+
+.meals-shell {
+  width: min(100%, 87.5rem);
+  margin: 0 auto;
+  padding: 1.25rem 0 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+.meals-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.meals-title {
+  margin: 0;
+  color: #143d33;
+  font-size: clamp(2rem, 3vw, 2.75rem);
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.meals-subtitle {
+  margin: 0.35rem 0 0;
+  color: #3b5a51;
+  font-size: 1rem;
+}
+
+.meals-add-button {
+  border: 1px solid rgba(71, 108, 91, 0.28);
+  border-radius: 999px;
+  background: rgba(250, 247, 239, 0.78);
+  color: #23463b;
+  padding: 0.62rem 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(20, 61, 51, 0.08);
+}
+
+.meals-tabs {
+  display: none;
+  gap: 0.6rem;
+  padding: 0.45rem;
+  margin-bottom: 1rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.66);
+  box-shadow: 0 12px 28px rgba(20, 61, 51, 0.08);
+  backdrop-filter: blur(10px);
+}
+
+.meals-tab {
+  border: none;
+  border-radius: 999px;
+  padding: 0.7rem 1.2rem;
+  background: transparent;
+  color: #2b5147;
+  font-weight: 700;
+  font-size: 0.98rem;
+  cursor: pointer;
+}
+
+.meals-tab.active {
+  background: #2c5b49;
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(44, 91, 73, 0.22);
+}
+
+.meals-panel {
+  border-radius: 28px;
+  padding: 1rem 1.1rem 1.35rem;
+  background: rgba(255, 255, 255, 0.58);
+  box-shadow: 0 20px 42px rgba(20, 61, 51, 0.08);
+  backdrop-filter: blur(10px);
+}
+
+.meals-panel--mobile {
+  display: none;
+}
+
+.meals-desktop-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1.2rem;
+}
+
+.meals-panel .recent-meals {
+  margin: 0;
+}
+
+.meals-panel--desktop .recent-meals {
+  max-width: none;
+  padding-left: 0;
+}
+
+.meals-panel .recent-meals__title {
+  color: #143d33;
+}
+
+@media (max-width: 980px) {
+  .meals-page {
+    background: transparent;
+  }
+
+  .meals-shell {
+    width: min(100%, calc(100vw - 1.5rem));
+  }
+
+  .meals-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .meals-tabs {
+    display: inline-flex;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .meals-panel--mobile {
+    display: block;
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    border-radius: 0;
+  }
+
+  .meals-desktop-grid {
+    display: none;
+  }
+
+  .meals-add-button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .meals-shell {
+    width: min(100%, calc(100vw - 1rem));
+  }
+}

@@ -7,8 +7,8 @@
   --gap: 1.0rem;        /* 40px */
 }
 .app{
-position:absolute;
-  inset:0;
+  position: relative;
+  min-height: 100vh;
   background: url('../../images/DesktopBackground.png') center / 100% 100% no-repeat; /* stretch like your mock */
   z-index:0;
   --stage-w: 87.5rem;   /* 1400px */
@@ -100,7 +100,11 @@ body { font-size: 1rem; line-height: 1.5; }
 
 /* ==== BELOW TABLET: switch to the responsive stack ==== */
 @media (max-width: 980px) {
-  .container { width: min(100%, calc(100vw - 1.5rem)); }
+  .app { background: transparent; }
+  .container {
+    width: min(100%, calc(100vw - 1.5rem));
+    padding-bottom: 7rem;
+  }
   .grid { grid-template-columns: 1fr; gap: 1.5rem; }
   .grid > * { width: 100%; max-width: 100%; }
 }

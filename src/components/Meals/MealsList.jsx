@@ -1,28 +1,31 @@
 import React from "react";
-import { supabase } from "../../supabaseClient";
 import MealCard from "./MealCard.jsx";
 import "../calories/RecentMeals.css";
+import { deleteCatalogItem, getCachedCatalogItems, listCatalogItems } from "../../services/catalogClient";
 
-export default function MealsList({ userId, onLogClick }) {
-  const [loading, setLoading] = React.useState(true);
+export default function MealsList({
+  userId,
+  onLogClick,
+  onEditClick,
+  title = "All Meals",
+  headerAction = null,
+}) {
+  const [rows, setRows] = React.useState(() => getCachedCatalogItems("meal", userId));
+  const [loading, setLoading] = React.useState(rows.length === 0);
   const [error, setError] = React.useState(null);
-  const [rows, setRows] = React.useState([]);
+  const [reloadKey, setReloadKey] = React.useState(0);
 
   React.useEffect(() => {
     let alive = true;
+
     async function load() {
       try {
-        setLoading(true);
+        if (!rows.length) {
+          setLoading(true);
+        }
         setError(null);
         if (!userId) throw new Error("Missing user ID");
-        const { data, error } = await supabase
-          .from("meals")
-          .select("id, user_id, title, type, created_at, kcal_per_100g, protein_g_per_100g, carbs_g_per_100g, fat_g_per_100g, unit_conversions, food_id")
-          .eq("user_id", userId)
-          .eq("type", "meal")
-          .order("created_at", { ascending: false })
-          .limit(200);
-        if (error) throw error;
+        const data = await listCatalogItems("meal");
         if (!alive) return;
         setRows(data ?? []);
       } catch (e) {
@@ -32,18 +35,46 @@ export default function MealsList({ userId, onLogClick }) {
         if (alive) setLoading(false);
       }
     }
+
     load();
-    return () => { alive = false; };
-  }, [userId]);
+    return () => {
+      alive = false;
+    };
+  }, [userId, reloadKey, rows.length]);
+
+  async function handleDelete(item) {
+    const confirmed = window.confirm(`Delete "${item.title}"?`);
+    if (!confirmed) return;
+
+    try {
+      setError(null);
+      await deleteCatalogItem(item.id);
+      setRows((current) => current.filter((row) => row.id !== item.id));
+      setReloadKey((value) => value + 1);
+    } catch (e) {
+      setError(e);
+    }
+  }
 
   return (
     <section className="recent-meals">
-      <h3 className="recent-meals__title">All Meals</h3>
-      {loading && <div style={{ padding: "0.5rem 0" }}>Loading…</div>}
+      <div className="recent-meals__header">
+        <h3 className="recent-meals__title">{title}</h3>
+        {headerAction}
+      </div>
+      {loading && <div style={{ padding: "0.5rem 0" }}>Loading...</div>}
       {error && <div style={{ color: "#b00020", padding: "0.5rem 0" }}>Failed to load meals: {String(error.message || error)}</div>}
       {!loading && !rows?.length && <div style={{ padding: "0.5rem 0" }}>No meals yet. Add your first one!</div>}
       <div className="list">
-        {rows?.map((m) => (<MealCard key={m.id} item={m} onClick={onLogClick} />))}
+        {rows?.map((m) => (
+          <MealCard
+            key={m.id}
+            item={m}
+            onClick={onLogClick}
+            onEdit={onEditClick}
+            onDelete={handleDelete}
+          />
+        ))}
       </div>
     </section>
   );

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import './QuickActions.css';
 import addIcon from './images/addIcon.png';
 
@@ -7,12 +7,44 @@ export default function QuickActionsFloating(){
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   const navigate = useNavigate();
+  const location = useLocation();
+  const [isPhone, setIsPhone] = useState(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return false;
+    return window.matchMedia("(max-width: 980px)").matches;
+  });
+
+  const isDashboard = location.pathname === "/";
+  const shouldRender = isPhone || !isDashboard;
 
   useEffect(()=>{
     function onDoc(e){ if(!ref.current) return; if(!ref.current.contains(e.target)) setOpen(false); }
     document.addEventListener('pointerdown', onDoc);
     return ()=> document.removeEventListener('pointerdown', onDoc);
   },[]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return undefined;
+
+    const mediaQuery = window.matchMedia("(max-width: 980px)");
+    const sync = (event) => setIsPhone(event.matches);
+    setIsPhone(mediaQuery.matches);
+
+    if (typeof mediaQuery.addEventListener === "function") {
+      mediaQuery.addEventListener("change", sync);
+      return () => mediaQuery.removeEventListener("change", sync);
+    }
+
+    mediaQuery.addListener(sync);
+    return () => mediaQuery.removeListener(sync);
+  }, []);
+
+  useEffect(() => {
+    setOpen(false);
+  }, [location.pathname, isPhone]);
+
+  if (!shouldRender) {
+    return null;
+  }
 
   return (
     <div className="qa-floating" ref={ref}>

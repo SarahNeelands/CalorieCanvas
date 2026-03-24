@@ -1,0 +1,55 @@
+.cc-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.cc-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(14, 28, 23, 0.42);
+  backdrop-filter: blur(3px);
+}
+
+.cc-modal-surface {
+  position: relative;
+  z-index: 1;
+  width: min(95vw, 40rem);
+  max-height: min(88vh, 50rem);
+  overflow: auto;
+  border-radius: 1.5rem;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 24px 60px rgba(19, 48, 38, 0.24);
+  border: 1px solid rgba(20, 61, 51, 0.08);
+}
+
+.cc-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.25rem 0.75rem;
+}
+
+.cc-modal-title {
+  margin: 0;
+  color: #143d33;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.cc-modal-close {
+  border: none;
+  background: transparent;
+  color: #4a655c;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.cc-modal-body {
+  padding: 0 1.25rem 1.25rem;
+}

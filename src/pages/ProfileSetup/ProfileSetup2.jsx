@@ -1,99 +1,192 @@
 import React, { useEffect, useState } from 'react';
-import { supabase } from '../../supabaseClient';
 import './ProfileSetup.css';
+import { API_BASE_URL } from '../../config/api';
+import { getCurrentSession, getCurrentUserId } from '../../services/authClient';
+import { isLocalAuth } from '../../config/runtime';
+import {
+  getProfileSetupState,
+  setProfileSetupStep,
+  updateProfileSetupState,
+} from '../../services/profileSetupProgress';
+import { saveLocalProfile } from '../../services/profileClient';
 
 export default function ProfileSetup2() {
-  const IS_LOCAL =
-    typeof window !== 'undefined' &&
-    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-
-  // units
-  const [heightUnit, setHeightUnit] = useState('cm'); // 'cm' | 'imperial'
-  const [weightUnit, setWeightUnit] = useState('kg'); // 'kg' | 'lb'
-
-  // metric storage (what we’ll write to DB)
-  const [height, setHeightCm] = useState('');
-  const [weight, setWeightKg] = useState('');
-
-  // imperial UI fields (derived)
+  const [heightUnit, setHeightUnit] = useState('cm');
+  const [weightUnit, setWeightUnit] = useState('kg');
+  const [heightCm, setHeightCm] = useState('');
+  const [weightKg, setWeightKg] = useState('');
   const [ft, setFt] = useState('');
   const [inch, setInch] = useState('');
   const [lb, setLb] = useState('');
-
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState(null);
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
+    setProfileSetupStep('/profile-setup-2');
     document.title = 'Profile setup • Measurements • Calorie Canvas';
 
-    let unsub;
-    (async () => {
-      if (IS_LOCAL) { setChecking(false); return; }
+    const draft = getProfileSetupState();
+    if (draft.heightUnit) setHeightUnit(draft.heightUnit);
+    if (draft.weightUnit) setWeightUnit(draft.weightUnit);
+    if (draft.heightCm !== undefined) setHeightCm(String(draft.heightCm));
+    if (draft.weightKg !== undefined) setWeightKg(String(draft.weightKg));
+    if (draft.ft !== undefined) setFt(String(draft.ft));
+    if (draft.inch !== undefined) setInch(String(draft.inch));
+    if (draft.lb !== undefined) setLb(String(draft.lb));
 
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) { setChecking(false); return; }
+    async function checkSession() {
+      const { session } = await getCurrentSession();
+      if (session) {
+        setChecking(false);
+        return;
+      }
+      window.location.replace('/login');
+    }
 
-      const { data: sub } = supabase.auth.onAuthStateChange((_e, newSession) => {
-        if (newSession) setChecking(false);
-      });
-      unsub = () => sub.subscription.unsubscribe();
+    checkSession();
+  }, []);
 
-      setTimeout(async () => {
-        const { data: { session: s } } = await supabase.auth.getSession();
-        if (!s) window.location.replace('/login'); else setChecking(false);
-      }, 400);
-    })();
-
-    return () => unsub && unsub();
-  }, [IS_LOCAL]);
-
-  // helpers
   const clampNum = (v) => (v ?? '').toString().trim();
   const cleanNum = (s, allowDot = true) =>
     (s ?? '').replace(allowDot ? /[^0-9.]/g : /[^0-9]/g, '');
 
+  function cmFromImperial(feet, inches) {
+    return (parseInt(feet || 0, 10) * 12 + parseFloat(inches || 0)) * 2.54;
+  }
+
+  function imperialFromCm(cm) {
+    const totalInches = parseFloat(cm || 0) / 2.54;
+    const feetValue = Math.floor(totalInches / 12);
+    const inchesValue = totalInches - feetValue * 12;
+    return { feetValue, inchesValue: Number(inchesValue.toFixed(1)) };
+  }
+
+  function kgFromLb(value) {
+    return parseFloat(value || 0) * 0.45359237;
+  }
+
+  function lbFromKg(value) {
+    return parseFloat(value || 0) / 0.45359237;
+  }
+
+  function onHeightUnitChange(nextUnit) {
+    if (nextUnit === 'imperial' && heightUnit !== 'imperial') {
+      const { feetValue, inchesValue } = imperialFromCm(heightCm || '0');
+      setFt(feetValue ? String(feetValue) : '');
+      setInch(inchesValue ? String(inchesValue) : '');
+    }
+
+    if (nextUnit === 'cm' && heightUnit !== 'cm') {
+      const nextHeightCm = cmFromImperial(ft, inch);
+      setHeightCm(nextHeightCm ? String(Number(nextHeightCm.toFixed(1))) : '');
+    }
+
+    setHeightUnit(nextUnit);
+  }
+
+  function onWeightUnitChange(nextUnit) {
+    if (nextUnit === 'lb' && weightUnit !== 'lb') {
+      const nextLb = lbFromKg(weightKg || '0');
+      setLb(nextLb ? String(Number(nextLb.toFixed(1))) : '');
+    }
+
+    if (nextUnit === 'kg' && weightUnit !== 'kg') {
+      const nextKg = kgFromLb(lb);
+      setWeightKg(nextKg ? String(Number(nextKg.toFixed(1))) : '');
+    }
+
+    setWeightUnit(nextUnit);
+  }
 
   async function onNext(e) {
     e.preventDefault();
     setMsg(null);
 
-    // finalize metric numbers from whichever UI is active
-    let finalHeight = height;
-    let finalWeight = weight;
+    const finalHeightCm = heightUnit === 'imperial'
+      ? cmFromImperial(ft, inch)
+      : parseFloat(clampNum(heightCm));
+    const finalWeightKg = weightUnit === 'lb'
+      ? kgFromLb(lb)
+      : parseFloat(clampNum(weightKg));
 
-    // validate
     const h = parseFloat(clampNum(finalHeightCm));
     const w = parseFloat(clampNum(finalWeightKg));
-    if (!(h > 50 && h < 300))  return setMsg('Height should be realistic (cm, e.g., 171).');
-
-    // Localhost preview without a session: skip DB write
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session && IS_LOCAL) {
-      window.location.href = '/profile-setup-3'; // connect to Step 3
-      return;
-    }
+    if (!(h > 50 && h < 300)) return setMsg('Height should be realistic (cm, e.g., 171).');
+    if (!(w > 20 && w < 500)) return setMsg('Weight should be realistic.');
 
     setSaving(true);
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setSaving(false); return setMsg('Session expired. Please log in.'); }
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      setSaving(false);
+      return setMsg('Session expired. Please log in.');
+    }
 
-    await fetch(`${BACKEND_URL}/add-weight-entry`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
+    saveLocalProfile(userId, {
+      height_cm: Number(finalHeightCm.toFixed(1)),
+      weight_kg: Number(finalWeightKg.toFixed(1)),
+    });
+
+    if (isLocalAuth()) {
+      updateProfileSetupState({
+        heightUnit,
+        weightUnit,
+        heightCm: Number(finalHeightCm.toFixed(1)),
+        weightKg: Number(finalWeightKg.toFixed(1)),
+        ft,
+        inch,
+        lb,
+        lastStep: '/profile-setup-3',
+      });
+
+      setSaving(false);
+      window.location.href = '/profile-setup-3';
+      return;
+    }
+
+    const heightResponse = await fetch(`${API_BASE_URL}/add-height`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        user_id: user.id,
-        weight_unit: weightUnit,
-        weight: weight,
+        user_id: userId,
+        height: Number(finalHeightCm.toFixed(1)),
+        height_unit: 'cm',
       }),
     });
 
-    await fetch(`${}`)
+    if (!heightResponse.ok) {
+      setSaving(false);
+      return setMsg('Could not save height.');
+    }
+
+    const weightResponse = await fetch(`${API_BASE_URL}/add-weight-entry`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: userId,
+        weight_unit: 'kg',
+        weight: Number(finalWeightKg.toFixed(1)),
+      }),
+    });
+
+    if (!weightResponse.ok) {
+      setSaving(false);
+      return setMsg('Could not save weight.');
+    }
+
+    updateProfileSetupState({
+      heightUnit,
+      weightUnit,
+      heightCm: Number(finalHeightCm.toFixed(1)),
+      weightKg: Number(finalWeightKg.toFixed(1)),
+      ft,
+      inch,
+      lb,
+      lastStep: '/profile-setup-3',
+    });
 
     setSaving(false);
-    if (error) return setMsg(error.message);
-
     window.location.href = '/profile-setup-3';
   }
 
@@ -101,7 +194,7 @@ export default function ProfileSetup2() {
     return (
       <main className="ps-wrap">
         <div className="ps-bg" aria-hidden="true" />
-        <div className="ps-grid"><p style={{opacity:.75}}>Checking your session…</p></div>
+        <div className="ps-grid"><p style={{ opacity: 0.75 }}>Checking your session…</p></div>
       </main>
     );
   }
@@ -116,11 +209,10 @@ export default function ProfileSetup2() {
           <p className="ps-sub">Enter your current stats. You can change these later.</p>
 
           <form onSubmit={onNext} className="ps-form">
-            {/* Height */}
             <div className="ps-row">
               <div className="ps-col">
                 <label className="ps-label" htmlFor="heightUnit">Height</label>
-                <div className="ps-row" style={{gridTemplateColumns:'1fr auto', gap:12}}>
+                <div className="ps-row" style={{ gridTemplateColumns: '1fr auto', gap: 12 }}>
                   {heightUnit === 'cm' ? (
                     <input
                       id="heightCm"
@@ -131,7 +223,7 @@ export default function ProfileSetup2() {
                       placeholder="e.g., 171"
                     />
                   ) : (
-                    <div className="ps-row" style={{gridTemplateColumns:'1fr 1fr', gap:12}}>
+                    <div className="ps-row" style={{ gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                       <input
                         className="ps-input"
                         inputMode="numeric"
@@ -161,10 +253,9 @@ export default function ProfileSetup2() {
                 </div>
               </div>
 
-              {/* Weight */}
               <div className="ps-col">
                 <label className="ps-label" htmlFor="weightUnit">Weight</label>
-                <div className="ps-row" style={{gridTemplateColumns:'1fr auto', gap:12}}>
+                <div className="ps-row" style={{ gridTemplateColumns: '1fr auto', gap: 12 }}>
                   {weightUnit === 'kg' ? (
                     <input
                       id="weightKg"

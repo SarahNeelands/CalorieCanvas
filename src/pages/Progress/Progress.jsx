@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import WeightModal from '../../components/progress/WeightModal.jsx';
 import ProgressTabs from '../../components/progress/ProgressTabs.jsx';
@@ -10,23 +10,29 @@ import NavBar from "../../components/NavBar";
 import './Progress.css';
 
 export default function Progress({ user }) {
-  const [scope, setScope] = useState('all'); // 'all' | 'month' | 'week'
+  const [scope, setScope] = useState('all');
+  const [weightUnit, setWeightUnit] = useState('kg');
   const [detail, setDetail] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
-  // local handler to persist weight – placeholder: save to localStorage
-  function handleSaveWeight({ value, unit }){
-    try{
+  const userId = user?.id;
+
+  function handleSaveWeight({ value, unit }) {
+    try {
       const key = 'cc.weights';
       const existing = JSON.parse(localStorage.getItem(key) || '[]');
-      const item = { date: new Date().toISOString().slice(0,10), value, unit };
+      const item = {
+        user_id: userId,
+        date: new Date().toISOString().slice(0, 10),
+        value,
+        unit,
+      };
       existing.push(item);
       localStorage.setItem(key, JSON.stringify(existing));
-      console.log('Saved weight', item);
-    }catch(e){ console.warn(e); }
+    } catch (error) {
+      console.warn(error);
+    }
   }
-  // TODO: wire to your auth/user context
-  const userId = useMemo(() => 'demo-user', []);
 
   const openDetail = (payload) => setDetail(payload);
   const closeDetail = () => setDetail(null);
@@ -35,39 +41,53 @@ export default function Progress({ user }) {
     <div className="progress-back">
       <NavBar profileImageSrc={user?.avatar} />
       <div className="progress-container">
-        
-        {/* open weight modal if route state requested it */}
         {location?.state?.openWeight && (
-          <WeightModal open={true} onClose={()=>{ try{ navigate(location.pathname, { replace:true, state: {} }); }catch(e){} }} onSave={handleSaveWeight} />
+          <WeightModal
+            open={true}
+            onClose={() => {
+              try {
+                navigate(location.pathname, { replace: true, state: {} });
+              } catch {}
+            }}
+            onSave={handleSaveWeight}
+          />
         )}
-              <h1 className="progress-title">Progress</h1>
+
+        <h1 className="progress-title">Progress</h1>
+
         <div className="progress-tabs">
           <ProgressTabs scope={scope} onChange={setScope} />
         </div>
+
         <div className="trend-grid">
           <WeightTrend
             userId={userId}
             scope={scope}
-            onDayClick={(d) => openDetail({ ...d })}
+            unit={weightUnit}
+            onUnitChange={setWeightUnit}
+            onDayClick={(point) => openDetail({ ...point })}
           />
+
           <CalorieTrend
             userId={userId}
             scope={scope}
-            onDayClick={(d) => openDetail({ ...d })}
+            onDayClick={(point) => openDetail({ ...point })}
           />
+
           <div className="exercise-card">
             <ExerciseTrend
               userId={userId}
               scope={scope}
-              onDayClick={(d) => openDetail({ ...d })}
+              onDayClick={(point) => openDetail({ ...point })}
             />
           </div>
         </div>
+
         {detail && (
           <DayDetailModal
-            detail={detail}
             open={Boolean(detail)}
             onClose={closeDetail}
+            detail={detail}
           />
         )}
       </div>

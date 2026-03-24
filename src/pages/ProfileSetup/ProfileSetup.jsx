@@ -1,62 +1,67 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../supabaseClient';
 import './ProfileSetup.css';
-import { BACKEND_URL } from '../../config/api';
+import { API_BASE_URL } from '../../config/api';
+import { getCurrentSession, getCurrentUserId } from '../../services/authClient';
+import { isLocalAuth } from '../../config/runtime';
+import {
+  getProfileSetupState,
+  setProfileSetupStep,
+  updateProfileSetupState,
+} from '../../services/profileSetupProgress';
+import { saveLocalProfile } from '../../services/profileClient';
 
 export default function ProfileSetup() {
-  const IS_LOCAL =
-    typeof window !== 'undefined' &&
-    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-
-  const [name, setName]       = useState('');
-  const [dob, setDob]         = useState(''); // ← date of birth (YYYY-MM-DD)
-  const [gender, setGender]   = useState('');
-  const [saving, setSaving]   = useState(false);
-  const [msg, setMsg]         = useState(null);
+  const [name, setName] = useState('');
+  const [dob, setDob] = useState('');
+  const [gender, setGender] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState(null);
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
+    setProfileSetupStep('/profile-setup');
     document.title = 'Tell us about you • Calorie Canvas';
 
+    const draft = getProfileSetupState();
+    if (draft.name) setName(draft.name);
+    if (draft.dob) setDob(draft.dob);
+    if (draft.gender) setGender(draft.gender);
 
     async function createProfile() {
-      const { data: { session } } = await supabase.auth.getUser();
-      const supabaseId = data?.user?.id;
-      if (!session && !IS_LOCAL) {
+      const userId = await getCurrentUserId();
+      if (!userId && !isLocalAuth()) {
         window.location.replace('/login');
         return;
       }
 
-      localStorage.setItem("user_id", supabaseId);
+      if (!userId) return;
 
-      await fetch(`${BACKEND_URL}/create_profile`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: supabaseId }),
-      })
-    }
-    createProfile();
+      localStorage.setItem('user_id', userId);
 
-    let unsub;
-    (async () => {
-      if (IS_LOCAL) { setChecking(false); return; }
+      if (isLocalAuth()) {
+        return;
+      }
 
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) { setChecking(false); return; }
-
-      const { data: sub } = supabase.auth.onAuthStateChange((_e, newSession) => {
-        if (newSession) setChecking(false);
+      await fetch(`${API_BASE_URL}/create_profile`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: userId }),
       });
-      unsub = () => sub.subscription.unsubscribe();
+    }
 
-      setTimeout(async () => {
-        const { data: { session: s } } = await supabase.auth.getSession();
-        if (!s) window.location.replace('/login'); else setChecking(false);
-      }, 400);
-    })();
+    async function checkSession() {
+      const { session } = await getCurrentSession();
+      if (session) {
+        setChecking(false);
+        return;
+      }
+      window.location.replace('/login');
+    }
 
-    return () => unsub && unsub();
-  }, [IS_LOCAL]);
+    createProfile();
+    checkSession();
+  }, []);
 
   function isValidDob(iso) {
     if (!iso) return true;
@@ -73,16 +78,44 @@ export default function ProfileSetup() {
     if (!name.trim()) return setMsg('Please enter your name.');
     if (!isValidDob(dob)) return setMsg('Enter a valid date of birth.');
 
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session && IS_LOCAL) {
+    const nextState = {
+      name: name.trim(),
+      dob: dob || null,
+      gender: gender || null,
+      lastStep: '/profile-setup-2',
+    };
+
+    const userId = await getCurrentUserId();
+    if (userId) {
+      saveLocalProfile(userId, {
+        display_name: name.trim(),
+        dob: dob || null,
+        gender: gender || null,
+      });
+    }
+
+    const { session } = await getCurrentSession();
+    if (!session && isLocalAuth()) {
+      updateProfileSetupState(nextState);
       window.location.href = '/profile-setup-2';
       return;
     }
 
     setSaving(true);
 
+    if (isLocalAuth()) {
+      updateProfileSetupState(nextState);
+      setSaving(false);
+      window.location.href = '/profile-setup-2';
+      return;
+    }
+
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setSaving(false); return setMsg('Session expired. Please log in.'); }
+    if (!user) {
+      setSaving(false);
+      return setMsg('Session expired. Please log in.');
+    }
+
     const { error } = await supabase
       .from('profiles')
       .upsert(
@@ -95,9 +128,10 @@ export default function ProfileSetup() {
         { onConflict: 'user_id' }
       );
 
+    setSaving(false);
     if (error) return setMsg(error.message);
 
-    // ✅ Connect to Step 2
+    updateProfileSetupState(nextState);
     window.location.href = '/profile-setup-2';
   }
 
@@ -105,7 +139,7 @@ export default function ProfileSetup() {
     return (
       <main className="ps-wrap">
         <div className="ps-bg" aria-hidden="true" />
-        <div className="ps-grid"><p style={{opacity:.75}}>Checking your session…</p></div>
+        <div className="ps-grid"><p style={{ opacity: 0.75 }}>Checking your session…</p></div>
       </main>
     );
   }

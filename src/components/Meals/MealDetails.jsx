@@ -5,23 +5,25 @@
 import React, { useEffect, useState } from "react";
 import "./MealDetails.css";
 
-export default function MealDetails({ onTotalWeightChange }) {
-  const [mealName, setMealName] = useState("");
-  const [timestamp, setTimestamp] = useState("");
-  const [totalWeight, setTotalWeight] = useState("");
+export default function MealDetails({
+  mealName,
+  timestamp,
+  totalWeight,
+  onMealNameChange,
+  onTimestampChange,
+  onTotalWeightChange,
+}) {
+  const [initialTimestamp, setInitialTimestamp] = useState("");
 
   useEffect(() => {
+    if (timestamp) return;
     const now = new Date();
     // yyyy-MM-ddTHH:mm (local)
     const pad = (n) => String(n).padStart(2, "0");
     const ts = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
-    setTimestamp(ts);
-  }, []);
-
-  useEffect(() => {
-    const v = Number(totalWeight || 0);
-    onTotalWeightChange?.(isNaN(v) ? 0 : v);
-  }, [totalWeight, onTotalWeightChange]);
+    setInitialTimestamp(ts);
+    onTimestampChange?.(ts);
+  }, [onTimestampChange, timestamp]);
 
   return (
     <div className="md-root">
@@ -33,7 +35,7 @@ export default function MealDetails({ onTotalWeightChange }) {
           type="text"
           placeholder="e.g., Post-Workout Smoothie"
           value={mealName}
-          onChange={(e) => setMealName(e.target.value)}
+          onChange={(e) => onMealNameChange?.(e.target.value)}
         />
       </label>
 
@@ -41,8 +43,8 @@ export default function MealDetails({ onTotalWeightChange }) {
         <span>Timestamp</span>
         <input
           type="datetime-local"
-          value={timestamp}
-          onChange={(e) => setTimestamp(e.target.value)}
+          value={timestamp || initialTimestamp}
+          onChange={(e) => onTimestampChange?.(e.target.value)}
         />
       </label>
 
@@ -53,7 +55,7 @@ export default function MealDetails({ onTotalWeightChange }) {
           inputMode="decimal"
           placeholder="e.g., 350"
           value={totalWeight}
-          onChange={(e) => setTotalWeight(e.target.value)}
+          onChange={(e) => onTotalWeightChange?.(e.target.value)}
         />
       </label>
     </div>

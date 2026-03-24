@@ -3,15 +3,52 @@ import NavBar from "../../components/NavBar";
 import CalorieSummary from "../../components/calories/CalorieSummary";
 import QuickActions from "../../components/QuickActions";
 import RecentMealsLogged from "../../components/RecentMealsLogged";
+import { getDailyMealLogSummary } from "../../services/mealLogClient";
+import { calculateDailyCalorieGoal, getProfile } from "../../services/profileClient";
 import "./Dashboard.css";
 
 
 export default function Dashboard({ user }) {
-  const goal = user?.dailyGoal ?? 2000;
-  const eaten = user?.today?.kcalEaten ?? 1200;
-  const meals = user?.today?.meals ?? [];
+  const [goal, setGoal] = React.useState(null);
+  const [eaten, setEaten] = React.useState(0);
   const avatar = user?.avatar ?? "/cc/avatar.png";
-  const logo = "/cc/logo-mark.png";
+
+  React.useEffect(() => {
+    let active = true;
+
+    async function loadSummary() {
+      if (!user?.id) return;
+
+      const [profileResult, summaryResult] = await Promise.allSettled([
+        getProfile(user.id),
+        getDailyMealLogSummary({ userId: user.id }),
+      ]);
+
+      if (!active) return;
+
+      if (profileResult.status === "fulfilled") {
+        setGoal(calculateDailyCalorieGoal(profileResult.value));
+      } else {
+        setGoal(null);
+      }
+
+      if (summaryResult.status === "fulfilled") {
+        setEaten(Math.round(Number(summaryResult.value?.calories || 0)));
+      } else {
+        setEaten(0);
+      }
+    }
+
+    loadSummary();
+
+    const handler = () => loadSummary();
+    window.addEventListener("meal-logged", handler);
+
+    return () => {
+      active = false;
+      window.removeEventListener("meal-logged", handler);
+    };
+  }, [user?.id]);
 
   return (
     <div className="app">

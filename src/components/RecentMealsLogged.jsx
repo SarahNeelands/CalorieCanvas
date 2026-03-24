@@ -1,14 +1,6 @@
 import React from "react";
-import { supabase } from "../supabaseClient";
 import "../components/calories/RecentMeals.css";
-import vine1 from "./images/vines/vine1.png";
-import vine2 from "./images/vines/vine2.png";
-import vine3 from "./images/vines/vine3.png";
-import vine4 from "./images/vines/vine4.png";
-import vine5 from "./images/vines/vine5.png";
-import vine6 from "./images/vines/vine6.png";
-
-const VINES = [vine1, vine2, vine3, vine4, vine5, vine6];
+import { listMealLogs } from "../services/mealLogClient";
 
 function formatDateTime(iso) {
   if (!iso) return "";
@@ -28,21 +20,7 @@ export default function RecentMealsLogged({ userId, limit = 3, title = "Recent M
       setLoading(true);
       setError(null);
       if (!userId) throw new Error("Missing user ID");
-      const { data, error } = await supabase
-        .from("meal_logs")
-        .select(`
-          id,
-          logged_at,
-          kcal,
-          grams_resolved,
-          qty,
-          unit_code,
-          meal:meals(id, title, kcal_per_100g)
-        `)
-        .eq("user_id", userId)
-        .order("logged_at", { ascending: false })
-        .limit(limit);
-      if (error) throw error;
+      const data = await listMealLogs({ userId, limit });
       setRows(data ?? []);
     } catch (e) {
       setError(e);
@@ -68,8 +46,7 @@ export default function RecentMealsLogged({ userId, limit = 3, title = "Recent M
       <div className="list">
         {rows.map((r) => (
           <div key={r.id} className="item">
-            {VINES.map((src, j) => (<img key={j} src={src} alt="" className={`vine vine--${j + 1}`} />))}
-            <div className="item__content" style={{ padding: "0.75rem 1.75rem 0.75rem" }}>
+            <div className="item__content item__content--padded">
               <div className="item__left">
                 <div className="meal-row">
                   <h4 className="item__title" style={{ margin: 0 }}>{r.meal?.title || "Meal"}</h4>

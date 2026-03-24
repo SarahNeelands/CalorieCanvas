@@ -1,0 +1,28 @@
+.weight-unit-toggle {
+  display: inline-flex;
+  gap: 0.35rem;
+  padding: 0.2rem;
+  border-radius: 999px;
+  background: rgba(20, 61, 51, 0.08);
+}
+
+.weight-unit-toggle__btn {
+  border: none;
+  border-radius: 999px;
+  padding: 0.45rem 0.8rem;
+  background: transparent;
+  color: #35574d;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.weight-unit-toggle__btn.is-active {
+  background: #2c5b49;
+  color: #fff;
+}
+
+.weight-trend__empty {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+  color: #6a8279;
+}

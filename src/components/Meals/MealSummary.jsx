@@ -4,14 +4,16 @@
 import React from "react";
 import "./MealSummary.css";
 
-export default function MealSummary({ ingredients, totalWeight }) {
+export default function MealSummary({
+  ingredients,
+  totalWeight,
+  saving = false,
+  error = null,
+  onSave,
+  isEditing = false,
+}) {
   const totalCalories = ingredients.reduce((sum, ing) => sum + (ing.calories || 0), 0);
   const per100g = totalWeight ? (totalCalories / totalWeight) * 100 : 0;
-
-  const save = () => {
-    // hook your saveMeal here if desired
-    alert("Saved (wire your DB here)");
-  };
 
   return (
     <div className="ms-root">
@@ -20,7 +22,10 @@ export default function MealSummary({ ingredients, totalWeight }) {
       <ul className="ms-items">
         {ingredients.map((ing, i) => (
           <li key={`${ing.id ?? ing.name}-${i}`}>
-            <div className="name">{ing.name}</div>
+            <div>
+              <div className="name">{ing.name}</div>
+              <div className="meta">{ing.qty || 0} {ing.unit} used</div>
+            </div>
             <div className="meta">{Math.round(ing.calories)} kcal</div>
           </li>
         ))}
@@ -40,9 +45,13 @@ export default function MealSummary({ ingredients, totalWeight }) {
         <div>Per 100g: <strong>{per100g.toFixed(1)} kcal</strong></div>
       </div>
 
+      {error && <div className="ms-error">{String(error.message || error)}</div>}
+
       <div className="ms-actions">
-        <button className="btn save" onClick={save}>Save Meal</button>
-        <button className="btn ghost">Log a Portion</button>
+        <button className="btn save" onClick={onSave} disabled={saving}>
+          {saving ? "Saving..." : isEditing ? "Save Changes" : "Save Meal"}
+        </button>
+        <button className="btn ghost" type="button">Log a Portion</button>
       </div>
     </div>
   );

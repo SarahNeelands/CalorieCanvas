@@ -1,3 +1,15 @@
 /* src/components/exercise/charts/TypeBreakdownPie.css */
 @import "../../../styles/theme.css";
 .ex-empty{ color: var(--cc-green-400); font-size:.9rem; }
+
+@media (max-width: 640px) {
+  .recharts-wrapper,
+  .recharts-surface {
+    max-width: 100%;
+  }
+
+  .recharts-legend-wrapper {
+    width: 100% !important;
+    left: 0 !important;
+  }
+}

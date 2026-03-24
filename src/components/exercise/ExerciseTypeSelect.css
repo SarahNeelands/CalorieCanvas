@@ -1,0 +1,64 @@
+.exercise-type-select {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.exercise-type-select__input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #cfd9c9;
+  border-radius: 14px;
+  padding: 14px 16px;
+  background: #fff;
+  font-size: 1rem;
+}
+
+.exercise-type-select__input:focus {
+  outline: none;
+  border-color: #9fb49f;
+  box-shadow: 0 0 0 3px rgba(159, 180, 159, 0.25);
+}
+
+.exercise-type-select__list {
+  max-height: 21rem;
+  overflow: auto;
+  border: 1px solid rgba(20, 61, 51, 0.1);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.86);
+}
+
+.exercise-type-select__option,
+.exercise-type-select__add,
+.exercise-type-select__empty {
+  padding: 0.85rem 1rem;
+}
+
+.exercise-type-select__option {
+  cursor: pointer;
+  color: #143d33;
+}
+
+.exercise-type-select__option:hover,
+.exercise-type-select__option.is-selected {
+  background: rgba(20, 61, 51, 0.08);
+}
+
+.exercise-type-select__empty {
+  color: #688179;
+  font-size: 0.95rem;
+}
+
+.exercise-type-select__divider {
+  height: 1px;
+  background: rgba(20, 61, 51, 0.08);
+}
+
+.exercise-type-select__add {
+  cursor: pointer;
+  color: #2c5b49;
+  font-weight: 700;
+}
+
+.exercise-type-select__add:hover {
+  background: rgba(44, 91, 73, 0.08);
+}
