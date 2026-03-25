@@ -1,21 +1,36 @@
 .md-root{ display:grid; gap:14px; }
 .md-title{
-  font-size:20px; font-weight:800; color:var(--cc-ink); margin-bottom:4px;
+  font-size:22px; font-weight:800; color:var(--cc-ink); margin:0 0 4px;
 }
 
 .md-field{ display:grid; gap:6px; }
-.md-field > span{ font-size:12px; color:#4a564d; }
+.md-field > span{ font-size:14px; color:#4a564d; font-weight:600; }
 
 .md-field input{
-  height:1rem;
-  padding:0 0.50rem;
+  width:100%;
+  min-height:2.9rem;
+  padding:0.8rem 0.9rem;
   border:1px solid var(--cc-border);
-  border-radius:1rem;
+  border-radius:0.9rem;
   background:#fff;
   color:var(--cc-ink);
   outline:none;
+  box-sizing:border-box;
+  font:inherit;
+  font-size:16px;
 }
 .md-field input:focus{
   border-color:var(--cc-accent);
   box-shadow:0 0 0 3px var(--cc-focus);
+}
+
+@media (max-width: 640px){
+  .md-root{ gap:12px; }
+  .md-title{ font-size:20px; }
+  .md-field > span{ font-size:13px; }
+  .md-field input{
+    min-height:2.75rem;
+    padding:0.75rem 0.85rem;
+    font-size:16px;
+  }
 }

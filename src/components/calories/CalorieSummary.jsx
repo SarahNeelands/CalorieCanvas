@@ -9,8 +9,8 @@ export default function CalorieSummary({ goal, eaten }) {
   return (
     <section className="summary-card">
       <div className="summary-grid">
-        <h1>Today's Canvas</h1>
-        <p className="summary-subtitle">Your daily calorie summary.</p>
+        <h1 className="cc-page-title">Today's Canvas</h1>
+        <p className="summary-subtitle cc-page-subtitle">Your daily calorie summary.</p>
       </div>
 
       <div className="progress-bar">

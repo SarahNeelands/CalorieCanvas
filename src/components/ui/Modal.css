@@ -20,11 +20,14 @@
   z-index: 1;
   width: min(95vw, 40rem);
   max-height: min(88vh, 50rem);
-  overflow: auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   border-radius: 1.5rem;
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 24px 60px rgba(19, 48, 38, 0.24);
-  border: 1px solid rgba(20, 61, 51, 0.08);
+  background:
+    linear-gradient(180deg, rgba(252, 248, 240, 0.97) 0%, rgba(246, 242, 232, 0.95) 100%);
+  box-shadow: 0 24px 60px rgba(19, 48, 38, 0.22);
+  border: 1px solid rgba(20, 61, 51, 0.12);
 }
 
 .cc-modal-header {
@@ -32,24 +35,28 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 1.1rem 1.25rem 0.75rem;
+  padding: 1.45rem 1.7rem 0.95rem;
 }
 
 .cc-modal-title {
   margin: 0;
   color: #143d33;
-  font-size: 1.15rem;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.82rem;
   font-weight: 700;
 }
 
 .cc-modal-close {
   border: none;
   background: transparent;
-  color: #4a655c;
-  font-size: 1.1rem;
+  color: #143d33;
+  font-size: 2rem;
+  font-weight: 700;
   cursor: pointer;
+  line-height: 1;
 }
 
 .cc-modal-body {
   padding: 0 1.25rem 1.25rem;
+  overflow: auto;
 }

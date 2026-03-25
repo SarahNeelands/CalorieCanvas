@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import NavBar from "../../components/NavBar";
 import { createCatalogItem, updateCatalogItem } from "../../services/catalogClient";
+import { scanNutritionLabelFromImage } from "../../utils/nutritionLabelOcr";
 
 const MACRO_FIELDS = [
   { key: "calories", label: "Calories", unit: "kcal" },
@@ -74,7 +76,16 @@ function cleanDecimalInput(value) {
   return (value ?? "").replace(/[^0-9.]/g, "");
 }
 
-export default function NewIngredientPage() {
+function readImageAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error("Failed to read photo."));
+    reader.readAsDataURL(file);
+  });
+}
+
+export default function NewIngredientPage({ user }) {
   const location = useLocation();
   const navigate = useNavigate();
   const returnTo = location.state?.returnTo || "/meals/new";
@@ -82,9 +93,12 @@ export default function NewIngredientPage() {
   const existingServing = existingIngredient?.unit_conversions?.serving_size || {};
   const existingMacros = existingIngredient?.unit_conversions?.macros || {};
   const existingMicros = existingIngredient?.unit_conversions?.micros || {};
+  const existingPhoto = existingIngredient?.unit_conversions?.photo_data_url || "";
   const isEditing = Boolean(existingIngredient?.id);
+  const photoInputRef = useRef(null);
   const [name, setName] = useState(existingIngredient?.title || "");
   const [brand, setBrand] = useState(existingIngredient?.unit_conversions?.brand || "");
+  const [photoDataUrl, setPhotoDataUrl] = useState(existingPhoto);
   const [servingSize, setServingSize] = useState(
     existingServing.qty === undefined || existingServing.qty === null ? "" : String(existingServing.qty)
   );
@@ -109,6 +123,7 @@ export default function NewIngredientPage() {
   });
   const [msg, setMsg] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [scanningPhoto, setScanningPhoto] = useState(false);
 
   function updateMacro(key, value) {
     setMacros((current) => ({ ...current, [key]: value }));
@@ -126,6 +141,52 @@ export default function NewIngredientPage() {
       ...current,
       [key]: { ...current[key], unit },
     }));
+  }
+
+  async function handlePhotoChange(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      setScanningPhoto(true);
+      setMsg("Reading nutrition label...");
+      const dataUrl = await readImageAsDataUrl(file);
+      setPhotoDataUrl(dataUrl);
+      const parsed = await scanNutritionLabelFromImage(dataUrl);
+
+      if (parsed?.serving?.qty) {
+        setServingSize(String(parsed.serving.qty));
+      }
+      if (parsed?.serving?.unit) {
+        setServingUnit(parsed.serving.unit);
+      }
+
+      setMacros((current) => ({
+        ...current,
+        calories: parsed?.macros?.calories != null ? String(parsed.macros.calories) : current.calories,
+        protein: parsed?.macros?.protein != null ? String(parsed.macros.protein) : current.protein,
+        carbs: parsed?.macros?.carbs != null ? String(parsed.macros.carbs) : current.carbs,
+        fat: parsed?.macros?.fat != null ? String(parsed.macros.fat) : current.fat,
+        fiber: parsed?.macros?.fiber != null ? String(parsed.macros.fiber) : current.fiber,
+        sugar: parsed?.macros?.sugar != null ? String(parsed.macros.sugar) : current.sugar,
+        cholesterol: parsed?.macros?.cholesterol != null ? String(parsed.macros.cholesterol) : current.cholesterol,
+      }));
+
+      setMicros((current) => ({
+        ...current,
+        sodium: parsed?.micros?.sodium ? { value: String(parsed.micros.sodium.value), unit: parsed.micros.sodium.unit } : current.sodium,
+        potassium: parsed?.micros?.potassium ? { value: String(parsed.micros.potassium.value), unit: parsed.micros.potassium.unit } : current.potassium,
+        calcium: parsed?.micros?.calcium ? { value: String(parsed.micros.calcium.value), unit: parsed.micros.calcium.unit } : current.calcium,
+        iron: parsed?.micros?.iron ? { value: String(parsed.micros.iron.value), unit: parsed.micros.iron.unit } : current.iron,
+        vitaminA: parsed?.micros?.vitaminA ? { value: String(parsed.micros.vitaminA.value), unit: parsed.micros.vitaminA.unit } : current.vitaminA,
+        vitaminC: parsed?.micros?.vitaminC ? { value: String(parsed.micros.vitaminC.value), unit: parsed.micros.vitaminC.unit } : current.vitaminC,
+      }));
+
+      setMsg("Nutrition label scanned. Review the values before saving.");
+    } catch (error) {
+      setMsg(error.message || "Failed to load photo.");
+    } finally {
+      setScanningPhoto(false);
+    }
   }
 
   async function handleSave() {
@@ -164,6 +225,7 @@ export default function NewIngredientPage() {
         fat_g_per_100g: payload.macros.fat,
         unit_conversions: {
           brand: payload.brand,
+          photo_data_url: photoDataUrl || null,
           serving_size: {
             qty: payload.servingSize,
             unit: payload.servingUnit,
@@ -195,16 +257,17 @@ export default function NewIngredientPage() {
       className="page form-page"
       style={{
         minHeight: "100vh",
-        background: "linear-gradient(180deg, #f6f0e4 0%, #eef4ea 100%)",
+        background: "transparent",
         padding: "32px 20px 48px",
       }}
     >
+      <NavBar profileImageSrc={user?.avatar} />
       <div style={{ maxWidth: 960, margin: "0 auto", display: "grid", gap: 20 }}>
-        <header style={{ display: "grid", gap: 8 }}>
-          <h2 style={{ margin: 0, color: "#163227", fontSize: "clamp(28px, 3vw, 40px)" }}>
+        <header className="cc-page-heading">
+          <h2 className="cc-page-title">
             {isEditing ? "Edit Ingredient" : "New Ingredient"}
           </h2>
-          <p style={{ margin: 0, color: "#516257" }}>
+          <p className="cc-page-subtitle">
             {isEditing
               ? "Update the nutrient profile and serving details for this ingredient."
               : "Add the full nutrient profile and the serving size those values refer to."}
@@ -231,6 +294,67 @@ export default function NewIngredientPage() {
               />
             </Field>
           </div>
+
+          <Field label="Photo" hint="Take a picture or upload one from your phone.">
+            <div style={{ display: "grid", gap: 12 }}>
+              <input
+                ref={photoInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={handlePhotoChange}
+                style={{ display: "none" }}
+              />
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <button
+                  type="button"
+                  onClick={() => photoInputRef.current?.click()}
+                  style={{
+                    borderRadius: 999,
+                    padding: "12px 18px",
+                    background: "#163227",
+                    color: "#fff",
+                    border: 0,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  {scanningPhoto ? "Reading Photo..." : "Upload Photo"}
+                </button>
+                {photoDataUrl ? (
+                  <button
+                    type="button"
+                    onClick={() => setPhotoDataUrl("")}
+                    style={{
+                      borderRadius: 999,
+                      padding: "12px 18px",
+                      background: "transparent",
+                      color: "#163227",
+                      border: "1px solid rgba(22,50,39,0.18)",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                    }}
+                  >
+                    Remove Photo
+                  </button>
+                ) : null}
+              </div>
+              {photoDataUrl ? (
+                <img
+                  src={photoDataUrl}
+                  alt="Ingredient preview"
+                  style={{
+                    width: "100%",
+                    maxWidth: 220,
+                    aspectRatio: "1 / 1",
+                    objectFit: "cover",
+                    borderRadius: 16,
+                    border: "1px solid rgba(22,50,39,0.12)",
+                  }}
+                />
+              ) : null}
+            </div>
+          </Field>
         </Section>
 
         <Section title="Serving Size">

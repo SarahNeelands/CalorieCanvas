@@ -13,11 +13,6 @@
 }
 
 .ex-title{
-  color: var(--cc-ink);
-  font-size: 2.5rem;
-  line-height: 1.1;
-  font-weight: 800;
-  letter-spacing: -0.02em;
   margin: 0;
 }
 
@@ -43,10 +38,6 @@
 .ex-log-btn:active{ transform: translateY(0.0625rem); }
 
 @media (max-width: 640px) {
-  .ex-title {
-    font-size: 2rem;
-  }
-
   .ex-actions {
     width: 100%;
     flex-direction: column;

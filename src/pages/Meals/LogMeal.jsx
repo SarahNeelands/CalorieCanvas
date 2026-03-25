@@ -182,11 +182,11 @@ export default function LogMeal({ user }) {
     editingMealId,
   };
 
-  async function handleSaveMeal() {
-    try {
-      setSavingMeal(true);
-      setSaveError(null);
+  async function saveMeal({ openLogAfterSave = false } = {}) {
+    setSavingMeal(true);
+    setSaveError(null);
 
+    try {
       if (!mealName.trim()) {
         throw new Error("Enter a meal name before saving.");
       }
@@ -276,18 +276,32 @@ export default function LogMeal({ user }) {
         },
       };
 
-      if (editingMealId) {
-        await updateCatalogItem(editingMealId, payload);
-      } else {
-        await createCatalogItem(payload);
-      }
+      const savedItem = editingMealId
+        ? await updateCatalogItem(editingMealId, payload)
+        : await createCatalogItem(payload);
 
-      navigate("/meals", { replace: true });
+      navigate("/meals", {
+        replace: true,
+        state: openLogAfterSave
+          ? {
+              openLogMeal: true,
+              selectedLogItem: savedItem,
+            }
+          : {},
+      });
     } catch (error) {
       setSaveError(error);
     } finally {
       setSavingMeal(false);
     }
+  }
+
+  async function handleSaveMeal() {
+    await saveMeal();
+  }
+
+  async function handleLogPortion() {
+    await saveMeal({ openLogAfterSave: true });
   }
 
   return (
@@ -328,6 +342,7 @@ export default function LogMeal({ user }) {
               saving={savingMeal}
               error={saveError}
               onSave={handleSaveMeal}
+              onLogPortion={handleLogPortion}
               isEditing={Boolean(editingMealId)}
             />
           </aside>

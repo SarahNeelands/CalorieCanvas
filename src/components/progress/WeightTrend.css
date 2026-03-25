@@ -13,6 +13,7 @@
   background: transparent;
   color: #35574d;
   font-weight: 700;
+  font-size: 0.98rem;
   cursor: pointer;
 }
 
@@ -23,6 +24,10 @@
 
 .weight-trend__empty {
   margin-top: 0.75rem;
-  font-size: 0.9rem;
+  font-size: 1rem;
   color: #6a8279;
+}
+
+.weight-trend__empty--top {
+  margin: -0.15rem 0 0.6rem;
 }

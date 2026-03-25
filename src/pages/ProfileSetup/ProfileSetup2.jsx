@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './ProfileSetup.css';
 import { API_BASE_URL } from '../../config/api';
 import { getCurrentSession, getCurrentUserId } from '../../services/authClient';
@@ -11,6 +12,7 @@ import {
 import { saveLocalProfile } from '../../services/profileClient';
 
 export default function ProfileSetup2() {
+  const navigate = useNavigate();
   const [heightUnit, setHeightUnit] = useState('cm');
   const [weightUnit, setWeightUnit] = useState('kg');
   const [heightCm, setHeightCm] = useState('');
@@ -141,7 +143,7 @@ export default function ProfileSetup2() {
       });
 
       setSaving(false);
-      window.location.href = '/profile-setup-3';
+      navigate('/profile-setup-3');
       return;
     }
 
@@ -187,7 +189,7 @@ export default function ProfileSetup2() {
     });
 
     setSaving(false);
-    window.location.href = '/profile-setup-3';
+    navigate('/profile-setup-3');
   }
 
   if (checking) {

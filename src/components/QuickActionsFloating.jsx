@@ -13,8 +13,8 @@ export default function QuickActionsFloating(){
     return window.matchMedia("(max-width: 980px)").matches;
   });
 
-  const isDashboard = location.pathname === "/";
-  const shouldRender = isPhone || !isDashboard;
+  const quickActionPaths = new Set(["/", "/meals", "/exercises", "/progress", "/profile"]);
+  const shouldRender = isPhone && quickActionPaths.has(location.pathname);
 
   useEffect(()=>{
     function onDoc(e){ if(!ref.current) return; if(!ref.current.contains(e.target)) setOpen(false); }

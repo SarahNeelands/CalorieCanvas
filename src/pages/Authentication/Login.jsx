@@ -52,11 +52,13 @@ export default function Login() {
       <div className="login-grid">
         {/* Left side branding */}
         <section className="left">
-          <h1 className="brand">Calorie Canvas</h1>
-          <p className="tagline">
-            Track your meals, exercises, and<br />
-            nutrition to reach your health goals.
-          </p>
+          <div className="brand-block">
+            <h1 className="brand">Calorie Canvas</h1>
+            <p className="tagline">
+              Track your meals, exercises, and<br />
+              nutrition to reach your health goals.
+            </p>
+          </div>
         </section>
 
         {/* Right side framed card */}

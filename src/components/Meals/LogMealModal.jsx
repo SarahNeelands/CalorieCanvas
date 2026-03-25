@@ -42,6 +42,18 @@ function getMealPer100g(item) {
   };
 }
 
+function getUnitLabel(item, unit) {
+  if (unit !== "quantity") return unit;
+  return item?.unit_conversions?.quantity_label || "snack";
+}
+
+function getDefaultUnit(item, availableUnits) {
+  if (item?.type === "snack" && availableUnits.includes("quantity")) {
+    return "quantity";
+  }
+  return availableUnits[0] || "g";
+}
+
 export default function LogMealModal({ open, onClose, userId, item }) {
   const navigate = useNavigate();
   const [whenAt, setWhenAt] = React.useState(new Date().toISOString());
@@ -55,7 +67,8 @@ export default function LogMealModal({ open, onClose, userId, item }) {
     if (open) {
       setWhenAt(new Date().toISOString());
       setQty(100);
-      setUnit(availableUnits[0] || "g");
+      setUnit(getDefaultUnit(item, availableUnits));
+      setQty(item?.type === "snack" && availableUnits.includes("quantity") ? 1 : 100);
       setError(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -126,7 +139,9 @@ export default function LogMealModal({ open, onClose, userId, item }) {
           <label style={{ width: 160 }}>
             <div className="label">Unit</div>
             <select value={unit} onChange={(e) => setUnit(e.target.value)}>
-              {availableUnits.map((u) => (<option key={u} value={u}>{u}</option>))}
+              {availableUnits.map((u) => (
+                <option key={u} value={u}>{getUnitLabel(item, u)}</option>
+              ))}
             </select>
           </label>
         </div>

@@ -6,7 +6,12 @@ import {
   getProfile,
   updateProfile,
 } from "../../services/profileClient";
-import { getCurrentSession, getCurrentUserId } from "../../services/authClient";
+import {
+  getCurrentSession,
+  getCurrentUserId,
+  signOutCurrentUser,
+} from "../../services/authClient";
+import { completeProfileSetup } from "../../services/profileSetupProgress";
 
 const activityOptions = [
   { value: "sedentary", label: "Sedentary", help: "Mostly sitting with minimal exercise." },
@@ -310,6 +315,17 @@ export default function Profile({ user }) {
     setIsEditing(false);
   }
 
+  async function handleLogout() {
+    setMsg(null);
+    try {
+      await signOutCurrentUser();
+      completeProfileSetup();
+      window.location.href = "/login";
+    } catch (error) {
+      setMsg(error.message || "Failed to log out.");
+    }
+  }
+
   const previewGoal = calculateDailyCalorieGoal({
     dob,
     gender,
@@ -324,12 +340,14 @@ export default function Profile({ user }) {
     <main className="profile-page">
       <NavBar profileImageSrc={user?.avatar} />
       <div className="profile-shell">
-        <section className="profile-card">
-          <h1 className="profile-title">Profile</h1>
-          <p className="profile-subtitle">
+        <div className="profile-intro cc-page-heading">
+          <h1 className="profile-title cc-page-title">Profile</h1>
+          <p className="profile-subtitle cc-page-subtitle">
             Update the measurements and goals that drive your dashboard calorie target.
           </p>
+        </div>
 
+        <section className="profile-card">
           {loading ? (
             <p className="profile-status">Loading profileâ€¦</p>
           ) : !isEditing ? (
@@ -389,6 +407,9 @@ export default function Profile({ user }) {
               {msg && <p className="profile-status">{msg}</p>}
 
               <div className="profile-actions">
+                <button className="profile-logout" type="button" onClick={handleLogout}>
+                  Log Out
+                </button>
                 <button className="profile-save" type="button" onClick={handleEdit}>
                   Edit Profile
                 </button>

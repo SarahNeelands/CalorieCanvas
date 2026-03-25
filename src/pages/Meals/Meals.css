@@ -16,20 +16,6 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.meals-title {
-  margin: 0;
-  color: #143d33;
-  font-size: clamp(2rem, 3vw, 2.75rem);
-  font-family: Georgia, "Times New Roman", serif;
-}
-
-.meals-subtitle {
-  margin: 0.35rem 0 0;
-  color: #3b5a51;
-  font-size: 1rem;
 }
 
 .meals-add-button {
@@ -45,30 +31,58 @@
 
 .meals-tabs {
   display: none;
-  gap: 0.6rem;
-  padding: 0.45rem;
+  position: relative;
+  gap: 0;
+  padding: 0.35rem;
   margin-bottom: 1rem;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.66);
+  background: rgba(221, 234, 213, 0.9);
   box-shadow: 0 12px 28px rgba(20, 61, 51, 0.08);
   backdrop-filter: blur(10px);
 }
 
+.meals-tabs__indicator {
+  position: absolute;
+  top: 0.35rem;
+  bottom: 0.35rem;
+  left: 0.35rem;
+  width: calc(50% - 0.175rem);
+  border-radius: 999px;
+  background: #2c5b49;
+  box-shadow: 0 8px 18px rgba(44, 91, 73, 0.22);
+  transition: transform 0.28s ease;
+}
+
+.meals-tabs[data-active="snacks"] .meals-tabs__indicator {
+  transform: translateX(100%);
+}
+
 .meals-tab {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 50%;
   border: none;
   border-radius: 999px;
-  padding: 0.7rem 1.2rem;
+  padding: 0.72rem 0.75rem;
   background: transparent;
   color: #2b5147;
   font-weight: 700;
   font-size: 0.98rem;
   cursor: pointer;
+  transition: color 0.22s ease;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .meals-tab.active {
-  background: #2c5b49;
   color: #fff;
-  box-shadow: 0 8px 18px rgba(44, 91, 73, 0.22);
+}
+
+.meals-tab:focus,
+.meals-tab:focus-visible,
+.meals-tab:active {
+  outline: none;
+  box-shadow: none;
 }
 
 .meals-panel {
@@ -81,6 +95,14 @@
 
 .meals-panel--mobile {
   display: none;
+}
+
+.meals-mobile-pane.is-hidden {
+  display: none;
+}
+
+.meals-mobile-pane.is-active {
+  display: block;
 }
 
 .meals-desktop-grid {
@@ -108,7 +130,8 @@
   }
 
   .meals-shell {
-    width: min(100%, calc(100vw - 1.5rem));
+    width: min(100%, calc(100vw - 1rem));
+    padding-top: 0.35rem;
   }
 
   .meals-header {
@@ -117,7 +140,7 @@
   }
 
   .meals-tabs {
-    display: inline-flex;
+    display: flex;
     width: 100%;
     box-sizing: border-box;
   }
@@ -137,11 +160,5 @@
 
   .meals-add-button {
     width: 100%;
-  }
-}
-
-@media (max-width: 600px) {
-  .meals-shell {
-    width: min(100%, calc(100vw - 1rem));
   }
 }

@@ -163,16 +163,82 @@
 }
 
 /* Floating quick actions (global) */
-.qa-floating{ position:fixed; left:18px; bottom:18px; z-index:120; }
-.qa-floating-btn{ width:64px; height:64px; border-radius:999px; border:none; background:#fff; box-shadow:0 12px 28px rgba(0,0,0,0.18); display:inline-flex; align-items:center; justify-content:center; cursor:pointer; }
-.qa-floating-btn img{ width:44px; height:44px; }
-.qa-floating-menu{ position:absolute; left:0; bottom:78px; background:#fff; padding:8px; border-radius:12px; box-shadow:0 12px 36px rgba(0,0,0,0.14); display:flex; flex-direction:column; gap:8px; }
-.qa-floating-item{ border:none; background:transparent; padding:8px 12px; text-align:left; font-weight:700; cursor:pointer; }
+.qa-floating{
+  position:fixed;
+  right:18px;
+  bottom:calc(4.1rem + env(safe-area-inset-bottom, 0px));
+  z-index:10050;
+}
+.qa-floating-btn{
+  width:88px;
+  height:88px;
+  border:none;
+  background:transparent;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  padding:0;
+  position:relative;
+}
+.qa-floating-btn::before{
+  content:"";
+  position:absolute;
+  width:64px;
+  height:64px;
+  top:8px;
+  border-radius:999px;
+  background:rgba(251, 247, 238, 0.96);
+  box-shadow:
+    0 10px 22px rgba(76, 61, 41, 0.12),
+    inset 0 1px 0 rgba(255, 251, 244, 0.65);
+  z-index:0;
+}
+.qa-floating-btn img{ width:84px; height:84px; display:block; position:relative; z-index:1; }
+.qa-floating-menu{
+  position:absolute;
+  right:0;
+  bottom:78px;
+  min-width:182px;
+  background:rgba(251, 247, 238, 0.96);
+  padding:8px;
+  border-radius:16px;
+  border:1px solid rgba(79, 107, 80, 0.18);
+  box-shadow:0 10px 24px rgba(76, 61, 41, 0.1);
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.qa-floating-item{
+  border:none;
+  border-radius:12px;
+  border-bottom:1px solid rgba(79, 107, 80, 0.1);
+  background:rgba(79, 107, 80, 0.03);
+  padding:10px 12px;
+  text-align:left;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size:1rem;
+  font-weight:700;
+  color:#24483c;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.qa-floating-item:last-child{
+  border-bottom:none;
+}
+.qa-floating-item:hover{
+  background:rgba(79, 107, 80, 0.08);
+}
 
 /* ensure floating button visible on desktop and phone */
 @media (max-width: 420px){
-  .qa-floating{ left:12px; bottom:12px; }
-  .qa-floating-btn{ width:56px; height:56px; }
+  .qa-floating{
+    right:12px;
+    bottom:calc(4rem + env(safe-area-inset-bottom, 0px));
+  }
+  .qa-floating-btn{ width:82px; height:82px; }
+  .qa-floating-btn::before{ width:60px; height:60px; top:7px; }
+  .qa-floating-btn img{ width:80px; height:80px; }
 }
 /* Enlarge quick actions area and buttons on large screens */
 @media (min-width: 1280px) {

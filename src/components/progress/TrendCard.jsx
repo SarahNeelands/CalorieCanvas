@@ -2,9 +2,9 @@ import React from 'react';
 import Card from '../ui/Card.jsx';
 import './TrendCard.css';
 
-export default function TrendCard({ title, subtitle, averageText, actions, children }) {
+export default function TrendCard({ title, subtitle, averageText, actions, children, className = '' }) {
   return (
-    <Card>
+    <Card className={`progress-trend-card ${className}`.trim()}>
       <div className="trend-card__header">
         <div>
           <h3 className="trend-card__title">{title}</h3>

@@ -10,6 +10,7 @@ export default function MealSummary({
   saving = false,
   error = null,
   onSave,
+  onLogPortion,
   isEditing = false,
 }) {
   const totalCalories = ingredients.reduce((sum, ing) => sum + (ing.calories || 0), 0);
@@ -51,7 +52,9 @@ export default function MealSummary({
         <button className="btn save" onClick={onSave} disabled={saving}>
           {saving ? "Saving..." : isEditing ? "Save Changes" : "Save Meal"}
         </button>
-        <button className="btn ghost" type="button">Log a Portion</button>
+        <button className="btn ghost" type="button" onClick={onLogPortion} disabled={saving}>
+          Log a Portion
+        </button>
       </div>
     </div>
   );

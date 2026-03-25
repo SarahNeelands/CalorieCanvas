@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
 import './ProfileSetup.css';
 import { getCurrentSession, getCurrentUserId } from '../../services/authClient';
@@ -11,6 +12,7 @@ import {
 import { saveLocalProfile } from '../../services/profileClient';
 
 export default function ProfileSetup4() {
+  const navigate = useNavigate();
   const [prefs, setPrefs] = useState({
     show_calories: true,
     show_macros: true,
@@ -107,7 +109,7 @@ export default function ProfileSetup4() {
     updateProfileSetupState({ prefs, completed: true });
     completeProfileSetup();
     setSaving(false);
-    window.location.href = '/';
+    navigate('/');
   }
 
   if (checking) {

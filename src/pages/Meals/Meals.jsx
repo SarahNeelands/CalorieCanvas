@@ -33,6 +33,7 @@ export default function Meals({ user }) {
 
   useEffect(() => {
     if (location?.state?.openLogMeal) {
+      setSelectedItem(location.state.selectedLogItem || null);
       setLogOpen(true);
       try {
         navigate(location.pathname, { replace: true, state: {} });
@@ -64,30 +65,33 @@ export default function Meals({ user }) {
     <main className="meals-page">
       <NavBar profileImageSrc={user.avatar} />
       <div className="meals-shell">
-        <header className="meals-header">
+        <header className="meals-header cc-page-heading">
           <div>
-            <h1 className="meals-title">Meals</h1>
-            <p className="meals-subtitle">Browse, edit, and log your saved meals and snacks.</p>
+            <h1 className="meals-title cc-page-title">Meals</h1>
+            <p className="meals-subtitle cc-page-subtitle">Browse, edit, and log your saved meals and snacks.</p>
           </div>
         </header>
 
-        <div className="meals-tabs">
+        <div className="meals-tabs" data-active={active}>
+          <span className="meals-tabs__indicator" aria-hidden="true" />
           <button
             className={active === "meals" ? "meals-tab active" : "meals-tab"}
             onClick={() => setActive("meals")}
+            type="button"
           >
             Meals
           </button>
           <button
             className={active === "snacks" ? "meals-tab active" : "meals-tab"}
             onClick={() => setActive("snacks")}
+            type="button"
           >
             Snacks
           </button>
         </div>
 
         <section className="meals-panel meals-panel--mobile">
-          {active === "meals" ? (
+          <div className={active === "meals" ? "meals-mobile-pane is-active" : "meals-mobile-pane is-hidden"}>
             <MealsList
               userId={user?.id}
               onLogClick={onSelectToLog}
@@ -95,14 +99,15 @@ export default function Meals({ user }) {
               title="Meals"
               headerAction={mealAddButton}
             />
-          ) : (
+          </div>
+          <div className={active === "snacks" ? "meals-mobile-pane is-active" : "meals-mobile-pane is-hidden"}>
             <SnacksList
               userId={user?.id}
               onLogClick={onSelectToLog}
               title="Snacks"
               headerAction={snackAddButton}
             />
-          )}
+          </div>
         </section>
 
         <section className="meals-desktop-grid">

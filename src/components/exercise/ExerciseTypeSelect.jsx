@@ -24,26 +24,32 @@ export default function ExerciseTypeSelect({
 
   return (
     <div className="exercise-type-select">
-      <input
-        value={query}
-        onChange={(event) => onQuery?.(event.target.value)}
-        placeholder="Search or select exercise"
-        className="exercise-type-select__input"
-      />
+      <div className="exercise-type-select__search">
+        <span className="exercise-type-select__search-icon" aria-hidden="true">⌕</span>
+        <input
+          value={query}
+          onChange={(event) => onQuery?.(event.target.value)}
+          placeholder="Search or select exercise"
+          className="exercise-type-select__input"
+        />
+      </div>
 
       <div className="exercise-type-select__list">
-        {filtered.map((option) => (
-          <div
-            key={option.id}
-            className={`exercise-type-select__option ${valueId === option.id ? "is-selected" : ""}`}
-            onMouseDown={(event) => {
-              event.preventDefault();
-              onSelect?.(option);
-            }}
-          >
-            {option.name}
-          </div>
-        ))}
+        <div className="exercise-type-select__grid">
+          {filtered.map((option) => (
+            <button
+              type="button"
+              key={option.id}
+              className={`exercise-type-select__option ${valueId === option.id ? "is-selected" : ""}`}
+              onMouseDown={(event) => {
+                event.preventDefault();
+                onSelect?.(option);
+              }}
+            >
+              {option.name}
+            </button>
+          ))}
+        </div>
 
         {!filtered.length && (
           <div className="exercise-type-select__empty">No matching exercises.</div>
@@ -51,7 +57,8 @@ export default function ExerciseTypeSelect({
 
         <div className="exercise-type-select__divider" />
 
-        <div
+        <button
+          type="button"
           className="exercise-type-select__add"
           onMouseDown={(event) => {
             event.preventDefault();
@@ -59,7 +66,7 @@ export default function ExerciseTypeSelect({
           }}
         >
           + Add new exercise
-        </div>
+        </button>
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import TrendCard from './TrendCard.jsx';
+import LineTrendChart from './LineTrendChart.jsx';
 import { fetchWeightSeries } from '../../services/progressService.js';
 import './WeightTrend.css';
 
@@ -40,9 +40,7 @@ export default function WeightTrend({ userId, scope, unit = 'kg', onUnitChange, 
     return `${(sum / displayData.length).toFixed(1)} ${unit}`;
   }, [displayData, unit]);
 
-  const handleClick = (state) => {
-    const index = state?.activeTooltipIndex ?? -1;
-    const point = displayData[index];
+  const handlePointClick = (point) => {
     if (point) {
       onDayClick?.({
         dateLabel: point.label,
@@ -57,6 +55,7 @@ export default function WeightTrend({ userId, scope, unit = 'kg', onUnitChange, 
       title="Weight"
       subtitle={scopeLabel(scope)}
       averageText={avg ?? ''}
+      className="progress-trend-card--weight"
       actions={
         <div className="weight-unit-toggle">
           <button
@@ -76,28 +75,16 @@ export default function WeightTrend({ userId, scope, unit = 'kg', onUnitChange, 
         </div>
       }
     >
+      {!displayData.length && <p className="weight-trend__empty weight-trend__empty--top">No data for this range.</p>}
       <div className="trend-chart">
-        <ResponsiveContainer>
-          <AreaChart
-            data={displayData}
-            margin={{ top: 10, right: 20, left: 0, bottom: 0 }}
-            onClick={handleClick}
-          >
-            <XAxis dataKey="label" />
-            <YAxis domain={['dataMin - 2', 'dataMax + 2']} />
-            <Tooltip formatter={(value) => [`${value} ${unit}`, 'Weight']} />
-            <Area
-              type="monotone"
-              dataKey="displayValue"
-              stroke=""
-              fillOpacity={0.15}
-              dot={{ r: 4 }}
-              activeDot={{ r: 5 }}
-            />
-          </AreaChart>
-        </ResponsiveContainer>
+        <LineTrendChart
+          data={displayData}
+          valueKey="displayValue"
+          labels={['Mon', 'Tue', 'Wed', 'Thu', 'Fri']}
+          tone="deep-green"
+          onPointClick={handlePointClick}
+        />
       </div>
-      {!displayData.length && <p className="weight-trend__empty">No data for this range.</p>}
     </TrendCard>
   );
 }

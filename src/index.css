@@ -12,9 +12,39 @@ html, body, #root {
   overflow-x: hidden;
 }
 
+:root {
+  --cc-mobile-page-gutter: 0.875rem;
+  --cc-page-title-font: Georgia, "Times New Roman", serif;
+  --cc-page-title-size: clamp(2.15rem, 7vw, 2.55rem);
+  --cc-page-title-color: #143d33;
+  --cc-page-title-gap: 0.45rem;
+  --cc-page-section-gap: 1rem;
+}
+
+.cc-page-heading {
+  display: grid;
+  gap: var(--cc-page-title-gap);
+  margin-bottom: var(--cc-page-section-gap);
+}
+
+.cc-page-title {
+  margin: 0;
+  color: var(--cc-page-title-color);
+  font-size: var(--cc-page-title-size);
+  font-family: var(--cc-page-title-font);
+  line-height: 1.08;
+}
+
+.cc-page-subtitle {
+  margin: 0;
+  color: #3b5a51;
+  font-size: 1rem;
+}
+
 /* Phone-specific background and slightly larger fonts + spacing to improve readability */
 @media (max-width: 720px){
   html { font-size: clamp(16px, 1.4vw + 12px, 20px); }
+  :root { --mobile-nav-safe-bottom: calc(12.25rem + env(safe-area-inset-bottom, 0px)); }
   body{
     background: transparent;
   }
@@ -28,7 +58,30 @@ html, body, #root {
     background: url('./images/Iphone_Watercolor_Background.png') center center / 100% 100% no-repeat;
   }
   /* ensure main app content gets padding so components don't touch edges */
-  .container, .ex-container, .progress-container { padding-left: 0.875rem; padding-right: 0.875rem; }
+  .container, .ex-container, .progress-container { padding-left: var(--cc-mobile-page-gutter); padding-right: var(--cc-mobile-page-gutter); }
+  .container,
+  .ex-container,
+  .progress-container,
+  .profile-shell,
+  .meals-shell,
+  main.page,
+  main.form-page {
+    padding-bottom: var(--mobile-nav-safe-bottom) !important;
+    box-sizing: border-box;
+  }
+
+  .container,
+  .ex-container,
+  .progress-container,
+  .profile-shell,
+  .meals-shell,
+  main.form-page > div {
+    width: min(100%, calc(100vw - (var(--cc-mobile-page-gutter) * 2))) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-top: 0.35rem;
+    box-sizing: border-box;
+  }
   /* keep quick actions floating on top */
-  .qa-floating{ z-index:140; }
+  .qa-floating{ z-index:10050; }
 }

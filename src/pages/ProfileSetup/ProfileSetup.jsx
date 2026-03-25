@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
 import './ProfileSetup.css';
 import { API_BASE_URL } from '../../config/api';
@@ -12,6 +13,7 @@ import {
 import { saveLocalProfile } from '../../services/profileClient';
 
 export default function ProfileSetup() {
+  const navigate = useNavigate();
   const [name, setName] = useState('');
   const [dob, setDob] = useState('');
   const [gender, setGender] = useState('');
@@ -97,7 +99,7 @@ export default function ProfileSetup() {
     const { session } = await getCurrentSession();
     if (!session && isLocalAuth()) {
       updateProfileSetupState(nextState);
-      window.location.href = '/profile-setup-2';
+      navigate('/profile-setup-2');
       return;
     }
 
@@ -106,7 +108,7 @@ export default function ProfileSetup() {
     if (isLocalAuth()) {
       updateProfileSetupState(nextState);
       setSaving(false);
-      window.location.href = '/profile-setup-2';
+      navigate('/profile-setup-2');
       return;
     }
 
@@ -132,7 +134,7 @@ export default function ProfileSetup() {
     if (error) return setMsg(error.message);
 
     updateProfileSetupState(nextState);
-    window.location.href = '/profile-setup-2';
+    navigate('/profile-setup-2');
   }
 
   if (checking) {

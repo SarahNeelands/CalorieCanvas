@@ -170,6 +170,8 @@
   }
 
   .header {
+    padding-left: var(--cc-mobile-page-gutter, 0.875rem);
+    padding-right: var(--cc-mobile-page-gutter, 0.875rem);
     padding-bottom: 0.6rem;
   }
 

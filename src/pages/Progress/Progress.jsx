@@ -17,13 +17,13 @@ export default function Progress({ user }) {
   const navigate = useNavigate();
   const userId = user?.id;
 
-  function handleSaveWeight({ value, unit }) {
+  function handleSaveWeight({ value, unit, date }) {
     try {
       const key = 'cc.weights';
       const existing = JSON.parse(localStorage.getItem(key) || '[]');
       const item = {
         user_id: userId,
-        date: new Date().toISOString().slice(0, 10),
+        date: date || new Date().toISOString().slice(0, 10),
         value,
         unit,
       };
@@ -53,7 +53,7 @@ export default function Progress({ user }) {
           />
         )}
 
-        <h1 className="progress-title">Progress</h1>
+        <h1 className="progress-title cc-page-title">Progress</h1>
 
         <div className="progress-tabs">
           <ProgressTabs scope={scope} onChange={setScope} />

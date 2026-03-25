@@ -34,14 +34,14 @@
 .item {
   position: relative;
   background:
-    linear-gradient(180deg, rgba(255, 251, 244, 0.34), rgba(243, 235, 221, 0.2));
+    linear-gradient(180deg, rgba(255, 252, 247, 0.5), rgba(245, 238, 226, 0.34));
   width: min(100%, 47rem);
   border-radius: 1.15rem;
-  border: 1px solid rgba(176, 152, 121, 0.24);
+  border: 1px solid rgba(176, 152, 121, 0.28);
   box-shadow:
-    0 16px 34px rgba(96, 78, 54, 0.06),
-    0 3px 10px rgba(154, 131, 102, 0.055);
-  backdrop-filter: blur(0.8px);
+    0 18px 38px rgba(96, 78, 54, 0.085),
+    0 5px 14px rgba(154, 131, 102, 0.08);
+  backdrop-filter: blur(1.1px);
   padding: 0.45rem 1.2rem 0.45rem;
   overflow: hidden;
   max-width: 100%;
@@ -195,7 +195,10 @@
   .recent-meals {
     padding-left: 0;
     padding-right: 0;
-    width: 100%;
+    width: calc(100vw - 2rem);
+    max-width: calc(100vw - 2rem);
+    margin: 0 auto 0 0;
+    box-sizing: border-box;
   }
 
   .recent-meals__header {
@@ -205,19 +208,27 @@
 
   .list {
     width: 100%;
+    max-width: 100%;
     justify-items: stretch;
+    box-sizing: border-box;
   }
 
   .item {
-    width: 100%;
-    max-width: 100%;
+    width: calc(100vw - 2rem);
+    max-width: calc(100vw - 2rem);
     margin: 0;
+    box-sizing: border-box;
+  }
+
+  .item__click {
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   .item__content {
     flex-direction: column;
     align-items: flex-start;
-    padding: 0.7rem 0.1rem 0.7rem !important;
+    padding: 0.7rem 0.6rem 0.7rem !important;
   }
 
   .kcal {
@@ -243,7 +254,7 @@
   }
 
   .item__actions {
-    padding: 0 0.2rem 0.45rem;
+    padding: 0 0.6rem 0.45rem;
     flex-wrap: wrap;
   }
 }

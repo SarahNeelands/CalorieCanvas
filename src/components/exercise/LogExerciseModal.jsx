@@ -12,7 +12,7 @@ const [pendingName, setPendingName] = useState("");
 
 
 return (
-<Modal title="Log exercise" onClose={onClose}>
+<Modal title="Log Exercise" onClose={onClose}>
 <div className="log-exercise-modal">
 <ExerciseLogForm
 types={state.exerciseTypes}

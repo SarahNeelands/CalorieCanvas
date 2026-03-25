@@ -11,6 +11,7 @@ const DEFAULT_TYPES = [
   { id: "yoga", name: "Yoga" },
   { id: "swim", name: "Swimming" },
 ];
+const DEFAULT_STATE = { userId: null, exerciseTypes: DEFAULT_TYPES, logs: [] };
 
 const rid = () => Math.random().toString(36).slice(2, 10);
 
@@ -28,17 +29,41 @@ function ymd(date) {
 function readStoredState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : { userId: null, exerciseTypes: DEFAULT_TYPES, logs: [] };
+    return raw ? JSON.parse(raw) : DEFAULT_STATE;
   } catch {
-    return { userId: null, exerciseTypes: DEFAULT_TYPES, logs: [] };
+    return DEFAULT_STATE;
   }
+}
+
+function writeStoredState(state) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function mergeExerciseTypes(primary = [], fallback = []) {
+  const merged = new Map();
+  [...fallback, ...primary].forEach((type) => {
+    if (!type?.id) return;
+    merged.set(type.id, type);
+  });
+  return Array.from(merged.values());
+}
+
+function mergeLogs(primary = [], fallback = []) {
+  const merged = new Map();
+  [...fallback, ...primary].forEach((log) => {
+    if (!log?.id) return;
+    merged.set(log.id, log);
+  });
+  return Array.from(merged.values()).sort(
+    (a, b) => new Date(b.timestampISO || 0).getTime() - new Date(a.timestampISO || 0).getTime()
+  );
 }
 
 export function ExerciseProvider({ children, userId }) {
   const [state, setState] = useState(() => readStoredState());
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    writeStoredState(state);
   }, [state]);
 
   useEffect(() => {
@@ -71,17 +96,20 @@ export function ExerciseProvider({ children, userId }) {
 
         if (!mounted) return;
 
+        const localState = readStoredState();
+        const remoteLogs = (logs || []).map((log) => ({
+          id: log.id,
+          userId: log.user_id,
+          typeId: log.type_id,
+          minutes: log.minutes,
+          timestampISO: log.timestamp_iso,
+        }));
+
         setState((current) => ({
           ...current,
           userId,
-          exerciseTypes: (types && types.length) ? types : current.exerciseTypes,
-          logs: (logs || []).map((log) => ({
-            id: log.id,
-            userId: log.user_id,
-            typeId: log.type_id,
-            minutes: log.minutes,
-            timestampISO: log.timestamp_iso,
-          })),
+          exerciseTypes: mergeExerciseTypes(types && types.length ? types : [], mergeExerciseTypes(current.exerciseTypes, localState.exerciseTypes)),
+          logs: mergeLogs(remoteLogs, mergeLogs(current.logs, localState.logs)),
         }));
       } catch {
         if (!mounted) return;
@@ -113,10 +141,14 @@ export function ExerciseProvider({ children, userId }) {
       name,
     };
 
-    setState((current) => ({
-      ...current,
-      exerciseTypes: [...current.exerciseTypes, nextType],
-    }));
+    setState((current) => {
+      const nextState = {
+        ...current,
+        exerciseTypes: mergeExerciseTypes([nextType], current.exerciseTypes),
+      };
+      writeStoredState(nextState);
+      return nextState;
+    });
 
     (async () => {
       try {
@@ -139,10 +171,14 @@ export function ExerciseProvider({ children, userId }) {
       timestampISO: normalizedTimestamp,
     };
 
-    setState((current) => ({
-      ...current,
-      logs: [log, ...(current.logs || [])],
-    }));
+    setState((current) => {
+      const nextState = {
+        ...current,
+        logs: mergeLogs([log], current.logs),
+      };
+      writeStoredState(nextState);
+      return nextState;
+    });
 
     (async () => {
       try {

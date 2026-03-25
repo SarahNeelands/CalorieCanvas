@@ -220,6 +220,6 @@ export async function fetchExerciseSeries(userId, scope = 'all') {
     return sortAscending(applyScope(points, scope));
   } catch (error) {
     console.warn('fetchExerciseSeries failed', error);
-    return [];
+    return sortAscending(applyScope(readLocalExerciseSeries(userId), scope));
   }
 }

@@ -6,7 +6,7 @@ import "./ExercisePageHeader.css";
 export default function ExercisePageHeader({ range, onChangeRange, onLog }) {
   return (
     <header className="ex-header">
-      <h1 className="ex-title">Exercise</h1>
+      <h1 className="ex-title cc-page-title">Exercise</h1>
       <div className="ex-actions">
         <SegmentedControl
           value={range}

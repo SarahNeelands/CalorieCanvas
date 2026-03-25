@@ -20,7 +20,7 @@ html, body, #root {
 /* ===== Page scaffold ===== */
 .logmeal-page {
   min-height: 100vh;
-  background: var(--cc-bg);
+  background: linear-gradient(180deg, #f6f0e4 0%, #eef4ea 100%);
   display: flex;
   flex-direction: column;
 }
@@ -30,6 +30,9 @@ html, body, #root {
   display: flex;
   justify-content: center;
   overflow: visible;
+  width: 100%;
+  padding-bottom: calc(var(--mobile-nav-safe-bottom, 0px) + 0.5rem);
+  box-sizing: border-box;
 }
 
 /* ===== Two-column grid ===== */
@@ -40,8 +43,9 @@ html, body, #root {
   display: grid;
   grid-template-columns: minmax(0, 1fr) clamp(320px, 25vw, 380px);
   gap: 1.5rem;
-  padding: 0rem 2rem 1.5rem;
+  padding: 0 1.25rem 1.5rem;
   align-items: start;
+  box-sizing: border-box;
 }
 
 .left-col,
@@ -51,10 +55,61 @@ html, body, #root {
 
 /* ===== Card styling ===== */
 .card {
-  background: var(--cc-surface);
-  border: 1px solid var(--cc-border);
+  position: relative;
+  background:
+    linear-gradient(180deg, rgba(255, 251, 244, 0.72), rgba(243, 235, 221, 0.7));
+  border: 1px solid rgba(176, 152, 121, 0.3);
   border-radius: 1rem;
-  box-shadow: 0 0.0625rem 0.125rem rgba(0, 0, 0, 0.04);
+  box-shadow:
+    0 16px 34px rgba(96, 78, 54, 0.06),
+    0 3px 10px rgba(154, 131, 102, 0.055);
+  backdrop-filter: blur(0.8px);
+  -webkit-backdrop-filter: blur(0.8px);
+  overflow: hidden;
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(115deg, rgba(255, 255, 255, 0.08), transparent 46%),
+    linear-gradient(180deg, rgba(255, 250, 242, 0.1), rgba(246, 239, 228, 0.06)),
+    repeating-linear-gradient(
+      0deg,
+      rgba(123, 98, 67, 0.028) 0,
+      rgba(123, 98, 67, 0.028) 1px,
+      transparent 1px,
+      transparent 11px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(135, 110, 76, 0.018) 0,
+      rgba(135, 110, 76, 0.018) 1px,
+      transparent 1px,
+      transparent 13px
+    );
+  opacity: 0.42;
+  pointer-events: none;
+}
+
+.card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 249, 240, 0.26),
+    inset 0 1px 6px rgba(127, 103, 71, 0.06);
+  background:
+    linear-gradient(180deg, rgba(196, 171, 137, 0.08), transparent 18%, transparent 82%, rgba(173, 147, 114, 0.06));
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+.card > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* ===== Left column: two equal-height cards that shrink rather than scroll ===== */
@@ -69,7 +124,7 @@ html, body, #root {
 /* Allow both cards to shrink naturally */
 .card--details,
 .card--ingredients {
-  padding-left: 0.75rem;
+  padding: 1rem;
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -168,6 +223,8 @@ select {
 @media (max-width: 900px) {
   .logmeal-grid {
     grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 0 0.9rem 1.25rem;
   }
 
   .card--summary {
@@ -177,5 +234,31 @@ select {
 
   .left-col {
     grid-template-rows: auto auto; /* natural stacking on mobile */
+  }
+}
+
+@media (max-width: 640px) {
+  .logmeal-wrap {
+    align-items: flex-start;
+  }
+
+  .logmeal-grid {
+    padding: 0 0.75rem 1rem;
+  }
+
+  .card {
+    border-radius: 0.9rem;
+  }
+
+  .card--details,
+  .card--ingredients,
+  .card--summary {
+    padding: 0.9rem;
+  }
+}
+
+@media (max-width: 720px) {
+  .logmeal-page {
+    background: transparent;
   }
 }

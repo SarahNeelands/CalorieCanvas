@@ -1,0 +1,120 @@
+.line-trend-chart {
+  position: relative;
+  height: 100%;
+  border-radius: 1rem;
+  padding: 0.25rem 0.5rem 1.75rem;
+  background: rgba(255, 248, 239, 0.14);
+  border: 1px dashed rgba(148, 120, 85, 0.24);
+}
+
+.line-trend-chart__grid {
+  position: absolute;
+  inset: 0.45rem 0.8rem 1.85rem 0.8rem;
+  display: grid;
+  grid-template-rows: repeat(4, 1fr);
+  pointer-events: none;
+}
+
+.line-trend-chart__grid span {
+  border-top: 1px dashed rgba(118, 101, 79, 0.18);
+}
+
+.line-trend-chart__svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+
+.line-trend-chart__axis {
+  stroke: rgba(111, 104, 91, 0.45);
+  stroke-width: 0.6;
+}
+
+.line-trend-chart__tick-line {
+  stroke: rgba(118, 101, 79, 0.16);
+  stroke-width: 0.55;
+  stroke-dasharray: 2 2;
+}
+
+.line-trend-chart__tick-text {
+  fill: #7a705e;
+  font-size: 4.3px;
+  text-anchor: start;
+}
+
+.line-trend-chart__line {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.line-trend-chart__area {
+  stroke: none;
+  opacity: 0.18;
+}
+
+.line-trend-chart__dot {
+  stroke: #fff8ef;
+  stroke-width: 1.5;
+}
+
+.line-trend-chart__line--green,
+.line-trend-chart__dot--green {
+  stroke: #456f5d;
+  fill: #456f5d;
+}
+
+.line-trend-chart__area--green {
+  fill: #8fb5a3;
+}
+
+.line-trend-chart__line--gold,
+.line-trend-chart__dot--gold {
+  stroke: #ad7b36;
+  fill: #ad7b36;
+}
+
+.line-trend-chart__area--gold {
+  fill: #d8b07a;
+}
+
+.line-trend-chart__line--deep-green,
+.line-trend-chart__dot--deep-green {
+  stroke: #2c5b49;
+  fill: #2c5b49;
+}
+
+.line-trend-chart__area--deep-green {
+  fill: #7ea696;
+}
+
+.line-trend-chart__labels {
+  position: absolute;
+  left: 0.8rem;
+  right: 0.8rem;
+  bottom: 0;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.25rem;
+  color: #6f685b;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+@media (max-width: 720px) {
+  .line-trend-chart {
+    padding: 0.2rem 0.4rem 1.6rem;
+  }
+
+  .line-trend-chart__grid {
+    inset: 0.35rem 0.65rem 1.7rem 0.65rem;
+  }
+
+  .line-trend-chart__labels {
+    left: 0.65rem;
+    right: 0.65rem;
+    font-size: 0.82rem;
+  }
+}

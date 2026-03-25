@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import TrendCard from './TrendCard.jsx';
+import LineTrendChart from './LineTrendChart.jsx';
 import { fetchExerciseSeries } from '../../services/progressService.js';
 
 export default function ExerciseTrend({ userId, scope, onDayClick }) {
@@ -18,30 +18,23 @@ export default function ExerciseTrend({ userId, scope, onDayClick }) {
     return Math.round(sum / data.length) + ' min';
   }, [data]);
 
-  const handleClick = (state) => {
-    if (!state?.activeLabel || scope !== 'week') return;
-    const idx = state?.activeTooltipIndex ?? -1;
-    const point = data[idx];
+  const handlePointClick = (point) => {
+    if (scope !== 'week') return;
     if (point) onDayClick?.({ dateLabel: point.label, exerciseTypes: point?.extra?.types ?? [] });
   };
 
   return (
-    <TrendCard title="Exercise Minutes" subtitle={scopeLabel(scope)} averageText={avg ?? ''}>
+    <TrendCard title="Exercise Minutes" subtitle={scopeLabel(scope)} averageText={avg ?? ''} className="progress-trend-card--exercise">
+      {!data.length && <p className="weight-trend__empty weight-trend__empty--top">No data for this range.</p>}
       <div className="trend-chart">
-        <ResponsiveContainer>
-          <AreaChart
-            data={data}
-            margin={{ top: 10, right: 20, left: 0, bottom: 0 }}
-            onClick={handleClick}
-          >
-            <XAxis dataKey="label" />
-            <YAxis />
-            <Tooltip />
-            <Area type="monotone" dataKey="value" stroke="" fillOpacity={0.15} />
-          </AreaChart>
-        </ResponsiveContainer>
+        <LineTrendChart
+          data={data}
+          valueKey="value"
+          labels={['Mon', 'Tue', 'Wed', 'Thu', 'Fri']}
+          tone="green"
+          onPointClick={handlePointClick}
+        />
       </div>
-      {!data.length && <p className="mt-3 text-sm opacity-70">No data for this range.</p>}
     </TrendCard>
   );
 }
