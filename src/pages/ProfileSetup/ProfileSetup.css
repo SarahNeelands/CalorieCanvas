@@ -187,5 +187,9 @@ html, body, #root { height:100%; margin:0; background:none !important; }
 
 /* Mobile */
 @media (max-width: 720px){
+  .ps-bg{
+    background: url('../../images/Iphone_Watercolor_Background.png') center / cover no-repeat;
+  }
+
   .ps-row{ grid-template-columns:1fr; }
 }

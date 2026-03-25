@@ -6,12 +6,12 @@ import "./ExerciseLogForm.css";
 export default function ExerciseLogForm({ types, onAddNewType, onSubmit }) {
 const [query, setQuery] = useState("");
 const [selected, setSelected] = useState(null);
-const [minutes, setMinutes] = useState(30);
+const [minutes, setMinutes] = useState("");
 const [dateTime, setDateTime] = useState(() => new Date().toISOString().slice(0, 16));
 
 
 return (
-<form onSubmit={(e) => { e.preventDefault(); const chosen = selected || types.find(t => t.name.toLowerCase() === query.toLowerCase()); if (!chosen) return; onSubmit?.({ typeId: chosen.id, minutes, timestampISO: new Date(dateTime).toISOString() }); }} className="exercise-log-form">
+<form onSubmit={(e) => { e.preventDefault(); const chosen = selected || types.find(t => t.name.toLowerCase() === query.toLowerCase()); const numericMinutes = Number(minutes); if (!chosen || !(numericMinutes > 0)) return; onSubmit?.({ typeId: chosen.id, minutes: numericMinutes, timestampISO: new Date(dateTime).toISOString() }); }} className="exercise-log-form">
 <div className="exercise-log-form__panel exercise-log-form__panel--picker">
 <ExerciseTypeSelect
 valueId={selected?.id}
@@ -26,7 +26,7 @@ onAddNew={onAddNewType}
 <div className="exercise-log-form__panel exercise-log-form__panel--details">
 <div className="exercise-log-form__field">
 <label className="exercise-log-form__label">Duration (minutes)</label>
-<input type="number" min={1} max={1440} value={minutes} onChange={(e) => setMinutes(Number(e.target.value))} className="exercise-log-form__input" />
+<input type="number" min={1} max={1440} value={minutes} onChange={(e) => setMinutes(e.target.value)} className="exercise-log-form__input" />
 </div>
 <div className="exercise-log-form__field">
 <label className="exercise-log-form__label">Date & Time</label>

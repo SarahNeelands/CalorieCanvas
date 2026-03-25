@@ -68,7 +68,10 @@ export async function listMealLogs({ userId = getStoredUserId(), limit = 3 } = {
   if (!userId) throw new Error('Missing user ID');
 
   if (isLocalAuth()) {
-    const meals = getCachedCatalogItems('meal', userId);
+    const meals = [
+      ...getCachedCatalogItems('meal', userId),
+      ...getCachedCatalogItems('snack', userId),
+    ];
     return readLocalMealLogs()
       .filter((entry) => entry.user_id === userId)
       .sort((a, b) => new Date(b.logged_at).getTime() - new Date(a.logged_at).getTime())
@@ -88,7 +91,7 @@ export async function listMealLogs({ userId = getStoredUserId(), limit = 3 } = {
       grams_resolved,
       qty,
       unit_code,
-      meal:meals(id, title, kcal_per_100g)
+      meal:meals(id, title, type, unit_conversions, kcal_per_100g)
     `)
     .eq('user_id', userId)
     .order('logged_at', { ascending: false })

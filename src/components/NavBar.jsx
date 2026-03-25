@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, forwardRef } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import "./NavBar.css";
 import underlineImg from "../images/VineUnderline.png";
 import logoSrc from "../images/IconBackground.png";
@@ -10,6 +10,7 @@ export default function NavBar() {
   const navRef = useRef(null);
   const vineRef = useRef(null);
   const { pathname } = useLocation();
+  const navigate = useNavigate();
 
   const [box, setBox] = useState({ left: 0, width: 0, top: 0 });
   const [visible, setVisible] = useState(false);
@@ -88,7 +89,7 @@ export default function NavBar() {
   async function handleLogout() {
     await signOutCurrentUser();
     completeProfileSetup();
-    window.location.href = "/login";
+    navigate("/login", { replace: true });
   }
 
   return (
@@ -126,7 +127,7 @@ export default function NavBar() {
           </button>
           {accountOpen && (
             <div className="account-dropdown">
-              <a href="/profile" onClick={() => setAccountOpen(false)}>View Profile</a>
+              <Link to="/profile" onClick={() => setAccountOpen(false)}>View Profile</Link>
               <button type="button" onClick={handleLogout}>Log out</button>
             </div>
           )}

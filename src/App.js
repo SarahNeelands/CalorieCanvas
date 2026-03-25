@@ -29,11 +29,18 @@ const mockUser = {
 };
 
 function ProtectedRoute({ children, status, userId }) {
-  if (status === 'checking' || (status === 'authorized' && !userId)) {
+  const storedUserId = localStorage.getItem("user_id") || undefined;
+  const effectiveUserId = userId || storedUserId;
+
+  if (status === 'checking' && !effectiveUserId) {
     return null;
   }
 
-  return status === 'authorized' ? children : <Navigate to="/login" replace />;
+  if (effectiveUserId) {
+    return children;
+  }
+
+  return <Navigate to="/login" replace />;
 }
 
 function ScrollToTop() {
@@ -49,6 +56,15 @@ function ScrollToTop() {
 export default function App() {
   const [status, setStatus] = useState('checking');
   const [currentUserId, setCurrentUserId] = useState(() => localStorage.getItem("user_id") || undefined);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      document.body.classList.remove("app-booting");
+      document.body.classList.add("app-ready");
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -77,8 +93,19 @@ export default function App() {
 
     bootstrapAuth();
 
+    const handleAuthChange = () => {
+      setCurrentUserId(localStorage.getItem("user_id") || undefined);
+      setStatus('checking');
+      bootstrapAuth();
+    };
+
+    window.addEventListener('cc-auth-changed', handleAuthChange);
+    window.addEventListener('storage', handleAuthChange);
+
     return () => {
       active = false;
+      window.removeEventListener('cc-auth-changed', handleAuthChange);
+      window.removeEventListener('storage', handleAuthChange);
     };
   }, []);
 

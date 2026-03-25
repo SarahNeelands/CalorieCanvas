@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import "./Profile.css";
 import {
@@ -78,6 +79,7 @@ function formatActivityLabel(value) {
 }
 
 export default function Profile({ user }) {
+  const navigate = useNavigate();
   const [userId, setUserId] = React.useState(user?.id || null);
   const [accountEmail, setAccountEmail] = React.useState("");
   const [loading, setLoading] = React.useState(true);
@@ -320,7 +322,7 @@ export default function Profile({ user }) {
     try {
       await signOutCurrentUser();
       completeProfileSetup();
-      window.location.href = "/login";
+      navigate("/login", { replace: true });
     } catch (error) {
       setMsg(error.message || "Failed to log out.");
     }

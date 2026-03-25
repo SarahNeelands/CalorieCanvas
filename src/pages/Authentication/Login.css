@@ -71,6 +71,7 @@ html, body, #root { height: 100%; margin: 0; background: none !important; }
   color:var(--ink);
   text-align:center;
   width:auto;
+  display:inline-block;
 }
 .tagline{
   margin:0;
@@ -79,6 +80,7 @@ html, body, #root { height: 100%; margin: 0; background: none !important; }
   line-height:1.6;
   text-align:center;
   width:auto;
+  display:inline-block;
 }
 .card-wrap{ display:grid; place-items:center; }
 .frame{
@@ -212,6 +214,10 @@ html, body, #root { height: 100%; margin: 0; background: none !important; }
 }
 
 @media (max-width: 560px){
+  .bg{
+    background: url('../../images/Iphone_Watercolor_Background.png') center / cover no-repeat;
+  }
+
   .login-grid{
     gap: 1.4rem;
     padding: 1.35rem 0.75rem 0;

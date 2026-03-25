@@ -6,6 +6,14 @@ const LOCAL_USER_ID_KEY = 'user_id';
 
 function saveLocalUserId(userId) {
   localStorage.setItem(LOCAL_USER_ID_KEY, userId);
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('cc-auth-changed'));
+  }
+}
+
+export function setStoredUserId(userId) {
+  if (!userId) return;
+  saveLocalUserId(userId);
 }
 
 export function getStoredUserId() {
@@ -14,6 +22,9 @@ export function getStoredUserId() {
 
 export function clearStoredUserId() {
   localStorage.removeItem(LOCAL_USER_ID_KEY);
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('cc-auth-changed'));
+  }
 }
 
 function readLocalAuthUsers() {
@@ -109,7 +120,12 @@ export async function signIn({ email, password }) {
     return signInLocalAuth(email, password);
   }
 
-  return supabase.auth.signInWithPassword({ email, password });
+  const result = await supabase.auth.signInWithPassword({ email, password });
+  const userId = result?.data?.user?.id || result?.data?.session?.user?.id;
+  if (userId) {
+    saveLocalUserId(userId);
+  }
+  return result;
 }
 
 export async function getCurrentUserId() {

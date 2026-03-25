@@ -172,6 +172,19 @@
   overflow-wrap: anywhere;
 }
 
+.item__meta {
+  font-size: 0.9rem;
+  color: #444;
+  line-height: 1.4;
+  margin-top: 0.25rem;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.item__meta--brand {
+  color: #667260;
+}
+
 /* kcal on the far right */
 .kcal {
   font-family: 'Georgia', serif;

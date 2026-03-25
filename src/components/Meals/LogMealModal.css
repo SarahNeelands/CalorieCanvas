@@ -1,0 +1,146 @@
+.meal-log-modal {
+  display: grid;
+  gap: 1rem;
+  width: min(100%, 28rem);
+  margin: 0 auto;
+}
+
+.meal-log-modal__field {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.meal-log-modal__field--grow {
+  flex: 1;
+}
+
+.meal-log-modal__field--unit {
+  width: 10rem;
+  flex: 0 0 10rem;
+}
+
+.meal-log-modal__label {
+  font-family: Georgia, "Times New Roman", serif;
+  color: #143d33;
+  font-size: 1.08rem;
+  font-weight: 600;
+}
+
+.meal-log-modal__input,
+.meal-log-modal__select {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(20, 61, 51, 0.12);
+  border-radius: 1.1rem;
+  padding: 0.82rem 1rem;
+  background: rgba(255, 252, 247, 0.88);
+  color: #143d33;
+  font-size: 1.08rem;
+  outline: none;
+  appearance: none;
+}
+
+.meal-log-modal__input:focus,
+.meal-log-modal__select:focus {
+  border-color: rgba(115, 145, 119, 0.55);
+  box-shadow: 0 0 0 3px rgba(201, 217, 193, 0.42);
+}
+
+.meal-log-modal__select {
+  background-image: linear-gradient(45deg, transparent 50%, #143d33 50%),
+    linear-gradient(135deg, #143d33 50%, transparent 50%);
+  background-position: calc(100% - 18px) calc(1em + 3px), calc(100% - 12px) calc(1em + 3px);
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+  padding-right: 2.6rem;
+}
+
+.meal-log-modal__row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: end;
+}
+
+.meal-log-modal__error {
+  color: #9b2c2c;
+  font-size: 0.98rem;
+}
+
+.meal-log-modal__actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.15rem;
+}
+
+.meal-log-modal__secondary-btn,
+.meal-log-modal__primary-btn {
+  border-radius: 1.25rem;
+  padding: 0.88rem 1.15rem;
+  font-size: 1.08rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.meal-log-modal__secondary-btn {
+  border: 1px solid rgba(20, 61, 51, 0.14);
+  background: rgba(255, 252, 247, 0.88);
+  color: #143d33;
+  flex: 0 0 8.5rem;
+}
+
+.meal-log-modal__primary-btn {
+  border: none;
+  flex: 1;
+  background: linear-gradient(180deg, #64886f 0%, #5b7d67 100%);
+  color: #fff;
+  box-shadow: 0 12px 24px rgba(68, 101, 79, 0.2);
+}
+
+.meal-log-modal__secondary-btn:hover,
+.meal-log-modal__primary-btn:hover {
+  transform: translateY(-1px);
+}
+
+.meal-log-modal__primary-btn:hover {
+  box-shadow: 0 14px 26px rgba(68, 101, 79, 0.24);
+}
+
+.meal-log-modal__secondary-btn:disabled,
+.meal-log-modal__primary-btn:disabled {
+  opacity: 0.7;
+  cursor: default;
+  transform: none;
+}
+
+@media (max-width: 600px) {
+  .meal-log-modal {
+    width: 100%;
+    gap: 0.82rem;
+  }
+
+  .meal-log-modal__label {
+    font-size: 1.02rem;
+  }
+
+  .meal-log-modal__row {
+    gap: 0.6rem;
+  }
+
+  .meal-log-modal__field--unit {
+    width: 8.5rem;
+    flex-basis: 8.5rem;
+  }
+
+  .meal-log-modal__input,
+  .meal-log-modal__select,
+  .meal-log-modal__secondary-btn,
+  .meal-log-modal__primary-btn {
+    font-size: 0.96rem;
+  }
+
+  .meal-log-modal__secondary-btn,
+  .meal-log-modal__primary-btn {
+    padding: 0.78rem 1rem;
+  }
+}
