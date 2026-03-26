@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/static/css/main.16f4bafa.css",
-    "main.js": "/static/js/main.daa5f32b.js",
+    "main.js": "/static/js/main.8c2d7031.js",
     "static/js/453.947bcc51.chunk.js": "/static/js/453.947bcc51.chunk.js",
     "static/media/Iphone_Watercolor_Background.png": "/static/media/Iphone_Watercolor_Background.b63df6190eb54bad78c4.png",
     "static/media/DesktopBackground.png": "/static/media/DesktopBackground.066d7692588c6d03d861.png",
@@ -15,11 +15,11 @@
     "static/media/defaultprofile.png": "/static/media/defaultprofile.b11f45a152bb037786cd.png",
     "index.html": "/index.html",
     "main.16f4bafa.css.map": "/static/css/main.16f4bafa.css.map",
-    "main.daa5f32b.js.map": "/static/js/main.daa5f32b.js.map",
+    "main.8c2d7031.js.map": "/static/js/main.8c2d7031.js.map",
     "453.947bcc51.chunk.js.map": "/static/js/453.947bcc51.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.16f4bafa.css",
-    "static/js/main.daa5f32b.js"
+    "static/js/main.8c2d7031.js"
   ]
 }
