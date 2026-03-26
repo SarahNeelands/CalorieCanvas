@@ -4,7 +4,13 @@ import { supabase } from '../../supabaseClient';
 import './Login.css';
 import { isLocalAuth } from '../../config/runtime';
 import { signIn } from '../../services/authClient';
-import { getProfileSetupResumePath, hydrateProfileSetupState } from '../../services/profileSetupProgress';
+import {
+  ensureProfileSetupRequired,
+  getProfileSetupResumePath,
+  hasCompletedRequiredProfileSetup,
+  hydrateProfileSetupState,
+} from '../../services/profileSetupProgress';
+import { getProfile } from '../../services/profileClient';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -16,7 +22,7 @@ export default function Login() {
   const [msg, setMsg] = useState(null);
 
   useEffect(() => {
-    document.title = 'Log in • Calorie Canvas';
+    document.title = 'Log in - Calorie Canvas';
     window.scrollTo(0, 0);
   }, []);
 
@@ -34,7 +40,11 @@ export default function Login() {
     }
 
     try {
-      await hydrateProfileSetupState();
+      const setupState = await hydrateProfileSetupState();
+      const profile = await getProfile();
+      if (!hasCompletedRequiredProfileSetup(profile)) {
+        ensureProfileSetupRequired(setupState?.lastStep || '/profile-setup');
+      }
     } catch (hydrateError) {
       console.warn('Failed to hydrate profile setup state after login', hydrateError);
     }
@@ -129,7 +139,7 @@ export default function Login() {
 
               <div className="signup-row">
                 <span>Don&apos;t have an account</span>{' '}
-                <Link className="signup-link" to="/signup">Create one »</Link>
+                <Link className="signup-link" to="/signup">Create one</Link>
               </div>
 
               {msg && <p className="msg">{msg}</p>}

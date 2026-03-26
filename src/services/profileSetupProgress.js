@@ -68,6 +68,28 @@ export async function hydrateProfileSetupState(userIdArg) {
   return merged;
 }
 
+export function hasCompletedRequiredProfileSetup(profile) {
+  if (!profile) return false;
+  const hasName = Boolean(String(profile.display_name || '').trim());
+  const hasDob = Boolean(profile.dob);
+  const hasGender = Boolean(String(profile.gender || '').trim());
+  const hasHeight = Number(profile.height_cm) > 0;
+  const hasWeight = Number(profile.weight_kg) > 0;
+  const hasActivityLevel = Boolean(String(profile.activity_level || '').trim());
+  return hasName && hasDob && hasGender && hasHeight && hasWeight && hasActivityLevel;
+}
+
+export function ensureProfileSetupRequired(resumePath = '/profile-setup') {
+  const state = readState();
+  if (state.completed) {
+    writeState({ ...state, completed: false, lastStep: resumePath });
+    return;
+  }
+  if (!state.lastStep) {
+    writeState({ ...state, completed: false, lastStep: resumePath });
+  }
+}
+
 export async function persistProfileSetupState(patch, userIdArg) {
   const next = updateProfileSetupState(patch);
   const userId = userIdArg || await getCurrentUserId();

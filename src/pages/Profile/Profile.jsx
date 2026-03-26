@@ -7,6 +7,7 @@ import {
   calculateDailyCalorieGoal,
   getProfile,
   getLatestWeightKg,
+  saveLocalProfile,
   updateProfile,
 } from "../../services/profileClient";
 import {
@@ -15,6 +16,7 @@ import {
   signOutCurrentUser,
 } from "../../services/authClient";
 import { completeProfileSetup } from "../../services/profileSetupProgress";
+import { isLocalAuth } from "../../config/runtime";
 
 const activityOptions = [
   { value: "sedentary", label: "Sedentary", help: "Mostly sitting with minimal exercise." },
@@ -237,42 +239,38 @@ export default function Profile({ user }) {
     if (targetBf && !(nextTargetBf >= 0 && nextTargetBf <= 70)) return setMsg("Target body fat % invalid.");
     if (calorieGoal && !(nextCalorieGoal >= 800 && nextCalorieGoal <= 5000)) return setMsg("Set calorie goal invalid.");
 
+    const nextProfile = {
+      display_name: name.trim(),
+      dob: dob || null,
+      gender: gender || null,
+      height_cm: Number(finalHeightCm.toFixed(1)),
+      weight_kg: Number(finalWeightKg.toFixed(1)),
+      activity_level: activityLevel || "sedentary",
+      goal_weight_intent: goal,
+      goal_muscle_intent: muscle,
+      calorie_goal: nextCalorieGoal,
+      target_weight_kg: nextTargetWeight,
+      target_body_fat_pct: nextTargetBf,
+      pref_show_calories: showCalories,
+      pref_show_macros: showMacros,
+      pref_show_micros: showMicros,
+    };
+
     try {
       setSaving(true);
-      await updateProfile({
-        display_name: name.trim(),
-        dob: dob || null,
-        gender: gender || null,
-        height_cm: Number(finalHeightCm.toFixed(1)),
-        weight_kg: Number(finalWeightKg.toFixed(1)),
-        activity_level: activityLevel || "sedentary",
-        goal_weight_intent: goal,
-        goal_muscle_intent: muscle,
-        calorie_goal: nextCalorieGoal,
-        target_weight_kg: nextTargetWeight,
-        target_body_fat_pct: nextTargetBf,
-        pref_show_calories: showCalories,
-        pref_show_macros: showMacros,
-        pref_show_micros: showMicros,
-      }, userId);
-      setSavedProfile({
-        display_name: name.trim(),
-        dob: dob || null,
-        gender: gender || null,
-        height_cm: Number(finalHeightCm.toFixed(1)),
-        weight_kg: Number(finalWeightKg.toFixed(1)),
-        activity_level: activityLevel || "sedentary",
-        goal_weight_intent: goal,
-        goal_muscle_intent: muscle,
-        calorie_goal: nextCalorieGoal,
-        target_weight_kg: nextTargetWeight,
-        target_body_fat_pct: nextTargetBf,
-        pref_show_calories: showCalories,
-        pref_show_macros: showMacros,
-        pref_show_micros: showMicros,
-      });
+      saveLocalProfile(userId, nextProfile);
+      setSavedProfile(nextProfile);
       setIsEditing(false);
       setMsg("Profile saved.");
+
+      if (isLocalAuth()) {
+        await updateProfile(nextProfile, userId);
+      } else {
+        void updateProfile(nextProfile, userId).catch((error) => {
+          console.warn("Failed to sync profile update", error);
+          setMsg(error.message || "Profile saved locally. Cloud sync failed.");
+        });
+      }
     } catch (error) {
       setMsg(error.message || "Failed to save profile.");
     } finally {
@@ -372,7 +370,7 @@ export default function Profile({ user }) {
 
         <section className="profile-card">
           {loading ? (
-            <p className="profile-status">Loading profileâ€¦</p>
+            <p className="profile-status">Loading profile...</p>
           ) : !isEditing ? (
             <div className="profile-view">
               <div className="profile-grid">
@@ -491,7 +489,7 @@ export default function Profile({ user }) {
                     value={gender}
                     onChange={(e) => setGender(e.target.value)}
                   >
-                    <option value="">Select…</option>
+                    <option value="">Select...</option>
                     <option value="Female">Female</option>
                     <option value="Male">Male</option>
                     <option value="Non-binary">Non-binary</option>
@@ -632,7 +630,7 @@ export default function Profile({ user }) {
                   Cancel
                 </button>
                 <button className="profile-save" type="submit" disabled={saving}>
-                  {saving ? "Saving…" : "Save Profile"}
+                  {saving ? "Saving..." : "Save Profile"}
                 </button>
               </div>
             </form>
