@@ -56,6 +56,8 @@ function Section({ title, children }) {
       padding: 20,
       display: "grid",
       gap: 16,
+      overflow: "hidden",
+      minWidth: 0,
     }}>
       <h3 style={{ margin: 0, color: "#163227" }}>{title}</h3>
       {children}
@@ -76,11 +78,14 @@ function Field({ label, children, hint }) {
 function baseInputStyle() {
   return {
     width: "100%",
+    maxWidth: "100%",
+    minWidth: 0,
     border: "1px solid rgba(22,50,39,0.18)",
     borderRadius: 12,
     padding: "12px 14px",
     fontSize: 15,
     background: "#fff",
+    boxSizing: "border-box",
   };
 }
 
@@ -331,7 +336,7 @@ export default function NewIngredientPage({ user }) {
         </header>
 
         <Section title="Ingredient Details">
-          <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))" }}>
+          <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", minWidth: 0 }}>
             <Field label="Ingredient Name">
               <input
                 style={baseInputStyle()}
@@ -352,12 +357,11 @@ export default function NewIngredientPage({ user }) {
           </div>
 
           <Field label="Photo" hint="Take a picture or upload one from your phone.">
-            <div style={{ display: "grid", gap: 12 }}>
+            <div style={{ display: "grid", gap: 12, minWidth: 0 }}>
               <input
                 ref={photoInputRef}
                 type="file"
                 accept="image/*"
-                capture="environment"
                 onChange={handlePhotoChange}
                 style={{ display: "none" }}
               />
@@ -414,9 +418,9 @@ export default function NewIngredientPage({ user }) {
         </Section>
 
         <Section title="Serving Size">
-          <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
+          <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", minWidth: 0 }}>
             <Field label="Serving Size" hint="What nutrition values below refer to.">
-              <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 10 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 10, minWidth: 0 }}>
                 <input
                   style={baseInputStyle()}
                   type="text"
@@ -440,10 +444,10 @@ export default function NewIngredientPage({ user }) {
         </Section>
 
         <Section title="Macros">
-          <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))" }}>
+          <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", minWidth: 0 }}>
             {MACRO_FIELDS.map((field) => (
               <Field key={field.key} label={field.label}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 10, alignItems: "center" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 10, alignItems: "center", minWidth: 0 }}>
                   <input
                     style={baseInputStyle()}
                     type="number"
@@ -461,14 +465,14 @@ export default function NewIngredientPage({ user }) {
         </Section>
 
         <Section title="Micros">
-          <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
+          <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", minWidth: 0 }}>
             {MICRO_FIELDS.map((field) => (
               <Field
                 key={field.key}
                 label={field.label}
                 hint="Enter mg, g, or % daily value. Conversion can be derived later."
               >
-                <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 10 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 10, minWidth: 0 }}>
                   <input
                     style={baseInputStyle()}
                     type="number"

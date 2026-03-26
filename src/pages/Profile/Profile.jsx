@@ -5,6 +5,7 @@ import "./Profile.css";
 import {
   calculateBmr,
   calculateDailyCalorieGoal,
+  getCachedProfile,
   getProfile,
   getLatestWeightKg,
   saveLocalProfile,
@@ -89,6 +90,20 @@ function formatActivityLabel(value) {
   return activityOptions.find((option) => option.value === value)?.label || "Sedentary";
 }
 
+function profileHasAnyData(profile) {
+  if (!profile) return false;
+  return Boolean(
+    profile.display_name ||
+    profile.dob ||
+    profile.gender ||
+    profile.height_cm ||
+    profile.weight_kg ||
+    profile.calorie_goal ||
+    profile.target_weight_kg ||
+    profile.target_body_fat_pct
+  );
+}
+
 export default function Profile({ user }) {
   const navigate = useNavigate();
   const [userId, setUserId] = React.useState(user?.id || null);
@@ -121,74 +136,88 @@ export default function Profile({ user }) {
   const [showMacros, setShowMacros] = React.useState(true);
   const [showMicros, setShowMicros] = React.useState(false);
 
+  const applyProfile = React.useCallback((profile, options = {}) => {
+    if (!profile) return;
+
+    setSavedProfile(profile);
+    setName(profile.display_name || "");
+    setDob(profile.dob || "");
+    setGender(profile.gender || "");
+    setGoal(profile.goal_weight_intent || "maintain");
+    setMuscle(profile.goal_muscle_intent || "maintain");
+    setActivityLevel(profile.activity_level || "sedentary");
+    setTargetWeight(profile.target_weight_kg ? String(profile.target_weight_kg) : "");
+    setTargetWeightUnit("kg");
+    setTargetBf(profile.target_body_fat_pct ? String(profile.target_body_fat_pct) : "");
+    setCalorieGoal(profile.calorie_goal ? String(profile.calorie_goal) : "");
+    setShowCalories(profile.pref_show_calories !== false);
+    setShowMacros(profile.pref_show_macros !== false);
+    setShowMicros(Boolean(profile.pref_show_micros));
+
+    if (profile.height_cm) {
+      setHeightCm(String(profile.height_cm));
+      const { feetValue, inchesValue } = imperialFromCm(profile.height_cm);
+      setFt(feetValue ? String(feetValue) : "");
+      setInch(inchesValue ? String(inchesValue) : "");
+    } else {
+      setHeightCm("");
+      setFt("");
+      setInch("");
+    }
+
+    if (profile.weight_kg) {
+      setWeightKg(String(profile.weight_kg));
+      const pounds = lbFromKg(profile.weight_kg);
+      setLb(pounds ? String(Number(pounds.toFixed(1))) : "");
+    } else {
+      setWeightKg("");
+      setLb("");
+    }
+
+    if (!profileHasAnyData(profile)) {
+      setIsEditing(true);
+      if (options.setSetupMessage !== false) {
+        setMsg("Complete your profile to unlock your calorie goal.");
+      }
+      return;
+    }
+
+    if (options.exitEdit !== false) {
+      setIsEditing(false);
+    }
+  }, []);
+
   React.useEffect(() => {
     let active = true;
 
     async function load() {
       try {
-        const [{ session }, resolvedUserId] = await Promise.all([
-          getCurrentSession(),
-          user?.id ? Promise.resolve(user.id) : getCurrentUserId(),
-        ]);
+        const resolvedUserId = user?.id ? user.id : await getCurrentUserId();
         if (!active) return;
         setUserId(resolvedUserId);
-        setAccountEmail(session?.user?.email || "");
+        const cachedProfile = getCachedProfile(resolvedUserId);
+        if (cachedProfile) {
+          applyProfile(cachedProfile);
+          setLoading(false);
+        }
 
-        const [profile, latestWeightKg] = await Promise.all([
+        const [profile, latestWeightKg, sessionResult] = await Promise.all([
           getProfile(resolvedUserId),
           getLatestWeightKg(resolvedUserId).catch(() => null),
+          getCurrentSession().catch(() => ({ session: null })),
         ]);
         if (!active) return;
+
+        setAccountEmail(sessionResult?.session?.user?.email || "");
+        setLatestLoggedWeightKg(latestWeightKg);
+
         if (!profile) {
           setIsEditing(true);
           setMsg("Complete your profile to unlock your calorie goal.");
           return;
         }
-        setSavedProfile(profile);
-        setLatestLoggedWeightKg(latestWeightKg);
 
-        setName(profile.display_name || "");
-        setDob(profile.dob || "");
-        setGender(profile.gender || "");
-        setGoal(profile.goal_weight_intent || "maintain");
-        setMuscle(profile.goal_muscle_intent || "maintain");
-        setActivityLevel(profile.activity_level || "sedentary");
-        setTargetWeight(profile.target_weight_kg ? String(profile.target_weight_kg) : "");
-        setTargetWeightUnit("kg");
-        setTargetBf(profile.target_body_fat_pct ? String(profile.target_body_fat_pct) : "");
-        setCalorieGoal(profile.calorie_goal ? String(profile.calorie_goal) : "");
-        setShowCalories(profile.pref_show_calories !== false);
-        setShowMacros(profile.pref_show_macros !== false);
-        setShowMicros(Boolean(profile.pref_show_micros));
-
-        if (profile.height_cm) {
-          setHeightCm(String(profile.height_cm));
-          const { feetValue, inchesValue } = imperialFromCm(profile.height_cm);
-          setFt(feetValue ? String(feetValue) : "");
-          setInch(inchesValue ? String(inchesValue) : "");
-        }
-
-        if (profile.weight_kg) {
-          setWeightKg(String(profile.weight_kg));
-          const pounds = lbFromKg(profile.weight_kg);
-          setLb(pounds ? String(Number(pounds.toFixed(1))) : "");
-        }
-
-        const hasAnyProfileData = Boolean(
-          profile.display_name ||
-          profile.dob ||
-          profile.gender ||
-          profile.height_cm ||
-          profile.weight_kg ||
-          profile.calorie_goal ||
-          profile.target_weight_kg ||
-          profile.target_body_fat_pct
-        );
-
-        if (!hasAnyProfileData) {
-          setIsEditing(true);
-          setMsg("Complete your profile to unlock your calorie goal.");
-        }
+        applyProfile(profile);
       } catch (error) {
         if (!active) return;
         setMsg(error.message || "Failed to load profile.");
@@ -202,7 +231,7 @@ export default function Profile({ user }) {
     return () => {
       active = false;
     };
-  }, [user?.id]);
+  }, [applyProfile, user?.id]);
 
   function onTargetWeightUnitChange(nextUnit) {
     if (nextUnit === targetWeightUnit) return;

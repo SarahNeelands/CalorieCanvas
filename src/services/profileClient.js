@@ -19,6 +19,12 @@ function writeLocalProfiles(profiles) {
   localStorage.setItem(LOCAL_PROFILES_KEY, JSON.stringify(profiles));
 }
 
+export function getCachedProfile(userId = getStoredUserId()) {
+  if (!userId) return null;
+  const localProfiles = readLocalProfiles();
+  return localProfiles[userId] || null;
+}
+
 function readLegacyWeights() {
   try {
     const raw = localStorage.getItem('cc.weights');
