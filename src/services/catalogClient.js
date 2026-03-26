@@ -57,6 +57,38 @@ function writeLocalCatalogItems(items) {
   localStorage.setItem(LOCAL_CATALOG_STORAGE_KEY, JSON.stringify(items));
 }
 
+function upsertLocalCatalogItemSnapshot(item) {
+  const items = readLocalCatalogItems();
+  const index = items.findIndex((entry) => entry.id === item.id);
+  if (index === -1) {
+    items.unshift(item);
+  } else {
+    items[index] = item;
+  }
+  writeLocalCatalogItems(items);
+}
+
+function replaceLocalCatalogItemSnapshot(previousId, nextItem) {
+  const items = readLocalCatalogItems();
+  const nextItems = items
+    .filter((entry) => entry.id !== previousId)
+    .filter((entry, index, source) => source.findIndex((candidate) => candidate.id === entry.id) === index);
+  nextItems.unshift(nextItem);
+  writeLocalCatalogItems(nextItems);
+}
+
+function patchCachedCatalogItem(userId, itemType, item) {
+  const existing = catalogCache.get(getCatalogCacheKey(userId, itemType)) || [];
+  const nextItems = [item, ...existing.filter((entry) => entry.id !== item.id)];
+  setCachedCatalogItems(userId, itemType, nextItems);
+}
+
+function replaceCachedCatalogItem(userId, itemType, previousId, item) {
+  const existing = catalogCache.get(getCatalogCacheKey(userId, itemType)) || [];
+  const nextItems = [item, ...existing.filter((entry) => entry.id !== previousId && entry.id !== item.id)];
+  setCachedCatalogItems(userId, itemType, nextItems);
+}
+
 function createLocalCatalogItem(userId, input) {
   const item = {
     id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
@@ -189,7 +221,13 @@ export async function createCatalogItem(input) {
     }
   }
 
-  const { data, error } = await supabase
+  const optimisticItem = normalizeCatalogItem(createLocalCatalogItem(userId, {
+    ...input,
+    created_at: input.created_at || new Date().toISOString(),
+  }));
+  patchCachedCatalogItem(userId, optimisticItem.type, optimisticItem);
+
+  void supabase
     .from('meals')
     .insert({
       user_id: userId,
@@ -204,13 +242,19 @@ export async function createCatalogItem(input) {
       food_id: input.food_id ?? null,
     })
     .select()
-    .single();
+    .single()
+    .then(({ data, error }) => {
+      if (error) throw error;
+      const normalized = normalizeCatalogItem(data);
+      replaceLocalCatalogItemSnapshot(optimisticItem.id, normalized);
+      replaceCachedCatalogItem(userId, normalized.type, optimisticItem.id, normalized);
+    })
+    .catch((error) => {
+      console.warn('Failed to sync created catalog item', error);
+      deleteLocalCatalogItem(userId, optimisticItem.id);
+    });
 
-  if (error) throw error;
-  const normalized = normalizeCatalogItem(data);
-  const existing = catalogCache.get(getCatalogCacheKey(userId, normalized.type)) || [];
-  setCachedCatalogItems(userId, normalized.type, [normalized, ...existing.filter((item) => item.id !== normalized.id)]);
-  return normalized;
+  return optimisticItem;
 }
 
 export async function updateCatalogItem(itemId, input) {
@@ -222,7 +266,25 @@ export async function updateCatalogItem(itemId, input) {
     return normalizeCatalogItem(updateLocalCatalogItem(userId, itemId, input));
   }
 
-  const { data, error } = await supabase
+  const optimisticItem = normalizeCatalogItem({
+    ...(readLocalCatalogItems().find((item) => item.id === itemId) || {}),
+    id: itemId,
+    user_id: userId,
+    title: input.title,
+    item_type: input.item_type,
+    type: input.item_type,
+    created_at: readLocalCatalogItems().find((item) => item.id === itemId)?.created_at || new Date().toISOString(),
+    kcal_per_100g: input.kcal_per_100g,
+    protein_g_per_100g: input.protein_g_per_100g,
+    carbs_g_per_100g: input.carbs_g_per_100g,
+    fat_g_per_100g: input.fat_g_per_100g,
+    unit_conversions: input.unit_conversions,
+    food_id: input.food_id ?? null,
+  });
+  upsertLocalCatalogItemSnapshot(optimisticItem);
+  patchCachedCatalogItem(userId, optimisticItem.type, optimisticItem);
+
+  void supabase
     .from('meals')
     .update({
       title: input.title,
@@ -237,17 +299,18 @@ export async function updateCatalogItem(itemId, input) {
     .eq('id', itemId)
     .eq('user_id', userId)
     .select()
-    .single();
+    .single()
+    .then(({ data, error }) => {
+      if (error) throw error;
+      const normalized = normalizeCatalogItem(data);
+      upsertLocalCatalogItemSnapshot(normalized);
+      replaceCachedCatalogItem(userId, normalized.type, itemId, normalized);
+    })
+    .catch((error) => {
+      console.warn('Failed to sync updated catalog item', error);
+    });
 
-  if (error) throw error;
-  const normalized = normalizeCatalogItem(data);
-  const existing = catalogCache.get(getCatalogCacheKey(userId, normalized.type)) || [];
-  setCachedCatalogItems(
-    userId,
-    normalized.type,
-    existing.map((item) => (item.id === normalized.id ? normalized : item))
-  );
-  return normalized;
+  return optimisticItem;
 }
 
 export async function deleteCatalogItem(itemId) {
