@@ -2,9 +2,9 @@
   position: relative;
   height: 100%;
   border-radius: 1rem;
-  padding: 0.25rem 0.5rem 1.75rem;
-  background: rgba(255, 248, 239, 0.14);
-  border: 1px dashed rgba(148, 120, 85, 0.24);
+  padding: 0.3rem 0.6rem 1.9rem;
+  background: linear-gradient(180deg, rgba(255, 252, 246, 0.92) 0%, rgba(247, 241, 231, 0.76) 100%);
+  border: 1px solid rgba(148, 120, 85, 0.18);
 }
 
 .line-trend-chart__grid {
@@ -16,7 +16,7 @@
 }
 
 .line-trend-chart__grid span {
-  border-top: 1px dashed rgba(118, 101, 79, 0.18);
+  border-top: 1px solid rgba(118, 101, 79, 0.15);
 }
 
 .line-trend-chart__svg {
@@ -45,14 +45,20 @@
 
 .line-trend-chart__line {
   fill: none;
-  stroke-width: 3;
+  stroke-width: 0.9;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
 .line-trend-chart__area {
   stroke: none;
-  opacity: 0.18;
+  opacity: 0.24;
+}
+
+.line-trend-chart__average {
+  stroke-width: 1.2;
+  stroke-dasharray: 3 3;
+  opacity: 0.42;
 }
 
 .line-trend-chart__dot {
@@ -62,32 +68,44 @@
 
 .line-trend-chart__line--green,
 .line-trend-chart__dot--green {
-  stroke: #456f5d;
-  fill: #456f5d;
+  stroke: #4d7a63;
+  fill: #4d7a63;
 }
 
 .line-trend-chart__area--green {
-  fill: #8fb5a3;
+  fill: #bcd3c5;
+}
+
+.line-trend-chart__average--green {
+  stroke: #4d7a63;
 }
 
 .line-trend-chart__line--gold,
 .line-trend-chart__dot--gold {
-  stroke: #ad7b36;
-  fill: #ad7b36;
+  stroke: #6f8f57;
+  fill: #6f8f57;
 }
 
 .line-trend-chart__area--gold {
-  fill: #d8b07a;
+  fill: #cad9b8;
+}
+
+.line-trend-chart__average--gold {
+  stroke: #6f8f57;
 }
 
 .line-trend-chart__line--deep-green,
 .line-trend-chart__dot--deep-green {
-  stroke: #2c5b49;
-  fill: #2c5b49;
+  stroke: #2f5f4d;
+  fill: #2f5f4d;
 }
 
 .line-trend-chart__area--deep-green {
-  fill: #7ea696;
+  fill: #a8c0b5;
+}
+
+.line-trend-chart__average--deep-green {
+  stroke: #2f5f4d;
 }
 
 .line-trend-chart__labels {
@@ -95,11 +113,15 @@
   left: 0.8rem;
   right: 0.8rem;
   bottom: 0;
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 0.25rem;
+  height: 1.2rem;
   color: #6f685b;
-  font-size: 0.9rem;
+  font-size: 0.78rem;
+}
+
+.line-trend-chart__label {
+  position: absolute;
+  transform: translateX(-50%);
+  white-space: nowrap;
   text-align: center;
 }
 

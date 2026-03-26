@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Modal from '../ui/Modal.jsx';
 import { resolveToGrams, unitOptionsForFood } from "../../utils/units";
 import { createMealLog } from "../../services/mealLogClient";
+import { toMassValue } from "../../utils/nutrients";
 import "./LogMealModal.css";
 
 function round2(value) {
@@ -31,15 +32,92 @@ function scaleMicros(grams, per100g = {}) {
   );
 }
 
+function servingUnitToGrams(qty, unit) {
+  const numericQty = Number(qty || 0);
+  if (!(numericQty > 0)) return null;
+
+  const normalizedUnit = String(unit || "g").trim().toLowerCase();
+  const gramsByUnit = {
+    mg: 0.001,
+    g: 1,
+    oz: 28.3495,
+    lb: 453.592,
+    ml: 1,
+    cup: 236.588,
+    tbsp: 14.7868,
+    tsp: 4.92892,
+  };
+
+  if (!gramsByUnit[normalizedUnit]) return null;
+  return numericQty * gramsByUnit[normalizedUnit];
+}
+
+function derivePer100gFromServing(value, item, isMicro = false) {
+  const serving = item?.unit_conversions?.serving_size;
+  const gramsPerServing = servingUnitToGrams(serving?.qty, serving?.unit);
+  const numericValue = Number(value || 0);
+
+  if (!(gramsPerServing > 0)) return 0;
+
+  if (isMicro) {
+    return numericValue * (100 / gramsPerServing);
+  }
+
+  return numericValue * (100 / gramsPerServing);
+}
+
+function getMacroPer100g(item, key) {
+  const per100g = item?.unit_conversions?.macros_per_100g;
+  if (typeof per100g?.[key] === "number") {
+    return Number(per100g[key] || 0);
+  }
+
+  const servingMacros = item?.unit_conversions?.macros;
+  if (typeof servingMacros?.[key] === "number") {
+    return derivePer100gFromServing(servingMacros[key], item);
+  }
+
+  return 0;
+}
+
+function getMicroPer100g(item, key) {
+  const per100g = item?.unit_conversions?.micros_per_100g;
+  if (typeof per100g?.[key] === "number") {
+    return Number(per100g[key] || 0);
+  }
+
+  const servingMicros = item?.unit_conversions?.micros;
+  if (servingMicros?.[key]?.value !== undefined && servingMicros?.[key]?.value !== null) {
+    return derivePer100gFromServing(
+      toMassValue(servingMicros[key].value, servingMicros[key].unit, key),
+      item,
+      true
+    );
+  }
+
+  return 0;
+}
+
 function getMealPer100g(item) {
   return {
     calories: Number(item.kcal_per_100g || 0),
     protein: Number(item.protein_g_per_100g || 0),
     carbs: Number(item.carbs_g_per_100g || 0),
     fat: Number(item.fat_g_per_100g || 0),
-    fiber: Number(item.unit_conversions?.macros_per_100g?.fiber || 0),
-    sugar: Number(item.unit_conversions?.macros_per_100g?.sugar || 0),
-    cholesterol: Number(item.unit_conversions?.macros_per_100g?.cholesterol || 0),
+    fiber: getMacroPer100g(item, "fiber"),
+    sugar: getMacroPer100g(item, "sugar"),
+    cholesterol: getMacroPer100g(item, "cholesterol"),
+  };
+}
+
+function getMicrosPer100g(item) {
+  return {
+    sodium: getMicroPer100g(item, "sodium"),
+    potassium: getMicroPer100g(item, "potassium"),
+    calcium: getMicroPer100g(item, "calcium"),
+    iron: getMicroPer100g(item, "iron"),
+    vitaminA: getMicroPer100g(item, "vitaminA"),
+    vitaminC: getMicroPer100g(item, "vitaminC"),
   };
 }
 
@@ -86,7 +164,7 @@ export default function LogMealModal({ open, onClose, userId, item }) {
 
       const grams = resolveToGrams({ unit, qty, item });
       const macros = scaleNutrients(grams, getMealPer100g(item));
-      const micros = scaleMicros(grams, item.unit_conversions?.micros_per_100g || {});
+      const micros = scaleMicros(grams, getMicrosPer100g(item));
 
       const payload = {
         user_id: userId,

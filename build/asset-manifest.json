@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/static/css/main.b866a2e9.css",
-    "main.js": "/static/js/main.10eae8f4.js",
+    "main.css": "/static/css/main.16f4bafa.css",
+    "main.js": "/static/js/main.ccf10271.js",
     "static/js/453.947bcc51.chunk.js": "/static/js/453.947bcc51.chunk.js",
     "static/media/Iphone_Watercolor_Background.png": "/static/media/Iphone_Watercolor_Background.b63df6190eb54bad78c4.png",
     "static/media/DesktopBackground.png": "/static/media/DesktopBackground.066d7692588c6d03d861.png",
@@ -14,12 +14,12 @@
     "static/media/LoginSignupFrame.png": "/static/media/LoginSignupFrame.a7e1cebde6c12996e1be.png",
     "static/media/defaultprofile.png": "/static/media/defaultprofile.b11f45a152bb037786cd.png",
     "index.html": "/index.html",
-    "main.b866a2e9.css.map": "/static/css/main.b866a2e9.css.map",
-    "main.10eae8f4.js.map": "/static/js/main.10eae8f4.js.map",
+    "main.16f4bafa.css.map": "/static/css/main.16f4bafa.css.map",
+    "main.ccf10271.js.map": "/static/js/main.ccf10271.js.map",
     "453.947bcc51.chunk.js.map": "/static/js/453.947bcc51.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.b866a2e9.css",
-    "static/js/main.10eae8f4.js"
+    "static/css/main.16f4bafa.css",
+    "static/js/main.ccf10271.js"
   ]
 }

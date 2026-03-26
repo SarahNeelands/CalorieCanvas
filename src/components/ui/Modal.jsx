@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { createPortal } from "react-dom";
 import "./Modal.css";
 
 export default function Modal({ open = true, title, onClose, children }) {
@@ -11,13 +12,22 @@ export default function Modal({ open = true, title, onClose, children }) {
       }
     };
 
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+
     document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = previousBodyOverflow;
+      document.documentElement.style.overflow = previousHtmlOverflow;
+    };
   }, [open, onClose]);
 
   if (!open) return null;
 
-  return (
+  const content = (
     <div className="cc-modal-overlay" role="dialog" aria-modal="true" aria-label={title || "Dialog"}>
       <div className="cc-modal-backdrop" onClick={onClose} />
       <div className="cc-modal-surface">
@@ -35,4 +45,10 @@ export default function Modal({ open = true, title, onClose, children }) {
       </div>
     </div>
   );
+
+  if (typeof document === "undefined") {
+    return content;
+  }
+
+  return createPortal(content, document.body);
 }

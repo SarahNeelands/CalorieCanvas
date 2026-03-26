@@ -182,12 +182,13 @@ export default function Ingredients({ ingredients = [], onIngredientsChange, mea
                 <span>Amount used</span>
                 <div className="ing-amount-row">
                   <input
-                    type="number"
-                    min="0"
-                    step="0.01"
+                    type="text"
+                    inputMode="decimal"
                     value={ing.qty}
                     placeholder={String(ing?.unit_conversions?.serving_size?.qty || "")}
-                    onChange={(e) => updateIngredient(i, { qty: e.target.value })}
+                    onChange={(e) => updateIngredient(i, {
+                      qty: (e.target.value ?? "").replace(/[^0-9.]/g, ""),
+                    })}
                   />
                   <select
                     value={ing.unit}

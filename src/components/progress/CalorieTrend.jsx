@@ -12,19 +12,18 @@ export default function CalorieTrend({ userId, scope, onDayClick }) {
     return () => { active = false; };
   }, [userId, scope]);
 
-  const avg = useMemo(() => {
-    if (!data.length) return null;
-    const sum = data.reduce((a, b) => a + (b.value ?? 0), 0);
-    return Math.round(sum / data.length) + ' cal';
+  const averageText = useMemo(() => {
+    if (!data.length) return '';
+    const sum = data.reduce((total, point) => total + Number(point.value || 0), 0);
+    return `Average ${Math.round(sum / data.length)} cal`;
   }, [data]);
 
   const handlePointClick = (point) => {
-    if (scope !== 'week') return;
-    if (point) onDayClick?.({ dateLabel: point.label, calories: point.value });
+    if (point) onDayClick?.({ ...point, dateLabel: point.label, calories: point.value });
   };
 
   return (
-    <TrendCard title="Calorie Intake" subtitle={scopeLabel(scope)} averageText={avg ?? ''} className="progress-trend-card--calories">
+    <TrendCard title="Calorie Intake" subtitle={averageText} averageText="" className="progress-trend-card--calories">
       {!data.length && <p className="weight-trend__empty weight-trend__empty--top">No data for this range.</p>}
       <div className="trend-chart">
         <LineTrendChart
@@ -33,14 +32,9 @@ export default function CalorieTrend({ userId, scope, onDayClick }) {
           labels={['Mon', 'Tue', 'Wed', 'Thu', 'Fri']}
           tone="gold"
           onPointClick={handlePointClick}
+          showArea={true}
         />
       </div>
     </TrendCard>
   );
-}
-
-function scopeLabel(s) {
-  if (s === 'all') return 'Overall trend';
-  if (s === 'month') return 'Last 30 days';
-  return 'This week (click a day)';
 }

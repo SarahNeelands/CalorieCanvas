@@ -34,15 +34,16 @@ export default function WeightTrend({ userId, scope, unit = 'kg', onUnitChange, 
     [data, unit]
   );
 
-  const avg = useMemo(() => {
-    if (!displayData.length) return null;
-    const sum = displayData.reduce((total, point) => total + (point.displayValue ?? 0), 0);
-    return `${(sum / displayData.length).toFixed(1)} ${unit}`;
+  const currentWeightText = useMemo(() => {
+    if (!displayData.length) return '';
+    const latest = displayData[displayData.length - 1];
+    return `Current Weight ${latest.displayValue.toFixed(1)} ${unit}`;
   }, [displayData, unit]);
 
   const handlePointClick = (point) => {
     if (point) {
       onDayClick?.({
+        ...point,
         dateLabel: point.label,
         weight: point.displayValue,
         weightUnit: unit,
@@ -53,8 +54,8 @@ export default function WeightTrend({ userId, scope, unit = 'kg', onUnitChange, 
   return (
     <TrendCard
       title="Weight"
-      subtitle={scopeLabel(scope)}
-      averageText={avg ?? ''}
+      subtitle={currentWeightText}
+      averageText=""
       className="progress-trend-card--weight"
       actions={
         <div className="weight-unit-toggle">
@@ -83,14 +84,9 @@ export default function WeightTrend({ userId, scope, unit = 'kg', onUnitChange, 
           labels={['Mon', 'Tue', 'Wed', 'Thu', 'Fri']}
           tone="deep-green"
           onPointClick={handlePointClick}
+          showArea={true}
         />
       </div>
     </TrendCard>
   );
-}
-
-function scopeLabel(scope) {
-  if (scope === 'all') return 'Overall trend';
-  if (scope === 'month') return 'Last 30 days';
-  return 'This week';
 }

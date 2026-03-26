@@ -1,0 +1,86 @@
+.micros-card {
+  background: rgba(252, 248, 239, 0.92);
+  border: 1px solid rgba(178, 166, 143, 0.18);
+  border-radius: 1.1rem;
+  padding: 1rem 1.1rem 0.95rem;
+  box-shadow: 0 14px 32px rgba(75, 93, 69, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 0.72rem;
+}
+
+.micros-card__row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.22rem;
+}
+
+.micros-card__row-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.micros-card__label {
+  font-size: 0.93rem;
+  font-weight: 700;
+  color: #2f4f45;
+}
+
+.micros-card__value {
+  font-size: 0.82rem;
+  color: #55695f;
+  white-space: nowrap;
+}
+
+.micros-card__value strong {
+  color: #37584c;
+}
+
+.micros-card__bar {
+  width: 100%;
+  height: 0.58rem;
+  border-radius: 999px;
+  background: #ece7da;
+  overflow: hidden;
+}
+
+.micros-card__fill {
+  height: 100%;
+  border-radius: 999px;
+}
+
+.micros-card__fill--iron,
+.micros-card__fill--vitc,
+.micros-card__fill--calcium,
+.micros-card__fill--sodium,
+.micros-card__fill--potassium,
+.micros-card__fill--vita {
+  background: #436b5d;
+}
+
+.micros-card__toggle {
+  align-self: flex-end;
+  border: 0;
+  background: transparent;
+  color: #47685b;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0.1rem 0;
+}
+
+@media (max-width: 720px) {
+  .micros-card {
+    padding: 0.9rem 0.95rem 0.85rem;
+  }
+
+  .micros-card__value {
+    font-size: 0.78rem;
+  }
+
+  .micros-card__toggle {
+    align-self: flex-start;
+  }
+}

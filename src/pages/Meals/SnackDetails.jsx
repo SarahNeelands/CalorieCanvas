@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import { createCatalogItem } from "../../services/catalogClient";
 import { scanNutritionLabelFromImage } from "../../utils/nutritionLabelOcr";
+import { toMassValue } from "../../utils/nutrients";
 
 const MACRO_FIELDS = [
   { key: "calories", label: "Calories", unit: "kcal" },
@@ -233,7 +234,14 @@ export default function SnackDetails({ user }) {
       cholesterol: parsedMacros.cholesterol * ratioTo100g,
     };
     const microsPer100g = Object.fromEntries(
-      Object.entries(parsedMicros).map(([key, value]) => [key, Number(value.value || 0) * ratioTo100g])
+      Object.entries(parsedMicros).map(([key, value]) => [key, toMassValue(value.value, value.unit, key) * ratioTo100g])
+    );
+    const normalizedMicros = Object.fromEntries(
+      Object.entries(parsedMicros).map(([key, value]) => {
+        const numericValue = toMassValue(value.value, value.unit, key);
+        const unit = key === "vitaminA" ? "mcg" : "mg";
+        return [key, { value: Number(numericValue.toFixed(2)), unit }];
+      })
     );
 
     try {
@@ -270,7 +278,7 @@ export default function SnackDetails({ user }) {
           micros_per_100g: Object.fromEntries(
             Object.entries(microsPer100g).map(([key, value]) => [key, Number(value.toFixed(2))])
           ),
-          micros: parsedMicros,
+          micros: normalizedMicros,
         },
       });
 

@@ -1,6 +1,7 @@
 // src/pages/Exercises.jsx
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from 'react-router-dom';
+import { getCurrentUserId } from "../../services/authClient";
 
 // Context
 import { ExerciseProvider } from '../../components/exercise/context/ExerciseContext.jsx';
@@ -21,10 +22,28 @@ import NavBar from "../../components/NavBar.jsx";
 import "./Exercises.css";
 
 export default function Exercises({ user }) {
+  const [resolvedUserId, setResolvedUserId] = useState(user?.id || null);
+
+  useEffect(() => {
+    let active = true;
+
+    async function resolveUser() {
+      const nextUserId = user?.id || await getCurrentUserId();
+      if (active) {
+        setResolvedUserId(nextUserId || null);
+      }
+    }
+
+    resolveUser();
+    return () => {
+      active = false;
+    };
+  }, [user?.id]);
+
   return (
     <div className="ex-page">
       <NavBar profileImageSrc={user?.avatar}/>
-      <ExerciseProvider userId={user?.id}>
+      <ExerciseProvider userId={resolvedUserId}>
         <ExercisePageInner />
       </ExerciseProvider>
     </div>

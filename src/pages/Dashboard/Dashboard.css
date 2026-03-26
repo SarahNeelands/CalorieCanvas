@@ -77,6 +77,19 @@
   padding-top: 0;          /* clean transition */
 }
 
+.dashboard-macros {
+  margin: 0.45rem 0 0.9rem;
+  width: min(100%, 31rem);
+  max-width: calc(100vw - 2rem);
+}
+
+.dashboard-section-title {
+  margin: 0 0 0.45rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #2e5146;
+}
+
 .grid > :last-child,
 .quick-actions,
 .frame {
@@ -113,6 +126,10 @@ body { font-size: 1rem; line-height: 1.5; }
   }
   .grid { grid-template-columns: 1fr; gap: 1.5rem; }
   .grid > * { width: 100%; max-width: 100%; }
+  .dashboard-macros {
+    margin-top: 0.2rem;
+    width: 100%;
+  }
 }
 /* Desktop-only adjustments: clamp overall width and scale elements */
 @media (min-width: 1280px) {

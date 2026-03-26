@@ -1,0 +1,127 @@
+.macros-card {
+  background: rgba(252, 248, 239, 0.92);
+  border: 1px solid rgba(178, 166, 143, 0.18);
+  border-radius: 1.1rem;
+  padding: 1rem 1.1rem 0.95rem;
+  box-shadow: 0 14px 32px rgba(75, 93, 69, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.macros-card__row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.24rem;
+}
+
+.macros-card__row-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.macros-card__label-wrap {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.macros-card__label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #2f4f45;
+}
+
+.macros-card__value {
+  font-size: 0.84rem;
+  color: #55695f;
+  white-space: normal;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.macros-card__value strong {
+  color: #37584c;
+}
+
+.macros-card__bar {
+  width: 100%;
+  height: 0.62rem;
+  border-radius: 999px;
+  background: #ece7da;
+  overflow: hidden;
+}
+
+.macros-card__fill {
+  height: 100%;
+  border-radius: 999px;
+}
+
+.macros-card__fill--protein {
+  background: #56886a;
+}
+
+.macros-card__fill--carbs {
+  background: #79a36c;
+}
+
+.macros-card__fill--fat {
+  background: #436b5d;
+}
+
+.macros-card__fill--fiber {
+  background: #6d8e5d;
+}
+
+.macros-card__fill--sugar {
+  background: #a4b57c;
+}
+
+.macros-card__fill--cholesterol {
+  background: #7f8f6b;
+}
+
+.macros-card__meta {
+  font-size: 0.78rem;
+  color: #79867a;
+}
+
+.macros-card__toggle {
+  align-self: flex-end;
+  border: 0;
+  background: transparent;
+  color: #47685b;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0.1rem 0;
+}
+
+@media (max-width: 720px) {
+  .macros-card {
+    padding: 0.9rem 0.95rem 0.85rem;
+  }
+
+  .macros-card__row-header {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .macros-card__value {
+    font-size: 0.78rem;
+    text-align: left;
+  }
+
+  .macros-card__toggle {
+    align-self: flex-start;
+  }
+}

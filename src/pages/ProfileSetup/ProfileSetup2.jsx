@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './ProfileSetup.css';
-import { API_BASE_URL } from '../../config/api';
 import { getCurrentSession, getCurrentUserId } from '../../services/authClient';
 import { isLocalAuth } from '../../config/runtime';
 import {
@@ -9,7 +8,7 @@ import {
   setProfileSetupStep,
   updateProfileSetupState,
 } from '../../services/profileSetupProgress';
-import { saveLocalProfile } from '../../services/profileClient';
+import { saveLocalProfile, updateProfile } from '../../services/profileClient';
 
 export default function ProfileSetup2() {
   const navigate = useNavigate();
@@ -147,34 +146,17 @@ export default function ProfileSetup2() {
       return;
     }
 
-    const heightResponse = await fetch(`${API_BASE_URL}/add-height`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        user_id: userId,
-        height: Number(finalHeightCm.toFixed(1)),
-        height_unit: 'cm',
-      }),
-    });
-
-    if (!heightResponse.ok) {
+    try {
+      await updateProfile(
+        {
+          height_cm: Number(finalHeightCm.toFixed(1)),
+          weight_kg: Number(finalWeightKg.toFixed(1)),
+        },
+        userId
+      );
+    } catch (error) {
       setSaving(false);
-      return setMsg('Could not save height.');
-    }
-
-    const weightResponse = await fetch(`${API_BASE_URL}/add-weight-entry`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        user_id: userId,
-        weight_unit: 'kg',
-        weight: Number(finalWeightKg.toFixed(1)),
-      }),
-    });
-
-    if (!weightResponse.ok) {
-      setSaving(false);
-      return setMsg('Could not save weight.');
+      return setMsg(error.message || 'Could not save measurements.');
     }
 
     updateProfileSetupState({

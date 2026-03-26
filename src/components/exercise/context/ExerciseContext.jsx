@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { supabase } from '../../../supabaseClient';
+import { isLocalAuth } from "../../../config/runtime";
 
 const STORAGE_KEY = "exercise_page_state_v3";
 const ExerciseContext = createContext(null);
@@ -77,6 +78,11 @@ export function ExerciseProvider({ children, userId }) {
     async function hydrate() {
       try {
         if (!userId) return;
+        if (isLocalAuth()) {
+          if (!mounted) return;
+          setState((current) => ({ ...current, userId }));
+          return;
+        }
 
         const { data: types, error: typesError } = await supabase
           .from('exercise_types')
@@ -153,6 +159,7 @@ export function ExerciseProvider({ children, userId }) {
     (async () => {
       try {
         if (!userId) return;
+        if (isLocalAuth()) return;
         await supabase.from('exercise_types').insert({ id: nextType.id, user_id: userId, name: nextType.name });
       } catch {}
     })();
@@ -183,6 +190,7 @@ export function ExerciseProvider({ children, userId }) {
     (async () => {
       try {
         if (!userId) return;
+        if (isLocalAuth()) return;
         await supabase.from('exercise_logs').insert({
           id: log.id,
           user_id: userId,

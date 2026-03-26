@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import { createCatalogItem, updateCatalogItem } from "../../services/catalogClient";
 import { scanNutritionLabelFromImage } from "../../utils/nutritionLabelOcr";
+import { toMassValue } from "../../utils/nutrients";
 
 const MACRO_FIELDS = [
   { key: "calories", label: "Calories", unit: "kcal" },
@@ -34,6 +35,17 @@ const DEFAULT_MACROS = MACRO_FIELDS.reduce((acc, field) => {
 }, {});
 
 const SERVING_UNITS = ["g", "mg", "ml", "oz", "lb", "cup", "tbsp", "tsp", "piece"];
+
+const MASS_EQUIVALENTS = {
+  mg: 0.001,
+  g: 1,
+  ml: 1,
+  oz: 28.3495,
+  lb: 453.592,
+  cup: 236.588,
+  tbsp: 14.7868,
+  tsp: 4.92892,
+};
 
 function Section({ title, children }) {
   return (
@@ -74,6 +86,13 @@ function baseInputStyle() {
 
 function cleanDecimalInput(value) {
   return (value ?? "").replace(/[^0-9.]/g, "");
+}
+
+function getServingGrams(qty, unit) {
+  const numericQty = Number(qty || 0);
+  const gramsPerUnit = MASS_EQUIVALENTS[String(unit || "").trim().toLowerCase()];
+  if (!(numericQty > 0) || !gramsPerUnit) return null;
+  return numericQty * gramsPerUnit;
 }
 
 function readImageAsDataUrl(file) {
@@ -216,13 +235,42 @@ export default function NewIngredientPage({ user }) {
     };
 
     try {
+      const servingGrams = getServingGrams(payload.servingSize, payload.servingUnit);
+      const toPer100g = (value) => {
+        const numericValue = Number(value || 0);
+        if (!(servingGrams > 0)) return numericValue;
+        return numericValue * (100 / servingGrams);
+      };
+
+      const macrosPer100g = {
+        calories: toPer100g(payload.macros.calories),
+        protein: toPer100g(payload.macros.protein),
+        carbs: toPer100g(payload.macros.carbs),
+        fat: toPer100g(payload.macros.fat),
+        fiber: toPer100g(payload.macros.fiber),
+        sugar: toPer100g(payload.macros.sugar),
+        cholesterol: toPer100g(payload.macros.cholesterol),
+      };
+
+      const microsPer100g = Object.fromEntries(
+        Object.entries(payload.micros).map(([key, value]) => [key, toPer100g(toMassValue(value.value, value.unit, key))])
+      );
+
+      const normalizedMicros = Object.fromEntries(
+        Object.entries(payload.micros).map(([key, value]) => {
+          const numericValue = toMassValue(value.value, value.unit, key);
+          const unit = key === "vitaminA" ? "mcg" : "mg";
+          return [key, { value: Number(numericValue.toFixed(2)), unit }];
+        })
+      );
+
       const catalogPayload = {
         title: payload.title,
         item_type: "ingredient",
-        kcal_per_100g: payload.macros.calories,
-        protein_g_per_100g: payload.macros.protein,
-        carbs_g_per_100g: payload.macros.carbs,
-        fat_g_per_100g: payload.macros.fat,
+        kcal_per_100g: Number(macrosPer100g.calories.toFixed(2)),
+        protein_g_per_100g: Number(macrosPer100g.protein.toFixed(2)),
+        carbs_g_per_100g: Number(macrosPer100g.carbs.toFixed(2)),
+        fat_g_per_100g: Number(macrosPer100g.fat.toFixed(2)),
         unit_conversions: {
           brand: payload.brand,
           photo_data_url: photoDataUrl || null,
@@ -231,7 +279,15 @@ export default function NewIngredientPage({ user }) {
             unit: payload.servingUnit,
           },
           macros: payload.macros,
-          micros: payload.micros,
+          macros_per_100g: {
+            fiber: Number(macrosPer100g.fiber.toFixed(2)),
+            sugar: Number(macrosPer100g.sugar.toFixed(2)),
+            cholesterol: Number(macrosPer100g.cholesterol.toFixed(2)),
+          },
+          micros: normalizedMicros,
+          micros_per_100g: Object.fromEntries(
+            Object.entries(microsPer100g).map(([key, value]) => [key, Number(value.toFixed(2))])
+          ),
         },
       };
 

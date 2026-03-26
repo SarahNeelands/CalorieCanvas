@@ -3,10 +3,12 @@
  * Displays all saved ingredients on open and filters when searching.
  */
 
-import React, { useDeferredValue, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./IngredientSearch.css";
 import { getCachedCatalogItems, listCatalogItems } from "../../services/catalogClient";
+import { BUILT_IN_INGREDIENTS } from "../../services/builtInIngredients";
+import Modal from "../ui/Modal";
 
 function mapIngredientResult(item) {
   return {
@@ -17,11 +19,29 @@ function mapIngredientResult(item) {
   };
 }
 
+function mergeIngredientResults(current, incoming) {
+  const merged = new Map();
+
+  for (const item of current) {
+    merged.set(item.id, item);
+  }
+
+  for (const item of incoming) {
+    merged.set(item.id, item);
+  }
+
+  return Array.from(merged.values());
+}
+
 export default function IngredientSearch({ onSelect, onClose, mealDraft }) {
+  const initialResults = mergeIngredientResults(
+    getCachedCatalogItems("ingredient").map(mapIngredientResult),
+    BUILT_IN_INGREDIENTS.map(mapIngredientResult)
+  );
   const [q, setQ] = useState("");
-  const deferredQuery = useDeferredValue(q);
-  const [allResults, setAllResults] = useState(() => getCachedCatalogItems("ingredient").map(mapIngredientResult));
-  const [loading, setLoading] = useState(allResults.length === 0);
+  const [allResults, setAllResults] = useState(initialResults);
+  const [results, setResults] = useState(initialResults);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const boxRef = useRef(null);
   const location = useLocation();
@@ -33,28 +53,45 @@ export default function IngredientSearch({ onSelect, onClose, mealDraft }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  async function loadResults() {
-    if (!allResults.length) {
-      setLoading(true);
-    }
-    setError("");
-    try {
-      const data = await listCatalogItems("ingredient");
+  useEffect(() => {
+    let cancelled = false;
 
-      setAllResults((data || []).map(mapIngredientResult));
-    } catch (err) {
-      if (!allResults.length) {
-        setAllResults([]);
+    async function loadResults() {
+      setLoading(true);
+      setError("");
+      try {
+        const data = await listCatalogItems("ingredient");
+        if (cancelled) return;
+        const mapped = (data || []).map(mapIngredientResult);
+        setAllResults((current) => mergeIngredientResults(current, mapped));
+      } catch (err) {
+        if (cancelled) return;
+        setError(err.message || "Failed to load ingredients.");
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
-      setError(err.message || "Failed to load ingredients.");
-    } finally {
-      setLoading(false);
     }
-  }
+
+    loadResults();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
-    loadResults();
-  }, []);
+    const normalizedQuery = q.trim().toLowerCase();
+    const filtered = normalizedQuery
+      ? allResults.filter((item) => {
+          const haystacks = [item.name, item.brand, item.title];
+          return haystacks.some((value) => value?.toLowerCase().includes(normalizedQuery));
+        })
+      : allResults;
+
+    setResults(filtered);
+  }, [allResults, q]);
 
   function handleEdit(item) {
     onClose?.();
@@ -67,77 +104,71 @@ export default function IngredientSearch({ onSelect, onClose, mealDraft }) {
     });
   }
 
-  const normalizedQuery = deferredQuery.trim().toLowerCase();
-  const results = normalizedQuery
-    ? allResults.filter((item) => {
-        const haystacks = [
-          item.name,
-          item.brand,
-          item.title,
-        ];
-        return haystacks.some((value) => value?.toLowerCase().includes(normalizedQuery));
-      })
-    : allResults;
-
   return (
-    <div className="is-backdrop" role="dialog" aria-modal="true">
-      <div className="is-card" ref={boxRef}>
-        <header className="row-between">
-          <h4>Find an ingredient</h4>
-          <button className="linklike" onClick={onClose} aria-label="Close">X</button>
-        </header>
-
-        <div className="is-row">
-          <input
-            autoFocus
-            type="search"
-            placeholder="Search by name..."
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-          />
-          <button className="btn" disabled={loading}>
-            {loading ? "Loading..." : "Ready"}
-          </button>
+    <Modal open title="Find an ingredient" onClose={onClose}>
+      <div className="ingredient-search-modal" ref={boxRef}>
+        <div className="ingredient-search-modal__toolbar">
+          <div className="ingredient-search-modal__search">
+            <input
+              autoFocus
+              className="ingredient-search-modal__input"
+              type="search"
+              placeholder="Search ingredients..."
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+            />
+            {q ? (
+              <button
+                className="ingredient-search-modal__clear"
+                type="button"
+                onClick={() => setQ("")}
+                aria-label="Clear search"
+              >
+                ×
+              </button>
+            ) : null}
+          </div>
         </div>
 
-        <div className="is-results">
-          {loading && <p className="muted">Loading...</p>}
-          {!loading && error && <p className="muted">{error}</p>}
+        <div className="ingredient-search-modal__results">
+          {loading && results.length === 0 && <p className="muted">Loading...</p>}
+          {!loading && error && results.length === 0 && <p className="muted">{error}</p>}
           {!loading && !error && q && results.length === 0 && (
             <p className="muted">No results for "{q}".</p>
           )}
           {!loading && !error && !q && results.length === 0 && (
             <p className="muted">No ingredients yet. Add one first.</p>
           )}
-          {!loading && results.length > 0 && (
+          {results.length > 0 && (
             <ul className="is-list">
               {results.map((r) => (
-                <li key={r.id}>
+                <li key={r.id} onClick={() => onSelect?.(r)} role="button" tabIndex={0} onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onSelect?.(r);
+                  }
+                }}>
                   <div className="is-main">
-                    <div className="col">
-                      <span className="name">{r.name}</span>
-                      <span className="meta">{Math.round(r.calories)} kcal</span>
-                    </div>
-                    <div className="is-brand" title={r.brand || ""}>
-                      {r.brand || ""}
-                    </div>
+                    <span className="name">{r.name}</span>
                   </div>
                   <div className="is-actions">
-                    <button className="edit" onClick={() => handleEdit(r)} type="button">
+                    <button className="edit" onClick={(e) => {
+                      e.stopPropagation();
+                      handleEdit(r);
+                    }} type="button">
                       Edit
                     </button>
-                    <button className="add" onClick={() => onSelect?.(r)} title="Add" type="button">+</button>
+                    <button className="add" onClick={(e) => {
+                      e.stopPropagation();
+                      onSelect?.(r);
+                    }} title="Add" type="button">+</button>
                   </div>
                 </li>
               ))}
             </ul>
           )}
         </div>
-
-        <footer className="row-end">
-          <button className="linklike" onClick={onClose}>Close</button>
-        </footer>
       </div>
-    </div>
+    </Modal>
   );
 }

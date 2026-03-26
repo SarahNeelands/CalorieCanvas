@@ -1,10 +1,12 @@
 pub mod mock_db;
+pub mod seed_data;
 pub mod sqlite_db;
 
 use std::env;
 
 use crate::models::{CatalogItem, User, WeightEntry};
 use mock_db::MockDB;
+use seed_data::SHARED_CATALOG_USER_ID;
 use sqlite_db::SqliteDB;
 
 #[derive(Clone)]
@@ -101,14 +103,14 @@ impl AppState {
     pub fn list_catalog_items(&self, user_id: &str, item_type: &str) -> Result<Vec<CatalogItem>, String> {
         match &self.db {
             Database::Mock(db) => Ok(db.list_catalog_items(user_id, item_type)),
-            Database::Sqlite(db) => db.list_catalog_items(user_id, item_type),
+            Database::Sqlite(db) => db.list_catalog_items(user_id, item_type, SHARED_CATALOG_USER_ID),
         }
     }
 
     pub fn search_catalog_items(&self, user_id: &str, item_type: &str, query: &str) -> Result<Vec<CatalogItem>, String> {
         match &self.db {
             Database::Mock(db) => Ok(db.search_catalog_items(user_id, item_type, query)),
-            Database::Sqlite(db) => db.search_catalog_items(user_id, item_type, query),
+            Database::Sqlite(db) => db.search_catalog_items(user_id, item_type, query, SHARED_CATALOG_USER_ID),
         }
     }
 }

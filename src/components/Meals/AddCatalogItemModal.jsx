@@ -1,7 +1,7 @@
 import React from "react";
-import { supabase } from "../../lib/supabaseClient";
 import BarcodeScanner from "../BarcodeScanner.jsx";
 import { fetchOFFProduct, mapOFFToCatalog } from "../../utils/openfoodfacts";
+import { createCatalogItem } from "../../services/catalogClient";
 
 export default function AddCatalogItemModal({ open, onClose, userId, defaultType = 'meal' }) {
   const [tab, setTab] = React.useState("manual");
@@ -23,12 +23,14 @@ export default function AddCatalogItemModal({ open, onClose, userId, defaultType
       setSaving(true); setError(null);
       if (!userId) throw new Error("Missing user");
       if (!title) throw new Error("Give it a name");
-      const { error } = await supabase.from("meals").insert({
-        user_id: userId, title, type, barcode: barcode || null,
+      await createCatalogItem({
+        title,
+        item_type: type,
         kcal_per_100g: Number(kcal100)||0, protein_g_per_100g: Number(p100)||0,
         carbs_g_per_100g: Number(c100)||0, fat_g_per_100g: Number(f100)||0,
+        food_id: barcode || null,
+        unit_conversions: {},
       });
-      if (error) throw error;
       onClose?.();
     } catch (e) { setError(e); } finally { setSaving(false); }
   }

@@ -5,6 +5,8 @@ import { getCurrentUserId, getStoredUserId } from './authClient';
 
 const LOCAL_CATALOG_STORAGE_KEY = 'local_catalog_items_v1';
 const catalogCache = new Map();
+const LOCAL_BACKEND_RETRY_MS = 30000;
+let localBackendUnavailableUntil = 0;
 
 function getCatalogCacheKey(userId, itemType) {
   return `${userId || 'anonymous'}:${itemType}`;
@@ -131,6 +133,10 @@ function searchLocalCatalogItems(userId, itemType, query) {
 }
 
 async function postLocal(path, body) {
+  if (Date.now() < localBackendUnavailableUntil) {
+    throw createLocalBackendUnreachableError();
+  }
+
   let response;
   try {
     response = await fetch(`${API_BASE_URL}${path}`, {
@@ -139,6 +145,7 @@ async function postLocal(path, body) {
       body: JSON.stringify(body),
     });
   } catch (error) {
+    localBackendUnavailableUntil = Date.now() + LOCAL_BACKEND_RETRY_MS;
     throw createLocalBackendUnreachableError();
   }
 
@@ -158,6 +165,10 @@ function logLocalReadFallback(path) {
   console.warn(
     `[catalogClient] Falling back to local browser storage because the local backend is unavailable for ${path}.`
   );
+}
+
+function getLocalCatalogUserId() {
+  return getStoredUserId() || 'anonymous';
 }
 
 export async function createCatalogItem(input) {
@@ -260,10 +271,8 @@ export async function deleteCatalogItem(itemId) {
 }
 
 export async function listCatalogItems(itemType) {
-  const userId = await getCurrentUserId();
-  if (!userId) throw new Error('Missing user ID');
-
   if (isLocalAuth()) {
+    const userId = getLocalCatalogUserId();
     try {
       const data = await postLocal('/catalog/items/list', {
         user_id: userId,
@@ -283,6 +292,9 @@ export async function listCatalogItems(itemType) {
     }
   }
 
+  const userId = await getCurrentUserId();
+  if (!userId) throw new Error('Missing user ID');
+
   const { data, error } = await supabase
     .from('meals')
     .select('id, user_id, title, type, created_at, kcal_per_100g, protein_g_per_100g, carbs_g_per_100g, fat_g_per_100g, unit_conversions, food_id')
@@ -298,11 +310,10 @@ export async function listCatalogItems(itemType) {
 }
 
 export async function searchCatalogItems(itemType, query) {
-  const userId = await getCurrentUserId();
-  if (!userId) throw new Error('Missing user ID');
   if (!query?.trim()) return [];
 
   if (isLocalAuth()) {
+    const userId = getLocalCatalogUserId();
     try {
       const data = await postLocal('/catalog/items/search', {
         user_id: userId,
@@ -318,6 +329,9 @@ export async function searchCatalogItems(itemType, query) {
       throw error;
     }
   }
+
+  const userId = await getCurrentUserId();
+  if (!userId) throw new Error('Missing user ID');
 
   const { data, error } = await supabase
     .from('meals')

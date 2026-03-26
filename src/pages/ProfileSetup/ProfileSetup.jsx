@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
 import './ProfileSetup.css';
-import { API_BASE_URL } from '../../config/api';
 import { getCurrentSession, getCurrentUserId } from '../../services/authClient';
 import { isLocalAuth } from '../../config/runtime';
 import {
@@ -10,7 +9,7 @@ import {
   setProfileSetupStep,
   updateProfileSetupState,
 } from '../../services/profileSetupProgress';
-import { saveLocalProfile } from '../../services/profileClient';
+import { saveLocalProfile, updateProfile } from '../../services/profileClient';
 
 export default function ProfileSetup() {
   const navigate = useNavigate();
@@ -40,16 +39,6 @@ export default function ProfileSetup() {
       if (!userId) return;
 
       localStorage.setItem('user_id', userId);
-
-      if (isLocalAuth()) {
-        return;
-      }
-
-      await fetch(`${API_BASE_URL}/create_profile`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: userId }),
-      });
     }
 
     async function checkSession() {
@@ -118,21 +107,21 @@ export default function ProfileSetup() {
       return setMsg('Session expired. Please log in.');
     }
 
-    const { error } = await supabase
-      .from('profiles')
-      .upsert(
+    try {
+      await updateProfile(
         {
-          user_id: user.id,
           display_name: name.trim(),
           dob: dob || null,
           gender: gender || null,
         },
-        { onConflict: 'user_id' }
+        user.id
       );
+    } catch (error) {
+      setSaving(false);
+      return setMsg(error.message || 'Failed to save profile.');
+    }
 
     setSaving(false);
-    if (error) return setMsg(error.message);
-
     updateProfileSetupState(nextState);
     navigate('/profile-setup-2');
   }

@@ -207,6 +207,28 @@
   color: #35574d;
 }
 
+.profile-module-list {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: nowrap;
+}
+
+.profile-module-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 12px;
+  border: 1px solid #d7dfd3;
+  background: rgba(255, 255, 255, 0.82);
+  color: #143d33;
+  font-weight: 600;
+}
+
+.profile-module-option input {
+  accent-color: #2c5b49;
+}
+
 .profile-select {
   appearance: none;
   background-image: linear-gradient(45deg, transparent 50%, #143d33 50%),
@@ -222,8 +244,25 @@
   gap: 0.75rem;
 }
 
+.profile-inline--attached {
+  gap: 0;
+}
+
 .profile-unit {
   width: 8rem;
+}
+
+.profile-unit--attached {
+  width: 5rem;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-left: 2px solid #1f2d24;
+  background-position: calc(100% - 16px) calc(1em + 2px), calc(100% - 10px) calc(1em + 2px);
+}
+
+.profile-inline--attached .profile-input:first-child {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
 }
 
 .profile-split {
@@ -234,9 +273,9 @@
 
 .profile-preview {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.9rem;
   border-radius: 1.15rem;
   padding: 1rem 1.1rem;
   background:
@@ -280,6 +319,11 @@
 .profile-preview-label {
   font-size: 0.95rem;
   color: #35574d;
+}
+
+.profile-preview-metric {
+  display: grid;
+  gap: 0.18rem;
 }
 
 .profile-actions {
@@ -342,7 +386,23 @@
     grid-template-columns: 1fr;
   }
 
+  .profile-inline--attached {
+    grid-template-columns: 1fr auto;
+  }
+
+  .profile-preview {
+    grid-template-columns: 1fr;
+  }
+
   .profile-unit {
     width: 100%;
+  }
+
+  .profile-unit--attached {
+    width: 4.8rem;
+  }
+
+  .profile-module-list {
+    flex-wrap: wrap;
   }
 }

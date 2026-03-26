@@ -7,6 +7,8 @@ export default function DayDetailModal({ open, onClose, detail }) {
   const weightUnit = detail?.weightUnit || 'kg';
   const calories = detail?.calories;
   const exerciseTypes = detail?.exerciseTypes || [];
+  const deleteLabel = detail?.deleteLabel || 'Delete Entry';
+  const onDelete = detail?.onDelete;
 
   return (
     <Modal open={open} onClose={onClose} title={`Details • ${dateLabel ?? ''}`}>
@@ -36,6 +38,25 @@ export default function DayDetailModal({ open, onClose, detail }) {
             </ul>
           </div>
         )}
+        {onDelete ? (
+          <div style={{ marginTop: 20, display: 'flex', justifyContent: 'flex-end' }}>
+            <button
+              type="button"
+              onClick={onDelete}
+              style={{
+                border: '1px solid rgba(140, 74, 58, 0.28)',
+                background: 'rgba(196, 116, 92, 0.08)',
+                color: '#8a4639',
+                borderRadius: 10,
+                padding: '0.65rem 0.95rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              {deleteLabel}
+            </button>
+          </div>
+        ) : null}
       </div>
     </Modal>
   );

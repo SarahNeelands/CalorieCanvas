@@ -66,6 +66,15 @@ function getLatestLegacyWeightKg() {
   return toKgFromLegacyWeight(latest.value, latest.unit);
 }
 
+function getLatestLocalWeightKg(userId) {
+  const latest = readLegacyWeights()
+    .filter((entry) => entry && typeof entry === 'object' && (!entry.user_id || entry.user_id === userId))
+    .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')))[0];
+
+  if (!latest) return null;
+  return toKgFromLegacyWeight(latest.value, latest.unit);
+}
+
 function normalizeProfileShape(profile, draft, userId) {
   const latestLegacyWeightKg = getLatestLegacyWeightKg();
   const legacyHeightCm = toCmFromLegacyHeight(profile?.height, profile?.heightUnit);
@@ -93,8 +102,14 @@ function normalizeProfileShape(profile, draft, userId) {
     activity_level: profile?.activity_level ?? profile?.activityLevel ?? draft?.activityLevel ?? 'sedentary',
     goal_weight_intent: normalizedGoalType,
     goal_muscle_intent: profile?.goal_muscle_intent ?? draft?.muscle ?? 'maintain',
+    calorie_goal: profile?.calorie_goal ?? profile?.calculated_calorie_goal ?? draft?.calorieGoal ?? null,
     target_weight_kg: profile?.target_weight_kg ?? (draft?.targetWeight ? Number(draft.targetWeight) : null),
     target_body_fat_pct: profile?.target_body_fat_pct ?? (draft?.targetBf ? Number(draft.targetBf) : null),
+    pref_show_calories: profile?.pref_show_calories ?? true,
+    pref_show_macros: profile?.pref_show_macros ?? true,
+    pref_show_micros: profile?.pref_show_micros ?? false,
+    pref_show_exercise: profile?.pref_show_exercise ?? true,
+    pref_show_weight: profile?.pref_show_weight ?? true,
   };
 }
 
@@ -135,8 +150,14 @@ export async function updateProfile(profile, userIdArg) {
     activity_level: normalizedProfile.activity_level,
     goal_weight_intent: normalizedProfile.goal_weight_intent,
     goal_muscle_intent: normalizedProfile.goal_muscle_intent,
+    calorie_goal: normalizedProfile.calorie_goal,
     target_weight_kg: normalizedProfile.target_weight_kg,
     target_body_fat_pct: normalizedProfile.target_body_fat_pct,
+    pref_show_calories: normalizedProfile.pref_show_calories,
+    pref_show_macros: normalizedProfile.pref_show_macros,
+    pref_show_micros: normalizedProfile.pref_show_micros,
+    pref_show_exercise: normalizedProfile.pref_show_exercise,
+    pref_show_weight: normalizedProfile.pref_show_weight,
   };
 
   const { error } = await supabase.from('profiles').upsert(payload, { onConflict: 'user_id' });
@@ -174,6 +195,7 @@ export async function getProfile(userId = getStoredUserId()) {
       activity_level,
       goal_weight_intent,
       goal_muscle_intent,
+      calorie_goal,
       target_weight_kg,
       target_body_fat_pct,
       pref_show_calories,
@@ -218,6 +240,24 @@ function getSexConstant(gender) {
   return -78;
 }
 
+export function calculateBmr(profile) {
+  const weightKg = Number(profile?.weight_kg ?? profile?.weightKg ?? 0);
+  const heightCm = Number(profile?.height_cm ?? profile?.heightCm ?? 0);
+
+  if (!(weightKg > 0) || !(heightCm > 0)) {
+    return null;
+  }
+
+  const age = calculateAge(profile?.dob);
+  const bmr =
+    (10 * weightKg) +
+    (6.25 * heightCm) -
+    (5 * age) +
+    getSexConstant(profile?.gender);
+
+  return Math.round(Math.max(800, bmr));
+}
+
 function resolveActivityFactor(profile) {
   const rawValue = profile?.activity_level ?? profile?.activityLevel ?? null;
 
@@ -260,19 +300,11 @@ function resolveActivityFactor(profile) {
 }
 
 export function calculateDailyCalorieGoal(profile) {
-  const weightKg = Number(profile?.weight_kg ?? profile?.weightKg ?? 0);
-  const heightCm = Number(profile?.height_cm ?? profile?.heightCm ?? 0);
+  const bmr = calculateBmr(profile);
 
-  if (!(weightKg > 0) || !(heightCm > 0)) {
+  if (!(bmr > 0)) {
     return null;
   }
-
-  const age = calculateAge(profile?.dob);
-  const bmr =
-    (10 * weightKg) +
-    (6.25 * heightCm) -
-    (5 * age) +
-    getSexConstant(profile?.gender);
 
   let goal = bmr * resolveActivityFactor(profile);
 
@@ -288,4 +320,25 @@ export function calculateDailyCalorieGoal(profile) {
   goal += weightAdjustments[weightIntent] ?? 0;
 
   return Math.round(Math.min(4500, Math.max(1200, goal)));
+}
+
+export async function getLatestWeightKg(userId = getStoredUserId()) {
+  if (!userId) return null;
+
+  if (isLocalAuth()) {
+    return getLatestLocalWeightKg(userId);
+  }
+
+  const { data, error } = await supabase
+    .from('weights')
+    .select('date,value,unit')
+    .eq('user_id', userId)
+    .order('date', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) return null;
+
+  return toKgFromLegacyWeight(data.value, data.unit);
 }

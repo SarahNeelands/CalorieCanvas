@@ -4,6 +4,7 @@ use std::sync::{Arc, Mutex};
 use rusqlite::{Connection, OptionalExtension, params};
 
 use crate::models::{CatalogItem, User, WeightEntry};
+use crate::database::seed_data::shared_catalog_items;
 
 #[derive(Clone)]
 pub struct SqliteDB {
@@ -70,6 +71,39 @@ impl SqliteDB {
             );
             ",
         )?;
+        drop(conn);
+        self.seed_shared_catalog_items()?;
+        Ok(())
+    }
+
+    fn seed_shared_catalog_items(&self) -> Result<(), rusqlite::Error> {
+        let conn = self.conn.lock().unwrap();
+
+        for item in shared_catalog_items() {
+            conn.execute(
+                "
+                INSERT OR IGNORE INTO catalog_items (
+                    id, user_id, title, item_type, created_at, kcal_per_100g,
+                    protein_g_per_100g, carbs_g_per_100g, fat_g_per_100g, unit_conversions, food_id
+                )
+                VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)
+                ",
+                params![
+                    item.id,
+                    item.user_id,
+                    item.title,
+                    item.item_type,
+                    item.created_at,
+                    item.kcal_per_100g,
+                    item.protein_g_per_100g,
+                    item.carbs_g_per_100g,
+                    item.fat_g_per_100g,
+                    item.unit_conversions.to_string(),
+                    item.food_id
+                ],
+            )?;
+        }
+
         Ok(())
     }
 
@@ -266,19 +300,19 @@ impl SqliteDB {
         Ok(item.clone())
     }
 
-    pub fn list_catalog_items(&self, user_id: &str, item_type: &str) -> Result<Vec<CatalogItem>, String> {
+    pub fn list_catalog_items(&self, user_id: &str, item_type: &str, shared_user_id: &str) -> Result<Vec<CatalogItem>, String> {
         let conn = self.conn.lock().unwrap();
         let mut stmt = conn.prepare(
             "
             SELECT id, user_id, title, item_type, created_at, kcal_per_100g,
                    protein_g_per_100g, carbs_g_per_100g, fat_g_per_100g, unit_conversions, food_id
             FROM catalog_items
-            WHERE user_id = ?1 AND item_type = ?2
+            WHERE item_type = ?2 AND (user_id = ?1 OR user_id = ?3)
             ORDER BY created_at DESC
             ",
         ).map_err(|e| e.to_string())?;
 
-        let rows = stmt.query_map(params![user_id, item_type], |row| {
+        let rows = stmt.query_map(params![user_id, item_type, shared_user_id], |row| {
             let unit_conversions_raw: String = row.get(9)?;
             Ok(CatalogItem {
                 id: row.get(0)?,
@@ -298,7 +332,7 @@ impl SqliteDB {
         rows.collect::<Result<Vec<_>, _>>().map_err(|e| e.to_string())
     }
 
-    pub fn search_catalog_items(&self, user_id: &str, item_type: &str, query: &str) -> Result<Vec<CatalogItem>, String> {
+    pub fn search_catalog_items(&self, user_id: &str, item_type: &str, query: &str, shared_user_id: &str) -> Result<Vec<CatalogItem>, String> {
         let conn = self.conn.lock().unwrap();
         let pattern = format!("%{}%", query.to_lowercase());
         let mut stmt = conn.prepare(
@@ -306,12 +340,12 @@ impl SqliteDB {
             SELECT id, user_id, title, item_type, created_at, kcal_per_100g,
                    protein_g_per_100g, carbs_g_per_100g, fat_g_per_100g, unit_conversions, food_id
             FROM catalog_items
-            WHERE user_id = ?1 AND item_type = ?2 AND lower(title) LIKE ?3
+            WHERE item_type = ?2 AND (user_id = ?1 OR user_id = ?4) AND lower(title) LIKE ?3
             ORDER BY created_at DESC
             ",
         ).map_err(|e| e.to_string())?;
 
-        let rows = stmt.query_map(params![user_id, item_type, pattern], |row| {
+        let rows = stmt.query_map(params![user_id, item_type, pattern, shared_user_id], |row| {
             let unit_conversions_raw: String = row.get(9)?;
             Ok(CatalogItem {
                 id: row.get(0)?,

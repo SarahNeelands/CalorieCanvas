@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import "./Profile.css";
 import {
+  calculateBmr,
   calculateDailyCalorieGoal,
   getProfile,
+  getLatestWeightKg,
   updateProfile,
 } from "../../services/profileClient";
 import {
@@ -56,7 +58,14 @@ function formatWeight(weightKg) {
   const numeric = Number(weightKg || 0);
   if (!(numeric > 0)) return "Unavailable";
   const pounds = lbFromKg(numeric);
-  return `${numeric} kg (${Number(pounds.toFixed(1))} lb)`;
+  return `${Number(numeric.toFixed(2))} kg (${Number(pounds.toFixed(2))} lb)`;
+}
+
+function formatTargetWeight(weightKg) {
+  const numeric = Number(weightKg || 0);
+  if (!(numeric > 0)) return "Unavailable";
+  const pounds = lbFromKg(numeric);
+  return `${Number(numeric.toFixed(2))} kg (${Number(pounds.toFixed(2))} lb)`;
 }
 
 function formatGoalLabel(value) {
@@ -104,6 +113,11 @@ export default function Profile({ user }) {
   const [targetWeight, setTargetWeight] = React.useState("");
   const [targetWeightUnit, setTargetWeightUnit] = React.useState("kg");
   const [targetBf, setTargetBf] = React.useState("");
+  const [calorieGoal, setCalorieGoal] = React.useState("");
+  const [latestLoggedWeightKg, setLatestLoggedWeightKg] = React.useState(null);
+  const [showCalories, setShowCalories] = React.useState(true);
+  const [showMacros, setShowMacros] = React.useState(true);
+  const [showMicros, setShowMicros] = React.useState(false);
 
   React.useEffect(() => {
     let active = true;
@@ -118,7 +132,10 @@ export default function Profile({ user }) {
         setUserId(resolvedUserId);
         setAccountEmail(session?.user?.email || "");
 
-        const profile = await getProfile(resolvedUserId);
+        const [profile, latestWeightKg] = await Promise.all([
+          getProfile(resolvedUserId),
+          getLatestWeightKg(resolvedUserId).catch(() => null),
+        ]);
         if (!active) return;
         if (!profile) {
           setIsEditing(true);
@@ -126,6 +143,7 @@ export default function Profile({ user }) {
           return;
         }
         setSavedProfile(profile);
+        setLatestLoggedWeightKg(latestWeightKg);
 
         setName(profile.display_name || "");
         setDob(profile.dob || "");
@@ -136,6 +154,10 @@ export default function Profile({ user }) {
         setTargetWeight(profile.target_weight_kg ? String(profile.target_weight_kg) : "");
         setTargetWeightUnit("kg");
         setTargetBf(profile.target_body_fat_pct ? String(profile.target_body_fat_pct) : "");
+        setCalorieGoal(profile.calorie_goal ? String(profile.calorie_goal) : "");
+        setShowCalories(profile.pref_show_calories !== false);
+        setShowMacros(profile.pref_show_macros !== false);
+        setShowMicros(Boolean(profile.pref_show_micros));
 
         if (profile.height_cm) {
           setHeightCm(String(profile.height_cm));
@@ -156,6 +178,7 @@ export default function Profile({ user }) {
           profile.gender ||
           profile.height_cm ||
           profile.weight_kg ||
+          profile.calorie_goal ||
           profile.target_weight_kg ||
           profile.target_body_fat_pct
         );
@@ -178,31 +201,6 @@ export default function Profile({ user }) {
       active = false;
     };
   }, [user?.id]);
-
-  function onHeightUnitChange(nextUnit) {
-    if (nextUnit === "imperial" && heightUnit !== "imperial") {
-      const { feetValue, inchesValue } = imperialFromCm(heightCm || "0");
-      setFt(feetValue ? String(feetValue) : "");
-      setInch(inchesValue ? String(inchesValue) : "");
-    }
-    if (nextUnit === "cm" && heightUnit !== "cm") {
-      const nextHeightCm = cmFromImperial(ft, inch);
-      setHeightCm(nextHeightCm ? String(Number(nextHeightCm.toFixed(1))) : "");
-    }
-    setHeightUnit(nextUnit);
-  }
-
-  function onWeightUnitChange(nextUnit) {
-    if (nextUnit === "lb" && weightUnit !== "lb") {
-      const nextLb = lbFromKg(weightKg || "0");
-      setLb(nextLb ? String(Number(nextLb.toFixed(1))) : "");
-    }
-    if (nextUnit === "kg" && weightUnit !== "kg") {
-      const nextKg = kgFromLb(lb);
-      setWeightKg(nextKg ? String(Number(nextKg.toFixed(1))) : "");
-    }
-    setWeightUnit(nextUnit);
-  }
 
   function onTargetWeightUnitChange(nextUnit) {
     if (nextUnit === targetWeightUnit) return;
@@ -230,12 +228,14 @@ export default function Profile({ user }) {
       ? (targetWeightUnit === "lb" ? kgFromLb(Number(targetWeight)) : Number(targetWeight))
       : null;
     const nextTargetBf = targetBf.trim() ? Number(targetBf) : null;
+    const nextCalorieGoal = calorieGoal.trim() ? Number(calorieGoal) : null;
 
     if (!name.trim()) return setMsg("Please enter your name.");
     if (!(finalHeightCm > 50 && finalHeightCm < 300)) return setMsg("Height should be realistic.");
     if (!(finalWeightKg > 20 && finalWeightKg < 500)) return setMsg("Weight should be realistic.");
     if (targetWeight && !(nextTargetWeight > 20 && nextTargetWeight < 500)) return setMsg("Target weight invalid.");
     if (targetBf && !(nextTargetBf >= 0 && nextTargetBf <= 70)) return setMsg("Target body fat % invalid.");
+    if (calorieGoal && !(nextCalorieGoal >= 800 && nextCalorieGoal <= 5000)) return setMsg("Set calorie goal invalid.");
 
     try {
       setSaving(true);
@@ -248,8 +248,12 @@ export default function Profile({ user }) {
         activity_level: activityLevel || "sedentary",
         goal_weight_intent: goal,
         goal_muscle_intent: muscle,
+        calorie_goal: nextCalorieGoal,
         target_weight_kg: nextTargetWeight,
         target_body_fat_pct: nextTargetBf,
+        pref_show_calories: showCalories,
+        pref_show_macros: showMacros,
+        pref_show_micros: showMicros,
       }, userId);
       setSavedProfile({
         display_name: name.trim(),
@@ -260,8 +264,12 @@ export default function Profile({ user }) {
         activity_level: activityLevel || "sedentary",
         goal_weight_intent: goal,
         goal_muscle_intent: muscle,
+        calorie_goal: nextCalorieGoal,
         target_weight_kg: nextTargetWeight,
         target_body_fat_pct: nextTargetBf,
+        pref_show_calories: showCalories,
+        pref_show_macros: showMacros,
+        pref_show_micros: showMicros,
       });
       setIsEditing(false);
       setMsg("Profile saved.");
@@ -283,6 +291,10 @@ export default function Profile({ user }) {
     setTargetWeight(savedProfile.target_weight_kg ? String(savedProfile.target_weight_kg) : "");
     setTargetWeightUnit("kg");
     setTargetBf(savedProfile.target_body_fat_pct ? String(savedProfile.target_body_fat_pct) : "");
+    setCalorieGoal(savedProfile.calorie_goal ? String(savedProfile.calorie_goal) : "");
+    setShowCalories(savedProfile.pref_show_calories !== false);
+    setShowMacros(savedProfile.pref_show_macros !== false);
+    setShowMicros(Boolean(savedProfile.pref_show_micros));
     setHeightUnit("cm");
     setWeightUnit("kg");
     setHeightCm(savedProfile.height_cm ? String(savedProfile.height_cm) : "");
@@ -328,11 +340,20 @@ export default function Profile({ user }) {
     }
   }
 
+  const effectiveWeightKg = latestLoggedWeightKg ?? (weightUnit === "lb" ? kgFromLb(lb) : Number(weightKg));
+
+  const bmrValue = calculateBmr({
+    dob,
+    gender,
+    height_cm: heightUnit === "imperial" ? cmFromImperial(ft, inch) : Number(heightCm),
+    weight_kg: effectiveWeightKg,
+  });
+
   const previewGoal = calculateDailyCalorieGoal({
     dob,
     gender,
     height_cm: heightUnit === "imperial" ? cmFromImperial(ft, inch) : Number(heightCm),
-    weight_kg: weightUnit === "lb" ? kgFromLb(lb) : Number(weightKg),
+    weight_kg: effectiveWeightKg,
     activity_level: activityLevel,
     goal_weight_intent: goal,
     goal_muscle_intent: muscle,
@@ -380,7 +401,7 @@ export default function Profile({ user }) {
                   <strong>{formatHeight(heightCm)}</strong>
                 </div>
                 <div className="profile-field">
-                  <span className="profile-field-label">Weight</span>
+                  <span className="profile-field-label">Initial Weight</span>
                   <strong>{formatWeight(weightKg)}</strong>
                 </div>
                 <div className="profile-field">
@@ -393,17 +414,37 @@ export default function Profile({ user }) {
                 </div>
                 <div className="profile-field">
                   <span className="profile-field-label">Target Weight</span>
-                  <strong>{targetWeight ? `${targetWeight} ${targetWeightUnit}` : "Unavailable"}</strong>
+                  <strong>{formatTargetWeight(savedProfile?.target_weight_kg)}</strong>
                 </div>
                 <div className="profile-field">
                   <span className="profile-field-label">Target Body Fat</span>
                   <strong>{targetBf ? `${targetBf}%` : "Unavailable"}</strong>
                 </div>
+                <div className="profile-field">
+                  <span className="profile-field-label">Show On Dashboard</span>
+                  <strong>
+                    {[
+                      showCalories ? "Calories" : null,
+                      showMacros ? "Macros" : null,
+                      showMicros ? "Micros" : null,
+                    ].filter(Boolean).join(", ") || "Nothing selected"}
+                  </strong>
+                </div>
               </div>
 
               <div className="profile-preview">
-                <span className="profile-preview-label">Calculated goal</span>
-                <strong>{previewGoal ? `${previewGoal} kcal` : "Unavailable"}</strong>
+                <div className="profile-preview-metric">
+                  <span className="profile-preview-label">Calculated Goal</span>
+                  <strong>{previewGoal ? `${previewGoal} kcal` : "Unavailable"}</strong>
+                </div>
+                <div className="profile-preview-metric">
+                  <span className="profile-preview-label">Set Calorie Goal</span>
+                  <strong>{calorieGoal ? `${calorieGoal} kcal` : "Unavailable"}</strong>
+                </div>
+                <div className="profile-preview-metric">
+                  <span className="profile-preview-label">BMR</span>
+                  <strong>{bmrValue ? `${bmrValue} kcal` : "Unavailable"}</strong>
+                </div>
               </div>
 
               {msg && <p className="profile-status">{msg}</p>}
@@ -419,13 +460,6 @@ export default function Profile({ user }) {
             </div>
           ) : (
             <form onSubmit={handleSave} className="profile-form">
-              <div className="profile-row">
-                <div className="profile-col">
-                  <label className="profile-label">Account</label>
-                  <div className="profile-readonly">{accountEmail || userId || "Unavailable"}</div>
-                </div>
-              </div>
-
               <div className="profile-row">
                 <div className="profile-col">
                   <label className="profile-label" htmlFor="profile-name">Full Name</label>
@@ -495,79 +529,6 @@ export default function Profile({ user }) {
 
               <div className="profile-row">
                 <div className="profile-col">
-                  <label className="profile-label">Height</label>
-                  <div className="profile-inline">
-                    {heightUnit === "cm" ? (
-                      <input
-                        className="profile-input"
-                        inputMode="decimal"
-                        value={heightCm}
-                        onChange={(e) => setHeightCm(cleanNum(e.target.value))}
-                        placeholder="cm"
-                      />
-                    ) : (
-                      <div className="profile-split">
-                        <input
-                          className="profile-input"
-                          inputMode="numeric"
-                          value={ft}
-                          onChange={(e) => setFt(cleanNum(e.target.value, false))}
-                          placeholder="ft"
-                        />
-                        <input
-                          className="profile-input"
-                          inputMode="decimal"
-                          value={inch}
-                          onChange={(e) => setInch(cleanNum(e.target.value))}
-                          placeholder="in"
-                        />
-                      </div>
-                    )}
-                    <select
-                      className="profile-input profile-select profile-unit"
-                      value={heightUnit}
-                      onChange={(e) => onHeightUnitChange(e.target.value)}
-                    >
-                      <option value="cm">cm</option>
-                      <option value="imperial">ft/in</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="profile-col">
-                  <label className="profile-label">Weight</label>
-                  <div className="profile-inline">
-                    {weightUnit === "kg" ? (
-                      <input
-                        className="profile-input"
-                        inputMode="decimal"
-                        value={weightKg}
-                        onChange={(e) => setWeightKg(cleanNum(e.target.value))}
-                        placeholder="kg"
-                      />
-                    ) : (
-                      <input
-                        className="profile-input"
-                        inputMode="decimal"
-                        value={lb}
-                        onChange={(e) => setLb(cleanNum(e.target.value))}
-                        placeholder="lb"
-                      />
-                    )}
-                    <select
-                      className="profile-input profile-select profile-unit"
-                      value={weightUnit}
-                      onChange={(e) => onWeightUnitChange(e.target.value)}
-                    >
-                      <option value="kg">kg</option>
-                      <option value="lb">lb</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              <div className="profile-row">
-                <div className="profile-col">
                   <label className="profile-label">Weight Goal</label>
                   <select className="profile-input profile-select" value={goal} onChange={(e) => setGoal(e.target.value)}>
                     <option value="rapid_loss">Rapid Weight Loss</option>
@@ -589,7 +550,7 @@ export default function Profile({ user }) {
               <div className="profile-row">
                 <div className="profile-col">
                   <label className="profile-label">Target Weight</label>
-                  <div className="profile-inline">
+                  <div className="profile-inline profile-inline--attached">
                     <input
                       className="profile-input"
                       inputMode="decimal"
@@ -598,7 +559,7 @@ export default function Profile({ user }) {
                       placeholder={targetWeightUnit === "lb" ? "Optional lb" : "Optional kg"}
                     />
                     <select
-                      className="profile-input profile-select profile-unit"
+                      className="profile-input profile-select profile-unit profile-unit--attached"
                       value={targetWeightUnit}
                       onChange={(e) => onTargetWeightUnitChange(e.target.value)}
                     >
@@ -619,9 +580,49 @@ export default function Profile({ user }) {
                 </div>
               </div>
 
-              <div className="profile-preview">
-                <span className="profile-preview-label">Calculated goal</span>
-                <strong>{previewGoal ? `${previewGoal} kcal` : "Unavailable"}</strong>
+              <div className="profile-row">
+                <div className="profile-col">
+                  <label className="profile-label">Set Calorie Goal</label>
+                  <input
+                    className="profile-input"
+                    inputMode="decimal"
+                    value={calorieGoal}
+                    onChange={(e) => setCalorieGoal(cleanNum(e.target.value, false))}
+                    placeholder="Optional kcal"
+                  />
+                </div>
+              </div>
+
+              <div className="profile-row">
+                <div className="profile-col">
+                  <label className="profile-label">Dashboard Modules</label>
+                  <div className="profile-module-list">
+                    <label className="profile-module-option">
+                      <input
+                        type="checkbox"
+                        checked={showCalories}
+                        onChange={() => setShowCalories((current) => !current)}
+                      />
+                      <span>Calories</span>
+                    </label>
+                    <label className="profile-module-option">
+                      <input
+                        type="checkbox"
+                        checked={showMacros}
+                        onChange={() => setShowMacros((current) => !current)}
+                      />
+                      <span>Macros</span>
+                    </label>
+                    <label className="profile-module-option">
+                      <input
+                        type="checkbox"
+                        checked={showMicros}
+                        onChange={() => setShowMicros((current) => !current)}
+                      />
+                      <span>Micros</span>
+                    </label>
+                  </div>
+                </div>
               </div>
 
               {msg && <p className="profile-status">{msg}</p>}

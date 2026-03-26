@@ -1,4 +1,5 @@
 use crate::models::{CatalogItem, User, WeightEntry};
+use crate::database::seed_data::{SHARED_CATALOG_USER_ID, shared_catalog_items};
 use std::sync::{Arc, Mutex};
 
 #[derive(Clone)]
@@ -20,7 +21,7 @@ impl MockDB {
         Self {
             users: Arc::new(Mutex::new(vec![])),
             auth_users: Arc::new(Mutex::new(vec![])),
-            catalog_items: Arc::new(Mutex::new(vec![])),
+            catalog_items: Arc::new(Mutex::new(shared_catalog_items())),
         }
     }
 
@@ -88,7 +89,10 @@ impl MockDB {
         let items = self.catalog_items.lock().unwrap();
         items
             .iter()
-            .filter(|item| item.user_id == user_id && item.item_type == item_type)
+            .filter(|item| {
+                item.item_type == item_type
+                    && (item.user_id == user_id || item.user_id == SHARED_CATALOG_USER_ID)
+            })
             .cloned()
             .collect()
     }
@@ -99,8 +103,8 @@ impl MockDB {
         items
             .iter()
             .filter(|item| {
-                item.user_id == user_id
-                    && item.item_type == item_type
+                item.item_type == item_type
+                    && (item.user_id == user_id || item.user_id == SHARED_CATALOG_USER_ID)
                     && item.title.to_lowercase().contains(&q)
             })
             .cloned()
