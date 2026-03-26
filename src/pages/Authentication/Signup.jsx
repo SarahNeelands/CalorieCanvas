@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '../../supabaseClient';
-import './Login.css'; // reuse the same styles + background
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import './Login.css';
+import { signUp, setStoredUserId } from '../../services/authClient';
+import { initializeProfileSetup } from '../../services/profileSetupProgress';
 
 export default function Signup() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [pw, setPw] = useState('');
   const [pw2, setPw2] = useState('');
@@ -25,24 +28,25 @@ export default function Signup() {
 
     setLoading(true);
 
-    const { data, error } = await supabase.auth.signUp({
+    const { data, error } = await signUp({
       email,
       password: pw,
-      options: {
-        emailRedirectTo: `${window.location.origin}/profile-setup`,
-      },
+      emailRedirectTo: `${window.location.origin}/profile-setup`,
     });
 
     setLoading(false);
 
     if (error) return setMsg(error.message);
 
-    // If email confirmations are disabled, we might already have a session:
+    if (data?.user?.id) {
+      setStoredUserId(data.user.id);
+      initializeProfileSetup();
+    }
+
     if (data?.session) {
-      window.location.href = '/profile-setup';
+      navigate('/profile-setup');
     } else {
-      // Confirmations ON: user must click the email link to continue.
-      setMsg('Check your email to confirm your account. After confirming, you’ll be redirected to profile setup.');
+      setMsg('Check your email to confirm your account. After confirming, you will be redirected to profile setup.');
     }
   }
 
@@ -52,11 +56,14 @@ export default function Signup() {
 
       <div className="login-grid">
         <section className="left">
-          <h1 className="brand">Calorie Canvas</h1>
-          <p className="tagline">
-            Track your meals, exercises, and<br />
-            nutrition to reach your health goals.
-          </p>
+          <div className="brand-block">
+            <h1 className="brand">Calorie Canvas</h1>
+            <p className="tagline">
+              Track your meals, exercises, and
+              <br />
+              nutrition to reach your health goals.
+            </p>
+          </div>
         </section>
 
         <section className="card-wrap">
@@ -107,13 +114,13 @@ export default function Signup() {
                 />
 
                 <button className="submit" type="submit" disabled={loading}>
-                  {loading ? 'Creating…' : 'Create account'}
+                  {loading ? 'Creating...' : 'Create account'}
                 </button>
               </form>
 
               <div className="signup-row">
                 <span>Already have an account?</span>{' '}
-                <a className="signup-link" href="/login">Log in »</a>
+                <Link className="signup-link" to="/login">Log in »</Link>
               </div>
 
               {msg && <p className="msg">{msg}</p>}

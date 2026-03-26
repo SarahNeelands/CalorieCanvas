@@ -1,0 +1,57 @@
+.trend-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.trend-card__title {
+  margin: 0;
+  color: #143d33;
+  font-size: 1.34rem;
+  font-weight: 700;
+}
+
+.trend-card__subtitle {
+  margin: 0.25rem 0 0;
+  color: #6a8279;
+  font-size: 1.08rem;
+}
+
+.trend-card__side {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.trend-card__actions {
+  display: flex;
+  align-items: center;
+}
+
+.trend-card__average {
+  text-align: right;
+}
+
+.trend-card__average-label {
+  font-size: 0.98rem;
+  color: #6a8279;
+}
+
+.trend-card__average-value {
+  font-size: 1.14rem;
+  font-weight: 600;
+  color: #143d33;
+}
+
+@media (max-width: 720px) {
+  .trend-card__header {
+    flex-direction: column;
+  }
+
+  .trend-card__side {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

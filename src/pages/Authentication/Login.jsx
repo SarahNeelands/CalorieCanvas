@@ -1,12 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
 import './Login.css';
+import { isLocalAuth } from '../../config/runtime';
+import { signIn } from '../../services/authClient';
+import { getProfileSetupResumePath } from '../../services/profileSetupProgress';
 
 export default function Login() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [pw, setPw] = useState('');
   const [showPw, setShowPw] = useState(false);
-  const [remember, setRemember] = useState(false); // cosmetic for now
+  const [remember, setRemember] = useState(false);
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState(null);
 
@@ -20,41 +25,43 @@ export default function Login() {
     setLoading(true);
     setMsg(null);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password: pw,
-    });
+    const { error } = await signIn({ email, password: pw });
 
     setLoading(false);
     if (error) setMsg(error.message);
-    else window.location.href = '/'; // or your dashboard route
+    else navigate(getProfileSetupResumePath() || '/', { replace: true });
   }
 
   async function onForgot() {
+    if (isLocalAuth()) {
+      setMsg('Password reset is only wired for Supabase right now.');
+      return;
+    }
+
     if (!email) return setMsg('Enter your email above first.');
-    setMsg('Sending reset email…');
+    setMsg('Sending reset email...');
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset`, // make a simple reset page later
+      redirectTo: `${window.location.origin}/reset`,
     });
     setMsg(error ? `Error: ${error.message}` : 'Reset link sent. Check your email.');
   }
 
   return (
     <main className="login-wrap">
-      {/* watercolor background */}
       <div className="bg" aria-hidden="true" />
 
       <div className="login-grid">
-        {/* Left side branding */}
         <section className="left">
-          <h1 className="brand">Calorie Canvas</h1>
-          <p className="tagline">
-            Track your meals, exercises, and<br />
-            nutrition to reach your health goals.
-          </p>
+          <div className="brand-block">
+            <h1 className="brand">Calorie Canvas</h1>
+            <p className="tagline">
+              Track your meals, exercises, and
+              <br />
+              nutrition to reach your health goals.
+            </p>
+          </div>
         </section>
 
-        {/* Right side framed card */}
         <section className="card-wrap">
           <div className="frame">
             <div className="frame-img" aria-hidden="true" />
@@ -102,7 +109,7 @@ export default function Login() {
                 </label>
 
                 <button className="submit" type="submit" disabled={loading}>
-                  {loading ? 'Logging in…' : 'Log in'}
+                  {loading ? 'Logging in...' : 'Log in'}
                 </button>
               </form>
 
@@ -111,8 +118,8 @@ export default function Login() {
               </button>
 
               <div className="signup-row">
-                <span>Don’t have an account</span>{' '}
-                <a className="signup-link" href="/signup">Create one »</a>
+                <span>Don&apos;t have an account</span>{' '}
+                <Link className="signup-link" to="/signup">Create one »</Link>
               </div>
 
               {msg && <p className="msg">{msg}</p>}

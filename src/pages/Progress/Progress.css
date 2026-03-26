@@ -1,28 +1,56 @@
 /* Styles for the Progress page */
 
+.progress-back {
+  position: relative;
+  min-height: 100vh;
+  background: url('../../images/DesktopBackground.png') center / 100% 100% no-repeat; /* stretch like your mock */
+  z-index:0;
+  --stage-w: 87.5rem;   /* 1400px */
+  --left-w: 48.75rem;   /* 780px */
+  --right-w: 22.5rem;   /* 360px */
+  --gap: 1.0rem;     
+}
+
 .progress-container {
-  /* Limit width and center the content */
-  width: min(100%, 90vw);
+  width: min(100%, 90vw); /* allow container to expand on large screens */
   margin: 0 auto;
-  padding: 2rem 0.75rem 4rem;
+  margin-top: 0;
+  padding-bottom: 3rem;
   position: relative;
   z-index: 1;
 }
 
+
+
 /* Large headline for the page title */
+/* Spacing for the tabs */
 .progress-title {
-  font-family: var(--cc-serif, 'Georgia', serif);
-  font-size: 2.5rem;
-  line-height: 1.1;
+  font-family: Georgia, "Times New Roman", serif;
   font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--cc-ink, #163227);
-  margin-bottom: 1.5rem;
+  letter-spacing: normal;
 }
 
-/* Spacing for the tabs */
 .progress-tabs {
-  margin-bottom: 1.5rem;
+  margin-top: 0.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.progress-tabs .seg {
+  background: var(--cc-olive-200);
+  box-shadow: 0 12px 28px rgba(20, 61, 51, 0.08);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.progress-tabs .seg-btn {
+  color: #2b5147;
+  font-weight: 700;
+}
+
+.progress-tabs .seg-btn.active {
+  background: #fff;
+  color: #23463b;
+  box-shadow: 0 8px 18px rgba(44, 91, 73, 0.12);
 }
 
 /* Grid layout for the trend cards */
@@ -30,6 +58,71 @@
   display: grid;
   gap: 1.5rem;
 }
+
+.trend-grid section.progress-trend-card.cc-card {
+  position: relative;
+  padding: 1rem 0.95rem !important;
+  background:
+    linear-gradient(180deg, rgba(255, 251, 244, 0.62), rgba(243, 235, 221, 0.46)) !important;
+  border: 1px solid rgba(176, 152, 121, 0.36) !important;
+  box-shadow:
+    0 16px 34px rgba(96, 78, 54, 0.06),
+    0 3px 10px rgba(154, 131, 102, 0.055) !important;
+  backdrop-filter: blur(2px) !important;
+  -webkit-backdrop-filter: blur(2px) !important;
+  overflow: hidden;
+}
+
+.trend-grid section.progress-trend-card.cc-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(115deg, rgba(255, 255, 255, 0.08), transparent 46%),
+    linear-gradient(180deg, rgba(255, 250, 242, 0.1), rgba(246, 239, 228, 0.06)),
+    repeating-linear-gradient(
+      0deg,
+      rgba(123, 98, 67, 0.028) 0,
+      rgba(123, 98, 67, 0.028) 1px,
+      transparent 1px,
+      transparent 11px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(135, 110, 76, 0.018) 0,
+      rgba(135, 110, 76, 0.018) 1px,
+      transparent 1px,
+      transparent 13px
+    );
+  opacity: 0.42;
+  pointer-events: none;
+}
+
+.trend-grid section.progress-trend-card.cc-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 249, 240, 0.26),
+    inset 0 1px 6px rgba(127, 103, 71, 0.06);
+  background:
+    linear-gradient(180deg, rgba(196, 171, 137, 0.08), transparent 18%, transparent 82%, rgba(173, 147, 114, 0.06));
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+.trend-grid section.progress-trend-card.cc-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.trend-chart{
+  height:220px;
+  width: 100%;
+  min-height: 220px;
+}
+@media (max-width: 720px){ .trend-chart{ height:160px; } }
 
 /* At medium widths place the first two cards side‑by‑side and let the exercise card span full width */
 @media (min-width: 768px) {
@@ -41,9 +134,25 @@
   }
 }
 
-/* Increase the title size on larger screens */
-@media (min-width: 1024px) {
-  .progress-title {
-    font-size: 3rem;
+@media (max-width: 720px) {
+  .progress-back {
+    background: transparent;
+  }
+
+  .progress-container {
+    width: min(100%, calc(100vw - 0.2rem));
+    margin-left: 0;
+    margin-right: auto;
+    padding-left: 0.05rem !important;
+    padding-right: 0.2rem !important;
+    padding-bottom: 7rem;
+  }
+
+  .trend-grid {
+    gap: 1rem;
+  }
+
+  .trend-grid section.progress-trend-card.cc-card {
+    padding: 0.9rem 0.8rem !important;
   }
 }

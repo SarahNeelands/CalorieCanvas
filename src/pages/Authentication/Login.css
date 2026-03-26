@@ -51,6 +51,17 @@ html, body, #root { height: 100%; margin: 0; background: none !important; }
 /* left column */
 .left{ 
   align-self:start;                /* was center -> start to sit higher */
+  text-align: center;
+  justify-self: center;
+  width: 100%;
+}
+.brand-block{
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto;
+  display: grid;
+  justify-items: center;
+  text-align: center;
 }
 .brand{
   font-family: Georgia, "Times New Roman", serif;
@@ -58,12 +69,18 @@ html, body, #root { height: 100%; margin: 0; background: none !important; }
   font-size: clamp(2.4rem, 5vw, 3.5rem);
   margin:0 0 .5rem 0;              /* slightly tighter */
   color:var(--ink);
+  text-align:center;
+  width:auto;
+  display:inline-block;
 }
 .tagline{
   margin:0;
   font-size: clamp(1rem, 1.7vw, 1.2rem);
   color:var(--ink-soft);
   line-height:1.6;
+  text-align:center;
+  width:auto;
+  display:inline-block;
 }
 .card-wrap{ display:grid; place-items:center; }
 .frame{
@@ -186,6 +203,96 @@ html, body, #root { height: 100%; margin: 0; background: none !important; }
     gap: 2rem;
     padding-top: 2.5rem;
   }
-  .left{ text-align: center; }
-  .frame{ width: min(520px, 92vw); } /* a touch larger on single-column */
+  .frame{ width: min(620px, 96vw); }
+  .left{
+    display:grid;
+    justify-items:center;
+    text-align:center;
+    margin:0 auto;
+  }
+  .brand-block{ margin: 0 auto; }
+}
+
+@media (max-width: 560px){
+  .bg{
+    background: url('../../images/Iphone_Watercolor_Background.png') center / cover no-repeat;
+  }
+
+  .login-grid{
+    gap: 1.4rem;
+    padding: 1.35rem 0.75rem 0;
+  }
+
+  .brand{
+    font-size: clamp(2.15rem, 9.5vw, 2.9rem);
+  }
+
+  .tagline{
+    font-size: 1.02rem;
+    line-height: 1.45;
+  }
+
+  .frame{
+    width: min(540px, 96vw);
+    aspect-ratio: 0.8;
+  }
+
+  .card-inner{
+    padding: 0.9rem 1.12rem 1.02rem;
+    align-content: center;
+  }
+
+  .heading{
+    font-size: 1.55rem;
+    margin-bottom: 0.45rem;
+  }
+
+  .form{
+    gap: 0.38rem;
+    margin-top: 0;
+  }
+
+  .label,
+  .input,
+  .show-btn,
+  .signup-row,
+  .link-btn,
+  .msg{
+    font-size: 0.98rem;
+  }
+
+  .input{
+    padding: 0.6rem 0.72rem;
+  }
+
+  .submit{
+    font-size: 1.04rem;
+    padding: 0.72rem 0.9rem;
+  }
+
+  .remember{
+    margin-top: 2px;
+    gap: 10px;
+  }
+
+  .link-btn{
+    margin-top: 14px;
+  }
+
+  .signup-row{
+    margin-top: 10px;
+  }
+
+  .msg{
+    margin-top: 12px;
+  }
+
+  .form,
+  .link-btn,
+  .signup-row,
+  .msg{
+    width: min(100%, 17.5rem);
+    margin-left: auto;
+    margin-right: auto;
+  }
 }

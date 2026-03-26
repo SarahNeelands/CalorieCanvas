@@ -2,30 +2,24 @@
 :root{
   --cc-ink:#163227;
 
-  /* speed + animation */
-  --vine-dur:.28s;            /* faster transform */
-  --vine-move:.22s;           /* faster left/width/top */
+  --vine-dur:.28s;
+  --vine-move:.22s;
   --vine-fade:.18s;
-  --vine-offset: 40px; 
+  --vine-offset: 40px;
 
-  /* responsive type */
   --fs-brand: clamp(18px, 1.1vw + 14px, 28px);
   --fs-link:  clamp(20px, 0.6vw + 12px, 18px);
 
-  /* underline */
-  --vine-h:62px;              /* adjust 22–26px to hug text baseline */
+  --vine-h:62px;
 }
 
-/* ---- layout ---- */
 .header{
   display:flex;
   align-items:center;
   gap:clamp(12px, 2vw, 24px);
   padding: clamp(.5rem, 1.2vw, .9rem) clamp(1rem, 3vw, 2rem);
-
 }
 
-/* brand */
 .brand{
   display:flex;
   align-items:flex-end;
@@ -36,12 +30,12 @@
   letter-spacing:.01em;
   white-space:nowrap;
 }
+
 .brand .logo{ width:50px; height:auto; }
 .brand-text{ font-size:var(--fs-brand); }
 
-/* nav occupies the middle */
 .nav{
-  position:relative;         /* anchor for the underline */
+  position:relative;
   flex:1;
   display:flex;
   justify-content:space-evenly;
@@ -49,78 +43,152 @@
   overflow:visible;
 }
 
-/* right side — only bell */
 .right{
   margin-left:auto;
   display:flex;
   align-items:center;
+  gap:10px;
 }
 
-/* bell button */
+.account-menu{ position:relative; }
+
+.account-button{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:92px;
+  height:36px;
+  border:1px solid rgba(0,0,0,.15);
+  border-radius:6px;
+  background:#fff;
+  cursor:pointer;
+  color:var(--cc-ink);
+  font-weight:700;
+}
+
+.account-dropdown{
+  position:absolute;
+  right:0;
+  top:44px;
+  min-width:150px;
+  background:#fff;
+  border-radius:10px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+  padding:8px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  z-index:90;
+}
+
+.account-dropdown a,
+.account-dropdown button{
+  color:var(--cc-ink);
+  text-decoration:none;
+  background:transparent;
+  border:none;
+  text-align:left;
+  padding:8px 12px;
+  border-radius:8px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.account-dropdown a:hover,
+.account-dropdown button:hover{
+  background: rgba(79,107,80,0.06);
+  color:#4F6B50;
+}
+
 .bell{
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  width:36px; height:36px;
+  width:36px;
+  height:36px;
   border:1px solid rgba(0,0,0,.15);
   border-radius:6px;
   background:#fff;
   cursor:pointer;
 }
 
-/* ---- links (responsive font) ---- */
 .nav a{
   font-family:"Inter","Helvetica Neue",Helvetica,Arial,sans-serif;
   font-weight:500;
   letter-spacing:.01em;
   color:#243E2D;
   text-decoration:none;
-  transition:color .15s ease;           /* snappier color change */
-  padding-bottom:6px;                    /* room for the underline */
+  transition:color .15s ease;
+  padding-bottom:6px;
   line-height:1.1;
   position:relative;
-  z-index:1;                             /* text above the vine */
+  z-index:1;
   font-size:var(--fs-link);
 }
+
 .nav a:hover,
 .nav a.active{ color:#4F6B50; }
 
-/* ---- vine underline (faster slide-in) ---- */
 .vine-photo-underline{
   position:absolute;
   height:var(--vine-h);
   pointer-events:none;
   z-index:0;
-
   background-image:var(--vine-img);
   background-repeat:no-repeat;
   background-position:center bottom;
   background-size:100% auto;
-
   transform-origin:center center;
   transform:scaleX(0);
   opacity:0;
-
-  /* faster movement + reveal */
   transition:
     left var(--vine-move) cubic-bezier(.25,.9,.25,1),
     width var(--vine-move) cubic-bezier(.25,.9,.25,1),
-    top   calc(var(--vine-move) - .06s) ease,
+    top calc(var(--vine-move) - .06s) ease,
     transform var(--vine-dur) cubic-bezier(.25,.9,.25,1),
-    opacity  var(--vine-fade) ease;
+    opacity var(--vine-fade) ease;
   will-change: left, width, top, transform, opacity;
 }
 
-/* shown state */
 .vine-photo-underline[style*="opacity: 1"]{
   transform:scaleX(1);
   opacity:1;
 }
 
-/* motion-safe */
 @media (prefers-reduced-motion: reduce){
   .vine-photo-underline{
     transition: left .15s ease, width .15s ease, top .15s ease, opacity .15s ease;
     transform:none;
+  }
+}
+
+@media (max-width: 900px), (hover: none) and (pointer: coarse){
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
+  .header {
+    padding-left: var(--cc-mobile-page-gutter, 0.875rem);
+    padding-right: var(--cc-mobile-page-gutter, 0.875rem);
+    padding-bottom: 0.6rem;
+  }
+
+  .nav,
+  .right {
+    display: none;
+  }
+
+  .brand {
+    align-items: center;
+  }
+
+  .brand .logo {
+    width: 42px;
+  }
+
+  .brand-text {
+    font-size: 1.15rem;
   }
 }

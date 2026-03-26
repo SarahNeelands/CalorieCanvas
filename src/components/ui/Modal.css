@@ -1,0 +1,66 @@
+.cc-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.1rem;
+}
+
+.cc-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(31, 42, 36, 0.24);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.cc-modal-surface {
+  position: relative;
+  z-index: 1;
+  width: min(95vw, 40rem);
+  max-height: min(88vh, 50rem);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border-radius: 1.9rem;
+  background:
+    linear-gradient(180deg, rgba(251, 247, 241, 0.98) 0%, rgba(244, 239, 232, 0.97) 100%);
+  box-shadow: 0 26px 70px rgba(32, 45, 40, 0.24);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  transform: translateY(-4vh);
+}
+
+.cc-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.2rem 1.45rem 0.7rem;
+}
+
+.cc-modal-title {
+  margin: 0;
+  color: #143d33;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.18rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.cc-modal-close {
+  border: none;
+  background: transparent;
+  color: #26463a;
+  font-size: 1.4rem;
+  font-weight: 400;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+}
+
+.cc-modal-body {
+  padding: 0 1.05rem 1.05rem;
+  overflow: auto;
+}

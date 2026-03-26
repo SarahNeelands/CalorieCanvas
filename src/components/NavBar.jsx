@@ -1,18 +1,23 @@
 import React, { useEffect, useRef, useState, forwardRef } from "react";
-import { NavLink, Link, useLocation } from "react-router-dom";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import "./NavBar.css";
 import underlineImg from "../images/VineUnderline.png";
 import logoSrc from "../images/IconBackground.png";
+import { signOutCurrentUser } from "../services/authClient";
+import { completeProfileSetup } from "../services/profileSetupProgress";
 
 export default function NavBar() {
-  const navRef  = useRef(null);
+  const navRef = useRef(null);
   const vineRef = useRef(null);
   const { pathname } = useLocation();
+  const navigate = useNavigate();
 
   const [box, setBox] = useState({ left: 0, width: 0, top: 0 });
   const [visible, setVisible] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
   const lastBox = useRef(box);
   const raf = useRef(0);
+  const accountRef = useRef(null);
 
   const setIfChanged = (next) => {
     const prev = lastBox.current;
@@ -28,29 +33,30 @@ export default function NavBar() {
     if (!navEl || !vineEl) return;
 
     const active = navEl.querySelector("a.active");
-    if (!active) { if (visible) setVisible(false); return; }
+    if (!active) {
+      if (visible) setVisible(false);
+      return;
+    }
 
     const navRect = navEl.getBoundingClientRect();
-    const aRect   = active.getBoundingClientRect();
-
-    // ✅ read the current vine height from CSS each time
+    const aRect = active.getBoundingClientRect();
     const computed = getComputedStyle(vineEl);
     const vineH = parseFloat(computed.height) || 24;
-
-    const gap = -2; // small upward nudge
+    const gap = -2;
 
     const next = {
       left: aRect.left - navRect.left + navEl.scrollLeft,
       width: aRect.width,
-      top: (aRect.bottom - navRect.top) - vineH + gap,
+      top: aRect.bottom - navRect.top - vineH + gap,
     };
 
     setVisible(true);
     setIfChanged(next);
   };
 
-
-  useEffect(() => { measure(); }, [pathname]);
+  useEffect(() => {
+    measure();
+  }, [pathname]);
 
   useEffect(() => {
     const onResize = () => {
@@ -66,7 +72,25 @@ export default function NavBar() {
     };
   }, []);
 
-  useEffect(() => { document.fonts?.ready?.then(measure); }, []);
+  useEffect(() => {
+    document.fonts?.ready?.then(measure);
+  }, []);
+
+  useEffect(() => {
+    function onDoc(e) {
+      if (accountRef.current && !accountRef.current.contains(e.target)) {
+        setAccountOpen(false);
+      }
+    }
+    document.addEventListener("pointerdown", onDoc);
+    return () => document.removeEventListener("pointerdown", onDoc);
+  }, []);
+
+  async function handleLogout() {
+    await signOutCurrentUser();
+    completeProfileSetup();
+    navigate("/login", { replace: true });
+  }
 
   return (
     <header className="header" role="banner">
@@ -76,10 +100,10 @@ export default function NavBar() {
       </div>
 
       <nav className="nav" aria-label="Primary" ref={navRef}>
-        <NavLink to="/" end className={({isActive}) => isActive ? "active" : ""}>Dashboard</NavLink>
-        <NavLink to="/meals" className={({isActive}) => isActive ? "active" : ""}>Meals</NavLink>
-        <NavLink to="/exercises" className={({isActive}) => isActive ? "active" : ""}>Exercises</NavLink>
-        <NavLink to="/progress" className={({isActive}) => isActive ? "active" : ""}>Progress</NavLink>
+        <NavLink to="/" end className={({ isActive }) => (isActive ? "active" : "")}>Dashboard</NavLink>
+        <NavLink to="/meals" className={({ isActive }) => (isActive ? "active" : "")}>Meals</NavLink>
+        <NavLink to="/exercises" className={({ isActive }) => (isActive ? "active" : "")}>Exercises</NavLink>
+        <NavLink to="/progress" className={({ isActive }) => (isActive ? "active" : "")}>Progress</NavLink>
 
         <ImageUnderline
           ref={vineRef}
@@ -92,9 +116,24 @@ export default function NavBar() {
         />
       </nav>
 
-      {/* RIGHT SIDE: only the bell */}
       <div className="right">
-        <button className="bell" aria-label="Notifications">🔔</button>
+        <div className="account-menu" ref={accountRef}>
+          <button
+            className="account-button"
+            type="button"
+            onClick={() => setAccountOpen((open) => !open)}
+          >
+            Account
+          </button>
+          {accountOpen && (
+            <div className="account-dropdown">
+              <Link to="/profile" onClick={() => setAccountOpen(false)}>View Profile</Link>
+              <button type="button" onClick={handleLogout}>Log out</button>
+            </div>
+          )}
+        </div>
+
+        <button className="bell" aria-label="Notifications">!</button>
       </div>
     </header>
   );
@@ -103,7 +142,7 @@ export default function NavBar() {
 const ImageUnderline = forwardRef(function ImageUnderline(
   { src, left, width, top, visible },
   ref
-){
+) {
   return (
     <div
       ref={ref}
@@ -113,7 +152,7 @@ const ImageUnderline = forwardRef(function ImageUnderline(
         top,
         width,
         opacity: visible ? 1 : 0,
-        ["--vine-img"]: `url(${src})`,
+        "--vine-img": `url(${src})`,
       }}
       aria-hidden="true"
     />

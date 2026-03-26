@@ -1,5 +1,7 @@
 // src/pages/Exercises.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useLocation, useNavigate } from 'react-router-dom';
+import { getCurrentUserId } from "../../services/authClient";
 
 // Context
 import { ExerciseProvider } from '../../components/exercise/context/ExerciseContext.jsx';
@@ -20,10 +22,28 @@ import NavBar from "../../components/NavBar.jsx";
 import "./Exercises.css";
 
 export default function Exercises({ user }) {
+  const [resolvedUserId, setResolvedUserId] = useState(user?.id || null);
+
+  useEffect(() => {
+    let active = true;
+
+    async function resolveUser() {
+      const nextUserId = user?.id || await getCurrentUserId();
+      if (active) {
+        setResolvedUserId(nextUserId || null);
+      }
+    }
+
+    resolveUser();
+    return () => {
+      active = false;
+    };
+  }, [user?.id]);
+
   return (
     <div className="ex-page">
       <NavBar profileImageSrc={user?.avatar}/>
-      <ExerciseProvider>
+      <ExerciseProvider userId={resolvedUserId}>
         <ExercisePageInner />
       </ExerciseProvider>
     </div>
@@ -34,6 +54,17 @@ function ExercisePageInner() {
   const [range, setRange] = useState("7");
   const [selectedDate, setSelectedDate] = useState(null);
   const [logOpen, setLogOpen] = useState(false);
+  // respond to navigation state so QuickActionsFloating can open the modal
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(()=>{
+    if(location?.state?.openLog){
+      setLogOpen(true);
+      // clear state so re-navigation doesn't re-open
+      try{ navigate(location.pathname, { replace: true, state: {} }); }catch(e){}
+    }
+  }, [location, navigate]);
 
   return (
     <div className="exercise-back">

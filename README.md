@@ -1,70 +1,61 @@
-# Getting Started with Create React App
+# Calorie Canvas
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Runtime Modes
 
-## Available Scripts
+This app supports two modes controlled entirely by environment variables.
 
-In the project directory, you can run:
+### Supabase + Vercel
 
-### `npm start`
+Set:
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+```env
+REACT_APP_AUTH_MODE=supabase
+REACT_APP_SUPABASE_URL=https://your-project.supabase.co
+REACT_APP_SUPABASE_ANON_KEY=your-supabase-anon-key
+```
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+In this mode:
+- auth uses Supabase
+- profile data uses Supabase
+- catalog/meals/logs use Supabase
+- no Rust backend is required
 
-### `npm test`
+### Local Rust Backend
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Set:
 
-### `npm run build`
+```env
+REACT_APP_AUTH_MODE=local
+REACT_APP_API_BASE_URL=http://127.0.0.1:3001/api
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+In this mode:
+- auth/catalog can use the Rust backend
+- local seeded ingredients are available
+- browser-storage fallbacks remain available where implemented
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Vercel Deployment
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+The repo includes `vercel.json` with a rewrite to `index.html`, so React Router routes work on refresh and direct links.
 
-### `npm run eject`
+### Required Vercel Environment Variables
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+```env
+REACT_APP_AUTH_MODE=supabase
+REACT_APP_SUPABASE_URL=https://your-project.supabase.co
+REACT_APP_SUPABASE_ANON_KEY=your-supabase-anon-key
+```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Local Development
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+```bash
+npm start
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+For local Rust backend mode, also run the backend server separately and point `REACT_APP_API_BASE_URL` at it.
 
-## Learn More
+## Build
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+```bash
+npm run build
+```

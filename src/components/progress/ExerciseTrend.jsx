@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import TrendCard from './TrendCard.jsx';
+import LineTrendChart from './LineTrendChart.jsx';
 import { fetchExerciseSeries } from '../../services/progressService.js';
 
 export default function ExerciseTrend({ userId, scope, onDayClick }) {
@@ -12,42 +12,95 @@ export default function ExerciseTrend({ userId, scope, onDayClick }) {
     return () => { active = false; };
   }, [userId, scope]);
 
-  const avg = useMemo(() => {
+  const averageMinutes = useMemo(() => {
     if (!data.length) return null;
     const sum = data.reduce((a, b) => a + (b.value ?? 0), 0);
-    return Math.round(sum / data.length) + ' min';
+    return sum / data.length;
   }, [data]);
 
-  const handleClick = (state) => {
-    if (!state?.activeLabel || scope !== 'week') return;
-    const idx = state?.activeTooltipIndex ?? -1;
-    const point = data[idx];
-    if (point) onDayClick?.({ dateLabel: point.label, exerciseTypes: point?.extra?.types ?? [] });
+  const dailyData = useMemo(
+    () => buildExerciseDailySeries(data, scope),
+    [data, scope]
+  );
+
+  const avg = useMemo(() => {
+    if (!Number.isFinite(averageMinutes)) return null;
+    return Math.round(averageMinutes) + ' min';
+  }, [averageMinutes]);
+
+  const handlePointClick = (point) => {
+    if (point) onDayClick?.({ ...point, dateLabel: point.label, exerciseTypes: point?.extra?.types ?? [] });
   };
 
   return (
-    <TrendCard title="Exercise Minutes" subtitle={scopeLabel(scope)} averageText={avg ?? ''}>
-      <div style={{ height: 260 }}>
-        <ResponsiveContainer>
-          <AreaChart
-            data={data}
-            margin={{ top: 10, right: 20, left: 0, bottom: 0 }}
-            onClick={handleClick}
-          >
-            <XAxis dataKey="label" />
-            <YAxis />
-            <Tooltip />
-            <Area type="monotone" dataKey="value" stroke="" fillOpacity={0.15} />
-          </AreaChart>
-        </ResponsiveContainer>
+    <TrendCard title="Exercise Minutes" subtitle={scopeLabel(scope)} averageText={avg ?? ''} className="progress-trend-card--exercise">
+      {!dailyData.length && <p className="weight-trend__empty weight-trend__empty--top">No data for this range.</p>}
+      <div className="trend-chart">
+        <LineTrendChart
+          data={dailyData}
+          valueKey="value"
+          labels={['Mon', 'Tue', 'Wed', 'Thu', 'Fri']}
+          tone="green"
+          onPointClick={handlePointClick}
+          showArea={true}
+          averageValue={dailyData.length > 1 ? averageMinutes : null}
+        />
       </div>
-      {!data.length && <p className="mt-3 text-sm opacity-70">No data for this range.</p>}
     </TrendCard>
   );
 }
 
 function scopeLabel(s) {
-  if (s === 'all') return 'Overall totals';
-  if (s === 'month') return 'Last 30 days';
-  return 'This week (click a day)';
+  if (s === 'all') return 'Daily totals';
+  if (s === 'month') return 'Daily totals, last 30 days';
+  return 'Daily totals, this week';
+}
+
+function formatExerciseDay(dateStr) {
+  const date = new Date(dateStr);
+  if (!Number.isFinite(date.getTime())) return String(dateStr || '');
+  return date.toLocaleDateString(undefined, { month: 'numeric', day: 'numeric' });
+}
+
+function buildExerciseDailySeries(data, scope) {
+  const pointsByDate = new Map((data || []).map((point) => [point.date, point]));
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  let startDate = new Date(today);
+  if (scope === 'week') {
+    startDate.setDate(today.getDate() - 6);
+  } else if (scope === 'month') {
+    startDate.setDate(today.getDate() - 29);
+  } else {
+    const firstPoint = (data || [])[0];
+    if (firstPoint?.date) {
+      const firstDate = new Date(firstPoint.date);
+      if (Number.isFinite(firstDate.getTime())) {
+        startDate = firstDate;
+      }
+    }
+  }
+
+  startDate.setHours(0, 0, 0, 0);
+
+  const series = [];
+  const cursor = new Date(startDate);
+  while (cursor <= today) {
+    const dateStr = cursor.toISOString().slice(0, 10);
+    const point = pointsByDate.get(dateStr);
+    series.push(
+      point
+        ? { ...point, label: formatExerciseDay(point.date) }
+        : {
+            date: dateStr,
+            label: formatExerciseDay(dateStr),
+            value: 0,
+            extra: { types: [] },
+          }
+    );
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  return series;
 }

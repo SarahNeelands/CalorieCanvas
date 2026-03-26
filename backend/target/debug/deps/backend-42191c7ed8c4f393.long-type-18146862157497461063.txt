@@ -1,0 +1,2 @@
+fn(State<MockDB>, axum::Json<IncomingWeight>) -> impl std::future::Future<Output = axum::Json<bool>> {user_api::add_user_weight_entry}
+fn(State<MockDB>, axum::Json<IncomingWeight>) -> impl std::future::Future<Output = axum::Json<bool>> {user_api::add_user_weight_entry}: Handler<_, _>

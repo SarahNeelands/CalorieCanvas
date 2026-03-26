@@ -1,0 +1,37 @@
+.exercise-chart-shell {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 640px) {
+  .exercise-chart-shell {
+    overflow: hidden;
+    min-height: 232px;
+  }
+
+  .exercise-chart-shell .recharts-wrapper,
+  .exercise-chart-shell .recharts-surface {
+    max-width: 100%;
+  }
+
+  .exercise-chart-shell .recharts-cartesian-axis-tick-value,
+  .exercise-chart-shell .recharts-legend-item-text {
+    font-size: 0.75rem;
+  }
+
+  .exercise-chart-shell .recharts-legend-wrapper {
+    max-width: 100% !important;
+    left: 0 !important;
+  }
+
+  .exercise-chart-shell--pie {
+    min-height: 250px;
+    align-items: flex-start;
+  }
+}

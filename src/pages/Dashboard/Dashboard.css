@@ -7,8 +7,8 @@
   --gap: 1.0rem;        /* 40px */
 }
 .app{
-position:absolute;
-  inset:0;
+  position: relative;
+  min-height: 100vh;
   background: url('../../images/DesktopBackground.png') center / 100% 100% no-repeat; /* stretch like your mock */
   z-index:0;
   --stage-w: 87.5rem;   /* 1400px */
@@ -77,6 +77,19 @@ position:absolute;
   padding-top: 0;          /* clean transition */
 }
 
+.dashboard-macros {
+  margin: 0.45rem 0 0.9rem;
+  width: min(100%, 31rem);
+  max-width: calc(100vw - 2rem);
+}
+
+.dashboard-section-title {
+  margin: 0 0 0.45rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #2e5146;
+}
+
 .grid > :last-child,
 .quick-actions,
 .frame {
@@ -100,9 +113,23 @@ body { font-size: 1rem; line-height: 1.5; }
 
 /* ==== BELOW TABLET: switch to the responsive stack ==== */
 @media (max-width: 980px) {
-  .container { width: min(100%, calc(100vw - 1.5rem)); }
+  .app { background: transparent; }
+  .container {
+    width: calc(100vw - 0.4rem);
+    max-width: calc(100vw - 0.4rem);
+    margin-left: 0.2rem;
+    margin-right: 0.2rem;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    padding-bottom: 7rem;
+    box-sizing: border-box;
+  }
   .grid { grid-template-columns: 1fr; gap: 1.5rem; }
   .grid > * { width: 100%; max-width: 100%; }
+  .dashboard-macros {
+    margin-top: 0.2rem;
+    width: 100%;
+  }
 }
 /* Desktop-only adjustments: clamp overall width and scale elements */
 @media (min-width: 1280px) {
