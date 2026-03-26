@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../../supabaseClient';
 import './ProfileSetup.css';
-import { getCurrentSession, getCurrentUserId } from '../../services/authClient';
+import { getCurrentUserId } from '../../services/authClient';
 import { isLocalAuth } from '../../config/runtime';
 import {
   getProfileSetupState,
@@ -19,11 +18,10 @@ export default function ProfileSetup() {
   const [gender, setGender] = useState('');
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState(null);
-  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
     setProfileSetupStep('/profile-setup');
-    document.title = 'Tell us about you • Calorie Canvas';
+    document.title = 'Tell us about you - Calorie Canvas';
 
     const draft = getProfileSetupState();
     if (draft.name) setName(draft.name);
@@ -38,21 +36,10 @@ export default function ProfileSetup() {
       }
 
       if (!userId) return;
-
       localStorage.setItem('user_id', userId);
     }
 
-    async function checkSession() {
-      const { session } = await getCurrentSession();
-      if (session) {
-        setChecking(false);
-        return;
-      }
-      window.location.replace('/login');
-    }
-
     createProfile();
-    checkSession();
   }, []);
 
   function isValidDob(iso) {
@@ -86,24 +73,12 @@ export default function ProfileSetup() {
       });
     }
 
-    const { session } = await getCurrentSession();
-    if (!session && isLocalAuth()) {
-      updateProfileSetupState(nextState);
-      navigate('/profile-setup-2');
-      return;
-    }
-
     setSaving(true);
     updateProfileSetupState(nextState);
     setSaving(false);
     navigate('/profile-setup-2');
 
-    if (isLocalAuth()) {
-      return;
-    }
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    if (isLocalAuth() || !userId) {
       return;
     }
 
@@ -113,23 +88,14 @@ export default function ProfileSetup() {
         dob: dob || null,
         gender: gender || null,
       },
-      user.id
+      userId
     ).catch((error) => {
       console.warn('Failed to save profile setup step 1', error);
     });
 
-    void persistProfileSetupState(nextState, user.id).catch((error) => {
+    void persistProfileSetupState(nextState, userId).catch((error) => {
       console.warn('Failed to persist profile setup progress', error);
     });
-  }
-
-  if (checking) {
-    return (
-      <main className="ps-wrap">
-        <div className="ps-bg" aria-hidden="true" />
-        <div className="ps-grid"><p style={{ opacity: 0.75 }}>Checking your session…</p></div>
-      </main>
-    );
   }
 
   return (
@@ -175,7 +141,7 @@ export default function ProfileSetup() {
                   value={gender}
                   onChange={(e) => setGender(e.target.value)}
                 >
-                  <option value="">Select…</option>
+                  <option value="">Select...</option>
                   <option>Female</option>
                   <option>Male</option>
                   <option>Non-binary</option>
@@ -188,9 +154,9 @@ export default function ProfileSetup() {
             {msg && <p className="ps-msg">{msg}</p>}
 
             <div className="ps-actions">
-              <a className="ps-back" href="/signup">← Back</a>
+              <a className="ps-back" href="/signup">&larr; Back</a>
               <button className="ps-next" type="submit" disabled={saving}>
-                {saving ? 'Saving…' : 'Next'}
+                {saving ? 'Saving...' : 'Next'}
               </button>
             </div>
           </form>

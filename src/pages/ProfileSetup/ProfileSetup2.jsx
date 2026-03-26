@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './ProfileSetup.css';
-import { getCurrentSession, getCurrentUserId } from '../../services/authClient';
+import { getCurrentUserId } from '../../services/authClient';
 import { isLocalAuth } from '../../config/runtime';
 import {
   getProfileSetupState,
@@ -22,11 +22,10 @@ export default function ProfileSetup2() {
   const [lb, setLb] = useState('');
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState(null);
-  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
     setProfileSetupStep('/profile-setup-2');
-    document.title = 'Profile setup • Measurements • Calorie Canvas';
+    document.title = 'Profile setup - Measurements - Calorie Canvas';
 
     const draft = getProfileSetupState();
     if (draft.heightUnit) setHeightUnit(draft.heightUnit);
@@ -36,17 +35,6 @@ export default function ProfileSetup2() {
     if (draft.ft !== undefined) setFt(String(draft.ft));
     if (draft.inch !== undefined) setInch(String(draft.inch));
     if (draft.lb !== undefined) setLb(String(draft.lb));
-
-    async function checkSession() {
-      const { session } = await getCurrentSession();
-      if (session) {
-        setChecking(false);
-        return;
-      }
-      window.location.replace('/login');
-    }
-
-    checkSession();
   }, []);
 
   const clampNum = (v) => (v ?? '').toString().trim();
@@ -163,15 +151,6 @@ export default function ProfileSetup2() {
     });
   }
 
-  if (checking) {
-    return (
-      <main className="ps-wrap">
-        <div className="ps-bg" aria-hidden="true" />
-        <div className="ps-grid"><p style={{ opacity: 0.75 }}>Checking your session…</p></div>
-      </main>
-    );
-  }
-
   return (
     <main className="ps-wrap">
       <div className="ps-bg" aria-hidden="true" />
@@ -265,9 +244,9 @@ export default function ProfileSetup2() {
             {msg && <p className="ps-msg">{msg}</p>}
 
             <div className="ps-actions">
-              <a className="ps-back" href="/profile-setup">← Back</a>
+              <a className="ps-back" href="/profile-setup">&larr; Back</a>
               <button className="ps-next" type="submit" disabled={saving}>
-                {saving ? 'Saving…' : 'Next'}
+                {saving ? 'Saving...' : 'Next'}
               </button>
             </div>
           </form>

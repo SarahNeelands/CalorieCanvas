@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
 import './ProfileSetup.css';
-import { getCurrentSession, getCurrentUserId } from '../../services/authClient';
+import { getCurrentUserId } from '../../services/authClient';
+import { isLocalAuth } from '../../config/runtime';
 import {
   completeProfileSetupPersisted,
   completeProfileSetup,
@@ -24,41 +25,25 @@ export default function ProfileSetup4() {
   });
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState(null);
-  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
     setProfileSetupStep('/profile-setup-4');
-    document.title = 'Profile setup • Preferences • Calorie Canvas';
+    document.title = 'Profile setup - Preferences - Calorie Canvas';
 
     const draft = getProfileSetupState();
     setPrefs((current) => ({
       ...current,
       ...(draft.prefs || {}),
     }));
-
-    async function checkSession() {
-      const { session } = await getCurrentSession();
-      if (session) {
-        setChecking(false);
-        return;
-      }
-      window.location.replace('/login');
-    }
-
-    checkSession();
   }, []);
 
   function toggle(key) {
-    setPrefs((p) => ({ ...p, [key]: !p[key] }));
+    setPrefs((current) => ({ ...current, [key]: !current[key] }));
   }
 
   async function onFinish(e) {
     e.preventDefault();
     setMsg(null);
-
-    const { session } = await getCurrentSession();
-    if (!session) return setMsg('Session expired. Please log in.');
-
     setSaving(true);
 
     const userId = await getCurrentUserId();
@@ -69,7 +54,7 @@ export default function ProfileSetup4() {
 
     const draft = getProfileSetupState();
 
-    if (!session.local) {
+    if (!isLocalAuth()) {
       const { error } = await supabase
         .from('profiles')
         .upsert(
@@ -110,7 +95,8 @@ export default function ProfileSetup4() {
 
     updateProfileSetupState({ prefs, completed: true, lastStep: null });
     completeProfileSetup();
-    if (!session.local) {
+
+    if (!isLocalAuth()) {
       try {
         await persistProfileSetupState({ prefs }, userId);
         await completeProfileSetupPersisted(userId);
@@ -118,17 +104,9 @@ export default function ProfileSetup4() {
         console.warn('Failed to persist completed profile setup state', error);
       }
     }
+
     setSaving(false);
     navigate('/');
-  }
-
-  if (checking) {
-    return (
-      <main className="ps-wrap">
-        <div className="ps-bg" aria-hidden="true" />
-        <div className="ps-grid"><p style={{ opacity: 0.75 }}>Checking your session…</p></div>
-      </main>
-    );
   }
 
   return (
@@ -191,9 +169,9 @@ export default function ProfileSetup4() {
             {msg && <p className="ps-msg">{msg}</p>}
 
             <div className="ps-actions">
-              <a className="ps-back" href="/profile-setup-3">← Back</a>
+              <a className="ps-back" href="/profile-setup-3">&larr; Back</a>
               <button className="ps-next" type="submit" disabled={saving}>
-                {saving ? 'Saving…' : 'Finish Setup'}
+                {saving ? 'Saving...' : 'Finish Setup'}
               </button>
             </div>
           </form>

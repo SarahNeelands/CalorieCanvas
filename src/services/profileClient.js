@@ -19,12 +19,6 @@ function writeLocalProfiles(profiles) {
   localStorage.setItem(LOCAL_PROFILES_KEY, JSON.stringify(profiles));
 }
 
-function getMostRecentLocalProfile(profiles) {
-  return Object.values(profiles)
-    .filter((profile) => profile && typeof profile === 'object')
-    .sort((a, b) => new Date(b.updated_at || 0).getTime() - new Date(a.updated_at || 0).getTime())[0] || null;
-}
-
 function readLegacyWeights() {
   try {
     const raw = localStorage.getItem('cc.weights');
@@ -170,7 +164,7 @@ export async function getProfile(userId = getStoredUserId()) {
   if (!userId) return null;
 
   const localProfiles = readLocalProfiles();
-  const localProfile = localProfiles[userId] || getMostRecentLocalProfile(localProfiles);
+  const localProfile = localProfiles[userId] || null;
   const draft = getProfileSetupState();
 
   if (isLocalAuth()) {
