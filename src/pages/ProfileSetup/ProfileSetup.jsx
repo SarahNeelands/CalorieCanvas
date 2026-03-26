@@ -6,6 +6,7 @@ import { getCurrentSession, getCurrentUserId } from '../../services/authClient';
 import { isLocalAuth } from '../../config/runtime';
 import {
   getProfileSetupState,
+  persistProfileSetupState,
   setProfileSetupStep,
   updateProfileSetupState,
 } from '../../services/profileSetupProgress';
@@ -93,37 +94,33 @@ export default function ProfileSetup() {
     }
 
     setSaving(true);
+    updateProfileSetupState(nextState);
+    setSaving(false);
+    navigate('/profile-setup-2');
 
     if (isLocalAuth()) {
-      updateProfileSetupState(nextState);
-      setSaving(false);
-      navigate('/profile-setup-2');
       return;
     }
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      setSaving(false);
-      return setMsg('Session expired. Please log in.');
+      return;
     }
 
-    try {
-      await updateProfile(
-        {
-          display_name: name.trim(),
-          dob: dob || null,
-          gender: gender || null,
-        },
-        user.id
-      );
-    } catch (error) {
-      setSaving(false);
-      return setMsg(error.message || 'Failed to save profile.');
-    }
+    void updateProfile(
+      {
+        display_name: name.trim(),
+        dob: dob || null,
+        gender: gender || null,
+      },
+      user.id
+    ).catch((error) => {
+      console.warn('Failed to save profile setup step 1', error);
+    });
 
-    setSaving(false);
-    updateProfileSetupState(nextState);
-    navigate('/profile-setup-2');
+    void persistProfileSetupState(nextState, user.id).catch((error) => {
+      console.warn('Failed to persist profile setup progress', error);
+    });
   }
 
   if (checking) {

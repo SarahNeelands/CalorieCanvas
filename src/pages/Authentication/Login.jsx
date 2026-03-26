@@ -4,7 +4,7 @@ import { supabase } from '../../supabaseClient';
 import './Login.css';
 import { isLocalAuth } from '../../config/runtime';
 import { signIn } from '../../services/authClient';
-import { getProfileSetupResumePath } from '../../services/profileSetupProgress';
+import { getProfileSetupResumePath, hydrateProfileSetupState } from '../../services/profileSetupProgress';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -28,8 +28,18 @@ export default function Login() {
     const { error } = await signIn({ email, password: pw });
 
     setLoading(false);
-    if (error) setMsg(error.message);
-    else navigate(getProfileSetupResumePath() || '/', { replace: true });
+    if (error) {
+      setMsg(error.message);
+      return;
+    }
+
+    try {
+      await hydrateProfileSetupState();
+    } catch (hydrateError) {
+      console.warn('Failed to hydrate profile setup state after login', hydrateError);
+    }
+
+    navigate(getProfileSetupResumePath() || '/', { replace: true });
   }
 
   async function onForgot() {

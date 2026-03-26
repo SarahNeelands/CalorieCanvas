@@ -18,6 +18,9 @@ create table if not exists public.profiles (
   pref_show_micros boolean not null default false,
   pref_show_exercise boolean not null default true,
   pref_show_weight boolean not null default true,
+  setup_completed boolean not null default false,
+  setup_last_step text,
+  setup_draft jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now())
 );

@@ -22,13 +22,15 @@ import ProfileSetup4 from './pages/ProfileSetup/ProfileSetup4';
 import QuickActionsFloating from './components/QuickActionsFloating';
 import MobileTabBar from './components/MobileTabBar';
 import { getCurrentUserId, validateStoredSession } from './services/authClient';
+import { getProfileSetupResumePath, hydrateProfileSetupState } from './services/profileSetupProgress';
 
 // Example: this would come from your DB call in a real app
 const mockUser = {
   avatar: DefaultImage,
 };
 
-function ProtectedRoute({ children, status, userId }) {
+function ProtectedRoute({ children, status, userId, allowIncompleteSetup = false }) {
+  const location = useLocation();
   const storedUserId = localStorage.getItem("user_id") || undefined;
   const effectiveUserId = userId || storedUserId;
 
@@ -37,6 +39,12 @@ function ProtectedRoute({ children, status, userId }) {
   }
 
   if (effectiveUserId) {
+    if (!allowIncompleteSetup) {
+      const resumePath = getProfileSetupResumePath();
+      if (resumePath && !location.pathname.startsWith('/profile-setup')) {
+        return <Navigate to={resumePath} replace />;
+      }
+    }
     return children;
   }
 
@@ -83,6 +91,11 @@ export default function App() {
       if (!active) return;
 
       if (userId) {
+        try {
+          await hydrateProfileSetupState(userId);
+        } catch (error) {
+          console.warn('Failed to hydrate profile setup state', error);
+        }
         setCurrentUserId(userId);
         setStatus('authorized');
       } else {
@@ -138,10 +151,10 @@ export default function App() {
         <Route path="/snacks/new" element={<ProtectedRoute status={status} userId={currentUserId}><SnackDetails user={currentUser} /></ProtectedRoute>} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/profile-setup" element={<ProtectedRoute status={status} userId={currentUserId}><ProfileSetup /></ProtectedRoute>} />
-        <Route path="/profile-setup-2" element={<ProtectedRoute status={status} userId={currentUserId}><ProfileSetup2 /></ProtectedRoute>} />
-        <Route path="/profile-setup-3" element={<ProtectedRoute status={status} userId={currentUserId}><ProfileSetup3 /></ProtectedRoute>} />
-        <Route path="/profile-setup-4" element={<ProtectedRoute status={status} userId={currentUserId}><ProfileSetup4 /></ProtectedRoute>} />
+        <Route path="/profile-setup" element={<ProtectedRoute status={status} userId={currentUserId} allowIncompleteSetup={true}><ProfileSetup /></ProtectedRoute>} />
+        <Route path="/profile-setup-2" element={<ProtectedRoute status={status} userId={currentUserId} allowIncompleteSetup={true}><ProfileSetup2 /></ProtectedRoute>} />
+        <Route path="/profile-setup-3" element={<ProtectedRoute status={status} userId={currentUserId} allowIncompleteSetup={true}><ProfileSetup3 /></ProtectedRoute>} />
+        <Route path="/profile-setup-4" element={<ProtectedRoute status={status} userId={currentUserId} allowIncompleteSetup={true}><ProfileSetup4 /></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>
   );
