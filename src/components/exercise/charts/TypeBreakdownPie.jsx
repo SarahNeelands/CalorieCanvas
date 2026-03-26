@@ -69,7 +69,7 @@ export default function TypeBreakdownPie({ range }) {
     }
     const lookup = Object.fromEntries(state.exerciseTypes.map((t) => [t.id, t.name]));
     return Array.from(acc.entries()).map(([typeId, minutes]) => ({ name: lookup[typeId] || typeId, typeId, minutes }));
-  }, [state.logs, state.exerciseTypes, range]);
+  }, [endMs, start, state.exerciseTypes, state.logs]);
 
   if (!data.length) return <div className="ex-empty">No exercise logged in this range yet.</div>;
 
