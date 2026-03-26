@@ -66,7 +66,7 @@ export default function DailyMinutesChart({ range, onSelectDate }) {
     for (let i = 0; i <= daysBack; i++) { const d = new Date(start); d.setDate(start.getDate() + i); map.set(helpers.ymd(d), 0); }
     for (const log of state.logs) { const key = helpers.ymd(log.timestampISO); if (map.has(key)) map.set(key, map.get(key) + (log.minutes || 0)); }
     return Array.from(map.entries()).map(([date, minutes]) => ({ date, minutes }));
-  }, [state.logs, range]);
+  }, [daysBack, helpers, start, state.logs]);
 
   return (
     <div className="exercise-chart-shell" ref={shellRef}>

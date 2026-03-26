@@ -1,18 +1,16 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import "./QuickActions.css";
 import quickActionFrame from "./images/QuickActionFrame.png"; // background frame
-import addIcon from "./images/addIcon.png";
 
 export default function QuickActions() {
-  const [open, setOpen] = useState(false);
   const menuRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     function onDoc(e) {
       if (!menuRef.current) return;
-      if (!menuRef.current.contains(e.target)) setOpen(false);
+      if (!menuRef.current.contains(e.target)) return;
     }
     document.addEventListener("pointerdown", onDoc);
     return () => document.removeEventListener("pointerdown", onDoc);

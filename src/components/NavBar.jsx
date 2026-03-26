@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, forwardRef } from "react";
+import React, { useCallback, useEffect, useRef, useState, forwardRef } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import "./NavBar.css";
 import underlineImg from "../images/VineUnderline.png";
@@ -27,7 +27,7 @@ export default function NavBar() {
     setBox(next);
   };
 
-  const measure = () => {
+  const measure = useCallback(() => {
     const navEl = navRef.current;
     const vineEl = vineRef.current;
     if (!navEl || !vineEl) return;
@@ -52,11 +52,11 @@ export default function NavBar() {
 
     setVisible(true);
     setIfChanged(next);
-  };
+  }, [visible]);
 
   useEffect(() => {
     measure();
-  }, [pathname]);
+  }, [pathname, measure]);
 
   useEffect(() => {
     const onResize = () => {
@@ -70,11 +70,11 @@ export default function NavBar() {
       window.removeEventListener("orientationchange", onResize);
       cancelAnimationFrame(raf.current);
     };
-  }, []);
+  }, [measure]);
 
   useEffect(() => {
     document.fonts?.ready?.then(measure);
-  }, []);
+  }, [measure]);
 
   useEffect(() => {
     function onDoc(e) {
