@@ -5,6 +5,7 @@ import './ProfileSetup.css';
 import { getCurrentSession, getCurrentUserId } from '../../services/authClient';
 import {
   getProfileSetupState,
+  persistProfileSetupState,
   setProfileSetupStep,
   updateProfileSetupState,
 } from '../../services/profileSetupProgress';
@@ -183,25 +184,7 @@ export default function ProfileSetup3() {
       target_body_fat_pct: tb ? tbNum : null,
     });
 
-    if (!session.local) {
-      const { error } = await supabase.from('profiles').upsert({
-        user_id: userId,
-        height_cm: Number(finalHeight.toFixed(1)),
-        weight_kg: Number(finalWeight.toFixed(1)),
-        activity_level: activityLevel || 'sedentary',
-        goal_weight_intent: goal,
-        goal_muscle_intent: muscle,
-        target_weight_kg: tw ? twNum : null,
-        target_body_fat_pct: tb ? tbNum : null,
-      }, { onConflict: 'user_id' });
-
-      if (error) {
-        setSaving(false);
-        return setMsg(error.message);
-      }
-    }
-
-    updateProfileSetupState({
+    const nextState = {
       heightUnit,
       weightUnit,
       heightCm: Number(finalHeight.toFixed(1)),
@@ -216,10 +199,34 @@ export default function ProfileSetup3() {
       targetWeightUnit,
       targetBf: tb,
       lastStep: '/profile-setup-4',
-    });
+    };
 
+    updateProfileSetupState(nextState);
     setSaving(false);
     navigate('/profile-setup-4');
+
+    if (session.local) {
+      return;
+    }
+
+    void supabase.from('profiles').upsert({
+      user_id: userId,
+      height_cm: Number(finalHeight.toFixed(1)),
+      weight_kg: Number(finalWeight.toFixed(1)),
+      activity_level: activityLevel || 'sedentary',
+      goal_weight_intent: goal,
+      goal_muscle_intent: muscle,
+      target_weight_kg: tw ? twNum : null,
+      target_body_fat_pct: tb ? tbNum : null,
+    }, { onConflict: 'user_id' }).then(({ error }) => {
+      if (error) {
+        console.warn('Failed to save profile setup step 3', error);
+      }
+    });
+
+    void persistProfileSetupState(nextState, userId).catch((error) => {
+      console.warn('Failed to persist profile setup progress', error);
+    });
   }
 
   if (checking) {

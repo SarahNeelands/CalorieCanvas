@@ -1,3 +1,7 @@
+import { supabase } from '../supabaseClient';
+import { isLocalAuth } from '../config/runtime';
+import { getCurrentUserId } from './authClient';
+
 const STORAGE_KEY = 'profile_setup_progress_v1';
 
 function readState() {
@@ -22,6 +26,67 @@ export function updateProfileSetupState(patch) {
   return next;
 }
 
+function buildRemoteSetupPayload(state, userId) {
+  return {
+    user_id: userId,
+    setup_completed: Boolean(state.completed),
+    setup_last_step: state.completed ? null : (state.lastStep || '/profile-setup'),
+    setup_draft: state,
+  };
+}
+
+export async function hydrateProfileSetupState(userIdArg) {
+  const userId = userIdArg || await getCurrentUserId();
+  const localState = readState();
+
+  if (!userId || isLocalAuth()) {
+    return localState;
+  }
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('setup_completed, setup_last_step, setup_draft')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  if (!data) {
+    return localState;
+  }
+
+  const merged = {
+    ...(data.setup_draft || {}),
+    ...localState,
+    completed: data.setup_completed ?? localState.completed ?? false,
+    lastStep: data.setup_last_step ?? localState.lastStep ?? null,
+  };
+
+  writeState(merged);
+  return merged;
+}
+
+export async function persistProfileSetupState(patch, userIdArg) {
+  const next = updateProfileSetupState(patch);
+  const userId = userIdArg || await getCurrentUserId();
+
+  if (!userId || isLocalAuth()) {
+    return next;
+  }
+
+  const { error } = await supabase
+    .from('profiles')
+    .upsert(buildRemoteSetupPayload(next, userId), { onConflict: 'user_id' });
+
+  if (error) {
+    throw error;
+  }
+
+  return next;
+}
+
 export function setProfileSetupStep(path) {
   updateProfileSetupState({ lastStep: path, completed: false });
 }
@@ -39,4 +104,23 @@ export function getProfileSetupResumePath() {
 export function completeProfileSetup() {
   const state = readState();
   writeState({ ...state, completed: true });
+}
+
+export async function completeProfileSetupPersisted(userIdArg) {
+  const next = updateProfileSetupState({ completed: true, lastStep: null });
+  const userId = userIdArg || await getCurrentUserId();
+
+  if (!userId || isLocalAuth()) {
+    return next;
+  }
+
+  const { error } = await supabase
+    .from('profiles')
+    .upsert(buildRemoteSetupPayload(next, userId), { onConflict: 'user_id' });
+
+  if (error) {
+    throw error;
+  }
+
+  return next;
 }

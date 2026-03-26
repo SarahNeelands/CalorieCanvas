@@ -4,8 +4,10 @@ import { supabase } from '../../supabaseClient';
 import './ProfileSetup.css';
 import { getCurrentSession, getCurrentUserId } from '../../services/authClient';
 import {
+  completeProfileSetupPersisted,
   completeProfileSetup,
   getProfileSetupState,
+  persistProfileSetupState,
   setProfileSetupStep,
   updateProfileSetupState,
 } from '../../services/profileSetupProgress';
@@ -106,8 +108,16 @@ export default function ProfileSetup4() {
       pref_show_weight: prefs.show_weight,
     });
 
-    updateProfileSetupState({ prefs, completed: true });
+    updateProfileSetupState({ prefs, completed: true, lastStep: null });
     completeProfileSetup();
+    if (!session.local) {
+      try {
+        await persistProfileSetupState({ prefs }, userId);
+        await completeProfileSetupPersisted(userId);
+      } catch (error) {
+        console.warn('Failed to persist completed profile setup state', error);
+      }
+    }
     setSaving(false);
     navigate('/');
   }

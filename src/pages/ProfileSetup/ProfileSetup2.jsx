@@ -5,6 +5,7 @@ import { getCurrentSession, getCurrentUserId } from '../../services/authClient';
 import { isLocalAuth } from '../../config/runtime';
 import {
   getProfileSetupState,
+  persistProfileSetupState,
   setProfileSetupStep,
   updateProfileSetupState,
 } from '../../services/profileSetupProgress';
@@ -116,50 +117,19 @@ export default function ProfileSetup2() {
     if (!(h > 50 && h < 300)) return setMsg('Height should be realistic (cm, e.g., 171).');
     if (!(w > 20 && w < 500)) return setMsg('Weight should be realistic.');
 
-    setSaving(true);
-
     const userId = await getCurrentUserId();
     if (!userId) {
-      setSaving(false);
       return setMsg('Session expired. Please log in.');
     }
+
+    setSaving(true);
 
     saveLocalProfile(userId, {
       height_cm: Number(finalHeightCm.toFixed(1)),
       weight_kg: Number(finalWeightKg.toFixed(1)),
     });
 
-    if (isLocalAuth()) {
-      updateProfileSetupState({
-        heightUnit,
-        weightUnit,
-        heightCm: Number(finalHeightCm.toFixed(1)),
-        weightKg: Number(finalWeightKg.toFixed(1)),
-        ft,
-        inch,
-        lb,
-        lastStep: '/profile-setup-3',
-      });
-
-      setSaving(false);
-      navigate('/profile-setup-3');
-      return;
-    }
-
-    try {
-      await updateProfile(
-        {
-          height_cm: Number(finalHeightCm.toFixed(1)),
-          weight_kg: Number(finalWeightKg.toFixed(1)),
-        },
-        userId
-      );
-    } catch (error) {
-      setSaving(false);
-      return setMsg(error.message || 'Could not save measurements.');
-    }
-
-    updateProfileSetupState({
+    const nextState = {
       heightUnit,
       weightUnit,
       heightCm: Number(finalHeightCm.toFixed(1)),
@@ -168,10 +138,29 @@ export default function ProfileSetup2() {
       inch,
       lb,
       lastStep: '/profile-setup-3',
-    });
+    };
 
+    updateProfileSetupState(nextState);
     setSaving(false);
     navigate('/profile-setup-3');
+
+    if (isLocalAuth()) {
+      return;
+    }
+
+    void updateProfile(
+      {
+        height_cm: Number(finalHeightCm.toFixed(1)),
+        weight_kg: Number(finalWeightKg.toFixed(1)),
+      },
+      userId
+    ).catch((error) => {
+      console.warn('Failed to save profile setup step 2', error);
+    });
+
+    void persistProfileSetupState(nextState, userId).catch((error) => {
+      console.warn('Failed to persist profile setup progress', error);
+    });
   }
 
   if (checking) {
