@@ -77,14 +77,14 @@ export default function TypeBreakdownPie({ range }) {
 
   return (
     <div className="exercise-chart-shell exercise-chart-shell--pie" ref={shellRef}>
-      <PieChart width={chartWidth} height={isPhone ? 250 : 300}>
+      <PieChart width={chartWidth} height={isPhone ? 250 : 248}>
         <Pie
           data={data}
           dataKey="minutes"
           nameKey="name"
           cx="50%"
           cy={isPhone ? 92 : "50%"}
-          outerRadius={isPhone ? 64 : 110}
+          outerRadius={isPhone ? 64 : 94}
           label={!isPhone}
         >
           {data.map((entry, i) => (<Cell key={entry.typeId} fill={fills[i % fills.length]} />))}

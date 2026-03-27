@@ -129,8 +129,15 @@ export default function Dashboard({ user }) {
 
       <main className="container">
         <div className="grid">
-          <div>
+          <div className="dashboard-primary">
             {showCalories && <CalorieSummary goal={goal} eaten={eaten} />}
+          </div>
+          <div>
+            <QuickActions />
+          </div>
+        </div>
+        {(showMacros || showMicros) && (
+          <div className="dashboard-nutrients dashboard-nutrients--full">
             {showMacros && (
               <div className="dashboard-macros">
                 <h3 className="dashboard-section-title">Macros</h3>
@@ -149,13 +156,10 @@ export default function Dashboard({ user }) {
                 />
               </div>
             )}
-            <div >
-              <RecentMealsLogged userId={resolvedUserId} />
-            </div>
           </div>
-          <div>
-            <QuickActions />
-          </div>
+        )}
+        <div className="dashboard-recent">
+          <RecentMealsLogged userId={resolvedUserId} />
         </div>
       </main>
     </div>

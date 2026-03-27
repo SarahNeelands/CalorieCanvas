@@ -72,7 +72,7 @@ export default function DailyMinutesChart({ range, onSelectDate }) {
     <div className="exercise-chart-shell" ref={shellRef}>
       <BarChart
         width={chartWidth}
-        height={isPhone ? 220 : 300}
+        height={isPhone ? 220 : 248}
         data={data}
         margin={{ top: 8, right: isPhone ? 6 : 16, bottom: 8, left: isPhone ? -14 : 0 }}
       >

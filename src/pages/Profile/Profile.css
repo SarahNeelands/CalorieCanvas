@@ -1,6 +1,6 @@
 .profile-page {
   min-height: 100vh;
-  background: url('../../images/DesktopBackground.png') center / 100% 100% no-repeat;
+  background: transparent;
 }
 
 .profile-shell {
@@ -9,6 +9,16 @@
   padding: 1.5rem 0 3rem;
   position: relative;
   z-index: 1;
+}
+
+@media (min-width: 981px) {
+  .profile-shell {
+    width: min(calc(100% - 2.2rem), 70rem);
+    margin-top: -0.3rem;
+    margin-left: 1.05rem;
+    margin-right: auto;
+    padding-top: 0.5rem;
+  }
 }
 
 .profile-intro {

@@ -19,6 +19,38 @@ html, body, #root {
   --cc-page-title-color: #143d33;
   --cc-page-title-gap: 0.45rem;
   --cc-page-section-gap: 1rem;
+  --cc-scrollbar-track: rgba(217, 232, 205, 0.8);
+  --cc-scrollbar-thumb: #2c5b49;
+  --cc-scrollbar-thumb-hover: #476f5d;
+}
+
+html {
+  scrollbar-color: var(--cc-scrollbar-thumb) var(--cc-scrollbar-track);
+}
+
+@media (min-width: 721px) {
+  html {
+    scrollbar-gutter: stable;
+  }
+}
+
+*::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--cc-scrollbar-track);
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--cc-scrollbar-thumb);
+  border-radius: 999px;
+  border: 2px solid var(--cc-scrollbar-track);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--cc-scrollbar-thumb-hover);
 }
 
 .cc-page-heading {

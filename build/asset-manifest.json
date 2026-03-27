@@ -1,10 +1,10 @@
 {
   "files": {
-    "main.css": "/static/css/main.16f4bafa.css",
-    "main.js": "/static/js/main.8c2d7031.js",
+    "main.css": "/static/css/main.681edda7.css",
+    "main.js": "/static/js/main.50d7ea60.js",
     "static/js/453.947bcc51.chunk.js": "/static/js/453.947bcc51.chunk.js",
     "static/media/Iphone_Watercolor_Background.png": "/static/media/Iphone_Watercolor_Background.b63df6190eb54bad78c4.png",
-    "static/media/DesktopBackground.png": "/static/media/DesktopBackground.066d7692588c6d03d861.png",
+    "static/media/Background_Blue.png": "/static/media/Background_Blue.10a2f20e6696c7767c20.png",
     "static/media/LoginBackground.png": "/static/media/LoginBackground.10736b97e82965ed1a1f.png",
     "static/media/QuickActionFrame.png": "/static/media/QuickActionFrame.6020cb537dfa6d9e04e7.png",
     "static/media/IconBackground.png": "/static/media/IconBackground.e16aaa8aee7d3aa51f12.png",
@@ -14,12 +14,12 @@
     "static/media/LoginSignupFrame.png": "/static/media/LoginSignupFrame.a7e1cebde6c12996e1be.png",
     "static/media/defaultprofile.png": "/static/media/defaultprofile.b11f45a152bb037786cd.png",
     "index.html": "/index.html",
-    "main.16f4bafa.css.map": "/static/css/main.16f4bafa.css.map",
-    "main.8c2d7031.js.map": "/static/js/main.8c2d7031.js.map",
+    "main.681edda7.css.map": "/static/css/main.681edda7.css.map",
+    "main.50d7ea60.js.map": "/static/js/main.50d7ea60.js.map",
     "453.947bcc51.chunk.js.map": "/static/js/453.947bcc51.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.16f4bafa.css",
-    "static/js/main.8c2d7031.js"
+    "static/css/main.681edda7.css",
+    "static/js/main.50d7ea60.js"
   ]
 }

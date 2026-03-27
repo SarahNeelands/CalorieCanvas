@@ -7,6 +7,24 @@
   border: 1px solid rgba(148, 120, 85, 0.18);
 }
 
+@media (min-width: 981px) {
+  .line-trend-chart {
+    padding: 0.2rem 0.45rem 0.3rem;
+    overflow: hidden;
+  }
+
+  .line-trend-chart__grid {
+    inset: 0.35rem 0.65rem 0.35rem 0.65rem;
+  }
+
+  .line-trend-chart__labels {
+    left: 0.65rem;
+    right: 0.65rem;
+    height: 0.2rem;
+    font-size: 0.64rem;
+  }
+}
+
 .line-trend-chart__grid {
   position: absolute;
   inset: 0.45rem 0.8rem 1.85rem 0.8rem;
@@ -40,7 +58,7 @@
 .line-trend-chart__tick-text {
   fill: #7a705e;
   font-size: 4.3px;
-  text-anchor: start;
+  text-anchor: end;
 }
 
 .line-trend-chart__line {

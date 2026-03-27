@@ -1,17 +1,19 @@
 import React from "react";
 import MealCard from "./MealCard.jsx";
 import "../calories/RecentMeals.css";
-import { getCachedCatalogItems, listCatalogItems } from "../../services/catalogClient";
+import { deleteCatalogItem, getCachedCatalogItems, listCatalogItems } from "../../services/catalogClient";
 
 export default function SnacksList({
   userId,
   onLogClick,
+  onEditClick,
   title = "All Snacks",
   headerAction = null,
 }) {
   const [rows, setRows] = React.useState(() => getCachedCatalogItems("snack", userId));
   const [loading, setLoading] = React.useState(rows.length === 0);
   const [error, setError] = React.useState(null);
+  const [reloadKey, setReloadKey] = React.useState(0);
 
   React.useEffect(() => {
     let alive = true;
@@ -38,10 +40,24 @@ export default function SnacksList({
     return () => {
       alive = false;
     };
-  }, [userId, rows.length]);
+  }, [userId, rows.length, reloadKey]);
+
+  async function handleDelete(item) {
+    const confirmed = window.confirm(`Delete "${item.title}"?`);
+    if (!confirmed) return;
+
+    try {
+      setError(null);
+      await deleteCatalogItem(item.id);
+      setRows((current) => current.filter((row) => row.id !== item.id));
+      setReloadKey((value) => value + 1);
+    } catch (e) {
+      setError(e);
+    }
+  }
 
   return (
-    <section className="recent-meals">
+    <section className="recent-meals recent-meals--catalog">
       <div className="recent-meals__header">
         <h3 className="recent-meals__title">{title}</h3>
         {headerAction}
@@ -51,7 +67,13 @@ export default function SnacksList({
       {!loading && !rows?.length && <div style={{ padding: "0.5rem 0" }}>No snacks yet. Add your first one!</div>}
       <div className="list">
         {rows?.map((m) => (
-          <MealCard key={m.id} item={m} onClick={onLogClick} />
+          <MealCard
+            key={m.id}
+            item={m}
+            onClick={onLogClick}
+            onEdit={onEditClick}
+            onDelete={handleDelete}
+          />
         ))}
       </div>
     </section>

@@ -1,7 +1,7 @@
 import React, { useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
-import { createCatalogItem } from "../../services/catalogClient";
+import { createCatalogItem, updateCatalogItem } from "../../services/catalogClient";
 import { scanNutritionLabelFromImage } from "../../utils/nutritionLabelOcr";
 import { toMassValue } from "../../utils/nutrients";
 
@@ -110,16 +110,48 @@ function readImageAsDataUrl(file) {
 }
 
 export default function SnackDetails({ user }) {
+  const location = useLocation();
   const navigate = useNavigate();
+  const existingSnack = location.state?.snack || null;
+  const packageServing = existingSnack?.unit_conversions?.package_serving || {};
+  const existingMicros = existingSnack?.unit_conversions?.micros || {};
+  const existingPhoto = existingSnack?.unit_conversions?.photo_data_url || "";
+  const isEditing = Boolean(existingSnack?.id);
   const photoInputRef = useRef(null);
-  const [name, setName] = useState("");
-  const [brand, setBrand] = useState("");
-  const [photoDataUrl, setPhotoDataUrl] = useState("");
-  const [servingWeight, setServingWeight] = useState("");
-  const [servingCount, setServingCount] = useState("");
-  const [snackLabel, setSnackLabel] = useState("snack");
-  const [macros, setMacros] = useState(DEFAULT_MACROS);
-  const [micros, setMicros] = useState(DEFAULT_MICROS);
+  const [name, setName] = useState(existingSnack?.title || "");
+  const [brand, setBrand] = useState(existingSnack?.unit_conversions?.brand || "");
+  const [photoDataUrl, setPhotoDataUrl] = useState(existingPhoto);
+  const [servingWeight, setServingWeight] = useState(
+    packageServing.qty === undefined || packageServing.qty === null ? "" : String(packageServing.qty)
+  );
+  const [servingCount, setServingCount] = useState(
+    packageServing.count === undefined || packageServing.count === null ? "" : String(packageServing.count)
+  );
+  const [snackLabel, setSnackLabel] = useState(
+    existingSnack?.unit_conversions?.quantity_label || packageServing.count_label || "snack"
+  );
+  const [macros, setMacros] = useState({
+    ...DEFAULT_MACROS,
+    calories: packageServing.macros?.calories === undefined || packageServing.macros?.calories === null ? "" : String(packageServing.macros.calories),
+    protein: packageServing.macros?.protein === undefined || packageServing.macros?.protein === null ? "" : String(packageServing.macros.protein),
+    carbs: packageServing.macros?.carbs === undefined || packageServing.macros?.carbs === null ? "" : String(packageServing.macros.carbs),
+    fat: packageServing.macros?.fat === undefined || packageServing.macros?.fat === null ? "" : String(packageServing.macros.fat),
+    fiber: packageServing.macros?.fiber === undefined || packageServing.macros?.fiber === null ? "" : String(packageServing.macros.fiber),
+    sugar: packageServing.macros?.sugar === undefined || packageServing.macros?.sugar === null ? "" : String(packageServing.macros.sugar),
+    cholesterol: packageServing.macros?.cholesterol === undefined || packageServing.macros?.cholesterol === null ? "" : String(packageServing.macros.cholesterol),
+  });
+  const [micros, setMicros] = useState({
+    ...DEFAULT_MICROS,
+    ...Object.fromEntries(
+      Object.entries(existingMicros).map(([key, value]) => [
+        key,
+        {
+          value: value?.value === undefined || value?.value === null ? "" : String(value.value),
+          unit: value?.unit || DEFAULT_MICROS[key]?.unit || "mg",
+        },
+      ])
+    ),
+  });
   const [msg, setMsg] = useState(null);
   const [saving, setSaving] = useState(false);
   const [scanningPhoto, setScanningPhoto] = useState(false);
@@ -248,7 +280,7 @@ export default function SnackDetails({ user }) {
       setSaving(true);
       setMsg(null);
 
-      await createCatalogItem({
+      const payload = {
         title: trimmedName,
         item_type: "snack",
         kcal_per_100g: Number(per100gMacros.calories.toFixed(2)),
@@ -269,6 +301,7 @@ export default function SnackDetails({ user }) {
             unit: "g",
             count: Number(numericServingCount.toFixed(2)),
             count_label: snackLabel.trim() || "snack",
+            macros: parsedMacros,
           },
           macros_per_100g: {
             fiber: Number(per100gMacros.fiber.toFixed(2)),
@@ -280,7 +313,13 @@ export default function SnackDetails({ user }) {
           ),
           micros: normalizedMicros,
         },
-      });
+      };
+
+      if (isEditing) {
+        await updateCatalogItem(existingSnack.id, payload);
+      } else {
+        await createCatalogItem(payload);
+      }
 
       navigate("/meals");
     } catch (error) {
@@ -303,7 +342,7 @@ export default function SnackDetails({ user }) {
       <div style={{ maxWidth: 760, margin: "0 auto", display: "grid", gap: 20 }}>
         <header className="cc-page-heading">
           <h2 className="cc-page-title">
-            New Snack
+            {isEditing ? "Edit Snack" : "New Snack"}
           </h2>
           <p className="cc-page-subtitle">
             Enter the serving details exactly like the package label, then log it later by grams or by snack count.

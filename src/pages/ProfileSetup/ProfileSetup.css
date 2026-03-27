@@ -25,6 +25,16 @@ html, body, #root { height:100%; margin:0; background:none !important; }
   z-index:0;
 }
 
+@media (min-width: 721px) {
+  .ps-wrap {
+    background: transparent;
+  }
+
+  .ps-bg {
+    background: transparent;
+  }
+}
+
 /* Layout */
 .ps-grid{
   position:relative;

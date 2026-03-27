@@ -20,39 +20,47 @@ export default function MealCard({ item, onClick, onEdit, onDelete }) {
         style={{ textAlign: "left", cursor: "pointer", border: "none", background: "transparent", padding: 0 }}
       >
         <div className="item__content item__content--padded">
-          <div className="item__left">
-            <div className="meal-row">
+          <div className="item__main">
+            <div className="item__top-row">
               <h4 className="item__title" style={{ margin: 0 }}>{title}</h4>
-              <p className="item__time" style={{ margin: 0 }}>{formatDateTime(created_at)}</p>
+              <div className="kcal">
+                {Number(kcal_per_100g ?? 0)} <span>kcal / 100g</span>
+              </div>
             </div>
-          </div>
-          <div className="kcal">
-            {Number(kcal_per_100g ?? 0)} <span>kcal / 100g</span>
+            <div className="item__bottom-row">
+              <p className="item__time" style={{ margin: 0 }}>{formatDateTime(created_at)}</p>
+              {(onEdit || onDelete) && (
+                <div className="item__actions item__actions--inline">
+                  {onEdit && (
+                    <button
+                      type="button"
+                      className="item__action-btn"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onEdit(item);
+                      }}
+                    >
+                      Edit
+                    </button>
+                  )}
+                  {onDelete && (
+                    <button
+                      type="button"
+                      className="item__action-btn item__action-btn--danger"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onDelete(item);
+                      }}
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </button>
-      {(onEdit || onDelete) && (
-        <div className="item__actions">
-          {onEdit && (
-            <button
-              type="button"
-              className="item__action-btn"
-              onClick={() => onEdit(item)}
-            >
-              Edit
-            </button>
-          )}
-          {onDelete && (
-            <button
-              type="button"
-              className="item__action-btn item__action-btn--danger"
-              onClick={() => onDelete(item)}
-            >
-              Delete
-            </button>
-          )}
-        </div>
-      )}
     </div>
   );
 }

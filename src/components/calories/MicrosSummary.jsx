@@ -34,10 +34,10 @@ export default function MicrosSummary({ micros, targets }) {
   const primaryRows = [
     { key: "iron_mg", label: "Iron", unit: "mg", tone: "iron" },
     { key: "sodium_mg", label: "Sodium", unit: "mg", tone: "sodium" },
+    { key: "calcium_mg", label: "Calcium", unit: "mg", tone: "calcium" },
   ];
   const extraRows = [
     { key: "vitamin_c_mg", label: "Vitamin C", unit: "mg", tone: "vitc" },
-    { key: "calcium_mg", label: "Calcium", unit: "mg", tone: "calcium" },
     { key: "potassium_mg", label: "Potassium", unit: "mg", tone: "potassium" },
     { key: "vitamin_a_mcg", label: "Vitamin A", unit: "mcg", tone: "vita" },
   ];

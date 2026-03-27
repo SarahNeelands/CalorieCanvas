@@ -25,6 +25,12 @@ html, body, #root {
   flex-direction: column;
 }
 
+@media (min-width: 721px) {
+  .logmeal-page {
+    background: transparent;
+  }
+}
+
 .logmeal-wrap {
   flex: 1;
   display: flex;
