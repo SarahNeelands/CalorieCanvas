@@ -31,6 +31,14 @@ export default function Meals({ user }) {
     });
   };
 
+  const onEditSnack = (item) => {
+    navigate("/snacks/new", {
+      state: {
+        snack: item,
+      },
+    });
+  };
+
   useEffect(() => {
     if (location?.state?.openLogMeal) {
       setSelectedItem(location.state.selectedLogItem || null);
@@ -104,6 +112,7 @@ export default function Meals({ user }) {
             <SnacksList
               userId={user?.id}
               onLogClick={onSelectToLog}
+              onEditClick={onEditSnack}
               title="Snacks"
               headerAction={snackAddButton}
             />
@@ -124,6 +133,7 @@ export default function Meals({ user }) {
             <SnacksList
               userId={user?.id}
               onLogClick={onSelectToLog}
+              onEditClick={onEditSnack}
               title="Snacks"
               headerAction={snackAddButton}
             />

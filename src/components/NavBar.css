@@ -17,99 +17,37 @@
   display:flex;
   align-items:center;
   gap:clamp(12px, 2vw, 24px);
-  padding: clamp(.5rem, 1.2vw, .9rem) clamp(1rem, 3vw, 2rem);
+  padding: 0 clamp(1rem, 3vw, 2rem) clamp(.15rem, 0.4vw, .25rem);
 }
 
 .brand{
   display:flex;
-  align-items:flex-end;
+  align-items:center;
   gap:.5rem;
   color:#243E2D;
   font-family:"Inter","Helvetica Neue",Helvetica,Arial,sans-serif;
   font-weight:700;
   letter-spacing:.01em;
   white-space:nowrap;
+  flex: 0 0 auto;
+  transform: translateY(-0.6rem);
 }
 
-.brand .logo{ width:50px; height:auto; }
+.brand .logo{
+  width:50px;
+  height:auto;
+  transform: translateY(0.8rem);
+}
 .brand-text{ font-size:var(--fs-brand); }
 
 .nav{
   position:relative;
   flex:1;
   display:flex;
-  justify-content:space-evenly;
+  justify-content:center;
   align-items:center;
+  gap: clamp(2rem, 4vw, 5rem);
   overflow:visible;
-}
-
-.right{
-  margin-left:auto;
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-
-.account-menu{ position:relative; }
-
-.account-button{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  min-width:92px;
-  height:36px;
-  border:1px solid rgba(0,0,0,.15);
-  border-radius:6px;
-  background:#fff;
-  cursor:pointer;
-  color:var(--cc-ink);
-  font-weight:700;
-}
-
-.account-dropdown{
-  position:absolute;
-  right:0;
-  top:44px;
-  min-width:150px;
-  background:#fff;
-  border-radius:10px;
-  box-shadow: 0 12px 32px rgba(0,0,0,0.12);
-  padding:8px;
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-  z-index:90;
-}
-
-.account-dropdown a,
-.account-dropdown button{
-  color:var(--cc-ink);
-  text-decoration:none;
-  background:transparent;
-  border:none;
-  text-align:left;
-  padding:8px 12px;
-  border-radius:8px;
-  font-weight:700;
-  cursor:pointer;
-}
-
-.account-dropdown a:hover,
-.account-dropdown button:hover{
-  background: rgba(79,107,80,0.06);
-  color:#4F6B50;
-}
-
-.bell{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  width:36px;
-  height:36px;
-  border:1px solid rgba(0,0,0,.15);
-  border-radius:6px;
-  background:#fff;
-  cursor:pointer;
 }
 
 .nav a{
@@ -182,6 +120,7 @@
 
   .brand {
     align-items: center;
+    transform: none;
   }
 
   .brand .logo {

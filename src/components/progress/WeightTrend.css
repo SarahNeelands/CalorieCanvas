@@ -6,6 +6,18 @@
   background: rgba(20, 61, 51, 0.08);
 }
 
+@media (min-width: 981px) {
+  .weight-unit-toggle {
+    gap: 0.2rem;
+    padding: 0.12rem;
+  }
+
+  .weight-unit-toggle__btn {
+    padding: 0.28rem 0.58rem;
+    font-size: 0.84rem;
+  }
+}
+
 .weight-unit-toggle__btn {
   border: none;
   border-radius: 999px;

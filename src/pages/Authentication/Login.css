@@ -33,6 +33,12 @@ html, body, #root { height: 100%; margin: 0; background: none !important; }
   /* background-size: 100% 100%; */
 }
 
+@media (min-width: 721px) {
+  .bg {
+    background: transparent;
+  }
+}
+
 /* two-column layout */
 .login-grid{
   position:relative;

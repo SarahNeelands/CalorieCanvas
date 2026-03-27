@@ -57,7 +57,7 @@ export default function MealsList({
   }
 
   return (
-    <section className="recent-meals">
+    <section className="recent-meals recent-meals--catalog">
       <div className="recent-meals__header">
         <h3 className="recent-meals__title">{title}</h3>
         {headerAction}

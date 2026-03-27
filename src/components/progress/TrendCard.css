@@ -45,6 +45,34 @@
   color: #143d33;
 }
 
+@media (min-width: 981px) {
+  .trend-card__header {
+    gap: 0.6rem;
+    margin-bottom: 0.45rem;
+  }
+
+  .trend-card__title {
+    font-size: 1.18rem;
+  }
+
+  .trend-card__subtitle {
+    margin-top: 0.02rem;
+    font-size: 0.96rem;
+  }
+
+  .trend-card__side {
+    gap: 0.45rem;
+  }
+
+  .trend-card__average-label {
+    font-size: 0.88rem;
+  }
+
+  .trend-card__average-value {
+    font-size: 1rem;
+  }
+}
+
 @media (max-width: 720px) {
   .trend-card__header {
     flex-direction: column;

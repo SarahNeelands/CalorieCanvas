@@ -24,6 +24,7 @@ import MobileTabBar from './components/MobileTabBar';
 import { getCurrentUserId, validateStoredSession } from './services/authClient';
 import { getProfileSetupResumePath, hasCompletedRequiredProfileSetup, hydrateProfileSetupState, ensureProfileSetupRequired } from './services/profileSetupProgress';
 import { getProfile } from './services/profileClient';
+import { processPendingCatalogSyncQueue } from './services/catalogClient';
 
 // Example: this would come from your DB call in a real app
 const mockUser = {
@@ -101,6 +102,7 @@ export default function App() {
         } catch (error) {
           console.warn('Failed to hydrate profile setup state', error);
         }
+        void processPendingCatalogSyncQueue();
         setCurrentUserId(userId);
         setStatus('authorized');
       } else {

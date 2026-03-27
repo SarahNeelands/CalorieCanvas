@@ -1,23 +1,18 @@
 import React, { useCallback, useEffect, useRef, useState, forwardRef } from "react";
-import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import "./NavBar.css";
 import underlineImg from "../images/VineUnderline.png";
 import logoSrc from "../images/IconBackground.png";
-import { signOutCurrentUser } from "../services/authClient";
-import { completeProfileSetup } from "../services/profileSetupProgress";
 
 export default function NavBar() {
   const navRef = useRef(null);
   const vineRef = useRef(null);
   const { pathname } = useLocation();
-  const navigate = useNavigate();
 
   const [box, setBox] = useState({ left: 0, width: 0, top: 0 });
   const [visible, setVisible] = useState(false);
-  const [accountOpen, setAccountOpen] = useState(false);
   const lastBox = useRef(box);
   const raf = useRef(0);
-  const accountRef = useRef(null);
 
   const setIfChanged = (next) => {
     const prev = lastBox.current;
@@ -76,22 +71,6 @@ export default function NavBar() {
     document.fonts?.ready?.then(measure);
   }, [measure]);
 
-  useEffect(() => {
-    function onDoc(e) {
-      if (accountRef.current && !accountRef.current.contains(e.target)) {
-        setAccountOpen(false);
-      }
-    }
-    document.addEventListener("pointerdown", onDoc);
-    return () => document.removeEventListener("pointerdown", onDoc);
-  }, []);
-
-  async function handleLogout() {
-    await signOutCurrentUser();
-    completeProfileSetup();
-    navigate("/login", { replace: true });
-  }
-
   return (
     <header className="header" role="banner">
       <div className="brand">
@@ -104,6 +83,7 @@ export default function NavBar() {
         <NavLink to="/meals" className={({ isActive }) => (isActive ? "active" : "")}>Meals</NavLink>
         <NavLink to="/exercises" className={({ isActive }) => (isActive ? "active" : "")}>Exercises</NavLink>
         <NavLink to="/progress" className={({ isActive }) => (isActive ? "active" : "")}>Progress</NavLink>
+        <NavLink to="/profile" className={({ isActive }) => (isActive ? "active" : "")}>Profile</NavLink>
 
         <ImageUnderline
           ref={vineRef}
@@ -115,26 +95,6 @@ export default function NavBar() {
           key={pathname}
         />
       </nav>
-
-      <div className="right">
-        <div className="account-menu" ref={accountRef}>
-          <button
-            className="account-button"
-            type="button"
-            onClick={() => setAccountOpen((open) => !open)}
-          >
-            Account
-          </button>
-          {accountOpen && (
-            <div className="account-dropdown">
-              <Link to="/profile" onClick={() => setAccountOpen(false)}>View Profile</Link>
-              <button type="button" onClick={handleLogout}>Log out</button>
-            </div>
-          )}
-        </div>
-
-        <button className="bell" aria-label="Notifications">!</button>
-      </div>
     </header>
   );
 }

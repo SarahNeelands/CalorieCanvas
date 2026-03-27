@@ -28,10 +28,10 @@ export default function LineTrendChart({
   const maxTimestamp = validTimestamps.length ? Math.max(...validTimestamps) : 0;
   const timeSpread = maxTimestamp - minTimestamp || 1;
   const yTicks = [max, max - spread / 2, min];
-  const chartLeft = 8;
+  const chartLeft = 14;
   const chartRight = 94;
   const chartTop = 14;
-  const chartBottom = 76;
+  const chartBottom = 88;
 
   const chartPoints = points.map((point, index) => {
     const timestamp = timestamps[index];
@@ -92,7 +92,7 @@ export default function LineTrendChart({
           return (
             <g key={`${tick}-${index}`}>
               <line className="line-trend-chart__tick-line" x1={chartLeft} y1={y} x2={chartRight} y2={y} />
-              <text className="line-trend-chart__tick-text" x={chartLeft + 0.6} y={y + 1.6}>
+              <text className="line-trend-chart__tick-text" x={chartLeft - 1.2} y={y + 1.6}>
                 {formatTick(tick)}
               </text>
             </g>

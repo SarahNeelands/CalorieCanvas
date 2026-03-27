@@ -2,10 +2,10 @@
 import React from "react";
 import "./Card.css";
 
-export default function Card({ title, children, footer, className = "" }) {
+export default function Card({ title, header, children, footer, className = "" }) {
   return (
     <section className={`cc-card ${className}`.trim()}>
-      {title && <h3 className="cc-card-title">{title}</h3>}
+      {header || (title && <h3 className="cc-card-title">{title}</h3>)}
       <div className="cc-card-body">{children}</div>
       {footer && <div className="cc-card-footer">{footer}</div>}
     </section>

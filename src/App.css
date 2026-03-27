@@ -1,12 +1,22 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
+@media (min-width: 721px) {
+  body {
+    background: transparent;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background: url('./images/Background_Blue.png') center center / cover no-repeat;
+  }
+}
 
 .App {
   text-align: center;
-}
-body {
-  /* Use cover so the background fills without stretching in odd ways */
-  background: url('./images/DesktopBackground.png') center / cover no-repeat fixed;
 }
 
 

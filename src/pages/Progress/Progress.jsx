@@ -91,10 +91,12 @@ export default function Progress({ user }) {
           />
         )}
 
-        <h1 className="progress-title cc-page-title">Progress</h1>
+        <div className="progress-header">
+          <h1 className="progress-title cc-page-title">Progress</h1>
 
-        <div className="progress-tabs">
-          <ProgressTabs scope={scope} onChange={setScope} />
+          <div className="progress-tabs">
+            <ProgressTabs scope={scope} onChange={setScope} />
+          </div>
         </div>
 
         <div className="trend-grid">

@@ -78,7 +78,7 @@ function ExercisePageInner() {
         <div className="ex-grid">
           <Card title={`Minutes per day (last ${range} days)`}>
             <DailyMinutesChart range={range} onSelectDate={(d) => setSelectedDate(d)} />
-            <p className="ex-hint">Click a bar to view that day’s logs.</p>
+            <p className="ex-hint">Click a bar to view that day's logs.</p>
           </Card>
 
           <Card title={`By type (last ${range} days)`}>

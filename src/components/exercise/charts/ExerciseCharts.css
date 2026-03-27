@@ -9,6 +9,12 @@
   justify-content: center;
 }
 
+@media (min-width: 981px) {
+  .exercise-chart-shell {
+    min-height: 248px;
+  }
+}
+
 @media (max-width: 640px) {
   .exercise-chart-shell {
     overflow: hidden;
