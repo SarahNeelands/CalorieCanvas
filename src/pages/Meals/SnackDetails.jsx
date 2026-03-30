@@ -384,7 +384,6 @@ export default function SnackDetails({ user }) {
                 ref={photoInputRef}
                 type="file"
                 accept="image/*"
-                capture="environment"
                 onChange={handlePhotoChange}
                 style={{ display: "none" }}
               />
