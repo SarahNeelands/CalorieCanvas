@@ -278,7 +278,6 @@ export default function NewIngredientPage({ user }) {
         fat_g_per_100g: Number(macrosPer100g.fat.toFixed(2)),
         unit_conversions: {
           brand: payload.brand,
-          photo_data_url: photoDataUrl || null,
           serving_size: {
             qty: payload.servingSize,
             unit: payload.servingUnit,

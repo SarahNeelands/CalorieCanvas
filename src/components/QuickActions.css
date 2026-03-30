@@ -184,7 +184,7 @@
 .qa-floating{
   position:fixed;
   right:18px;
-  bottom:calc(4.1rem + env(safe-area-inset-bottom, 0px));
+  bottom:calc(6.25rem + env(safe-area-inset-bottom, 0px));
   z-index:10050;
 }
 .qa-floating-btn{
@@ -252,7 +252,7 @@
 @media (max-width: 420px){
   .qa-floating{
     right:12px;
-    bottom:calc(4rem + env(safe-area-inset-bottom, 0px));
+    bottom:calc(6rem + env(safe-area-inset-bottom, 0px));
   }
   .qa-floating-btn{ width:82px; height:82px; }
   .qa-floating-btn::before{ width:60px; height:60px; top:7px; }

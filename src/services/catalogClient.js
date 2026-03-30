@@ -7,6 +7,7 @@ const LOCAL_CATALOG_STORAGE_KEY = 'local_catalog_items_v1';
 const PENDING_CATALOG_SYNC_KEY = 'pending_catalog_sync_v1';
 const catalogCache = new Map();
 const LOCAL_BACKEND_RETRY_MS = 30000;
+const INLINE_STORAGE_SOFT_LIMIT_BYTES = 150000;
 let localBackendUnavailableUntil = 0;
 let pendingCatalogSyncPromise = null;
 
@@ -33,6 +34,23 @@ function normalizeCatalogItem(item) {
     ...item,
     type: item.type || item.item_type,
   };
+}
+
+function estimateJsonSize(value) {
+  try {
+    return JSON.stringify(value).length;
+  } catch {
+    return Number.POSITIVE_INFINITY;
+  }
+}
+
+function shouldBypassLocalPersistence(input) {
+  const photoDataUrl = input?.unit_conversions?.photo_data_url;
+  if (typeof photoDataUrl === 'string' && photoDataUrl.length > INLINE_STORAGE_SOFT_LIMIT_BYTES) {
+    return true;
+  }
+
+  return estimateJsonSize(input) > INLINE_STORAGE_SOFT_LIMIT_BYTES;
 }
 
 function createLocalBackendUnreachableError() {
@@ -378,6 +396,50 @@ export function processPendingCatalogSyncQueue() {
   });
 }
 
+async function createHostedCatalogItem(userId, input) {
+  const { data, error } = await supabase
+    .from('meals')
+    .insert({
+      user_id: userId,
+      title: input.title,
+      type: input.item_type,
+      created_at: input.created_at,
+      kcal_per_100g: input.kcal_per_100g,
+      protein_g_per_100g: input.protein_g_per_100g,
+      carbs_g_per_100g: input.carbs_g_per_100g,
+      fat_g_per_100g: input.fat_g_per_100g,
+      unit_conversions: input.unit_conversions,
+      food_id: input.food_id ?? null,
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return normalizeCatalogItem(data);
+}
+
+async function updateHostedCatalogItem(userId, itemId, input) {
+  const { data, error } = await supabase
+    .from('meals')
+    .update({
+      title: input.title,
+      type: input.item_type,
+      kcal_per_100g: input.kcal_per_100g,
+      protein_g_per_100g: input.protein_g_per_100g,
+      carbs_g_per_100g: input.carbs_g_per_100g,
+      fat_g_per_100g: input.fat_g_per_100g,
+      unit_conversions: input.unit_conversions,
+      food_id: input.food_id ?? null,
+    })
+    .eq('id', itemId)
+    .eq('user_id', userId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return normalizeCatalogItem(data);
+}
+
 export async function createCatalogItem(input) {
   const userId = await getCurrentUserId();
   if (!userId) throw new Error('Missing user ID');
@@ -394,6 +456,15 @@ export async function createCatalogItem(input) {
       }
       throw error;
     }
+  }
+
+  if (shouldBypassLocalPersistence(input)) {
+    const createdItem = await createHostedCatalogItem(userId, {
+      ...input,
+      created_at: input.created_at || new Date().toISOString(),
+    });
+    patchCachedCatalogItem(userId, createdItem.type, createdItem);
+    return createdItem;
   }
 
   const optimisticItem = normalizeCatalogItem(createLocalCatalogItem(userId, {
@@ -416,6 +487,13 @@ export async function updateCatalogItem(itemId, input) {
 
   if (isLocalAuth()) {
     return normalizeCatalogItem(updateLocalCatalogItem(userId, itemId, input));
+  }
+
+  if (shouldBypassLocalPersistence(input)) {
+    const updatedItem = await updateHostedCatalogItem(userId, itemId, input);
+    patchCachedCatalogItem(userId, updatedItem.type, updatedItem);
+    removePendingCatalogOperation((entry) => entry.userId === userId && ((entry.kind === 'create' && entry.tempId === itemId) || (entry.kind === 'update' && entry.itemId === itemId)));
+    return updatedItem;
   }
 
   const previousItem = readLocalCatalogItems().find((item) => item.id === itemId) || null;
