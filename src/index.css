@@ -28,12 +28,6 @@ html {
   scrollbar-color: var(--cc-scrollbar-thumb) var(--cc-scrollbar-track);
 }
 
-@media (min-width: 721px) {
-  html {
-    scrollbar-gutter: stable;
-  }
-}
-
 *::-webkit-scrollbar {
   width: 12px;
   height: 12px;

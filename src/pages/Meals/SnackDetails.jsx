@@ -289,7 +289,6 @@ export default function SnackDetails({ user }) {
         fat_g_per_100g: Number(per100gMacros.fat.toFixed(2)),
         unit_conversions: {
           brand: brand.trim() || null,
-          photo_data_url: photoDataUrl || null,
           quantity: Number(gramsPerSnack.toFixed(2)),
           quantity_label: snackLabel.trim() || "snack",
           serving_size: {

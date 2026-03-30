@@ -1,13 +1,15 @@
-.md-root{ display:grid; gap:14px; }
+.md-root{ display:grid; gap:14px; min-width:0; }
 .md-title{
   font-size:22px; font-weight:800; color:var(--cc-ink); margin:0 0 4px;
 }
 
-.md-field{ display:grid; gap:6px; }
+.md-field{ display:grid; gap:6px; min-width:0; max-width:100%; }
 .md-field > span{ font-size:14px; color:#4a564d; font-weight:600; }
 
 .md-field input{
   width:100%;
+  max-width:100%;
+  min-width:0;
   min-height:2.9rem;
   padding:0.8rem 0.9rem;
   border:1px solid var(--cc-border);
