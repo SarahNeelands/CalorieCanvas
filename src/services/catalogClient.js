@@ -7,7 +7,6 @@ const LOCAL_CATALOG_STORAGE_KEY = 'local_catalog_items_v1';
 const PENDING_CATALOG_SYNC_KEY = 'pending_catalog_sync_v1';
 const catalogCache = new Map();
 const LOCAL_BACKEND_RETRY_MS = 30000;
-const INLINE_STORAGE_SOFT_LIMIT_BYTES = 150000;
 let localBackendUnavailableUntil = 0;
 let pendingCatalogSyncPromise = null;
 
@@ -34,23 +33,6 @@ function normalizeCatalogItem(item) {
     ...item,
     type: item.type || item.item_type,
   };
-}
-
-function estimateJsonSize(value) {
-  try {
-    return JSON.stringify(value).length;
-  } catch {
-    return Number.POSITIVE_INFINITY;
-  }
-}
-
-function shouldBypassLocalPersistence(input) {
-  const photoDataUrl = input?.unit_conversions?.photo_data_url;
-  if (typeof photoDataUrl === 'string' && photoDataUrl.length > INLINE_STORAGE_SOFT_LIMIT_BYTES) {
-    return true;
-  }
-
-  return estimateJsonSize(input) > INLINE_STORAGE_SOFT_LIMIT_BYTES;
 }
 
 function createLocalBackendUnreachableError() {
@@ -127,54 +109,6 @@ function replaceCachedCatalogItem(userId, itemType, previousId, item) {
   const existing = catalogCache.get(getCatalogCacheKey(userId, itemType)) || [];
   const nextItems = [item, ...existing.filter((entry) => entry.id !== previousId && entry.id !== item.id)];
   setCachedCatalogItems(userId, itemType, nextItems);
-}
-
-function upsertPendingCatalogCreateOperation(userId, tempId, input) {
-  updatePendingCatalogSyncQueue((queue) => {
-    const nextOperation = {
-      kind: 'create',
-      userId,
-      tempId,
-      input,
-    };
-    const existingIndex = queue.findIndex((entry) => entry.kind === 'create' && entry.userId === userId && entry.tempId === tempId);
-    if (existingIndex === -1) {
-      return [...queue, nextOperation];
-    }
-
-    const nextQueue = [...queue];
-    nextQueue[existingIndex] = nextOperation;
-    return nextQueue;
-  });
-}
-
-function upsertPendingCatalogUpdateOperation(userId, itemId, input) {
-  updatePendingCatalogSyncQueue((queue) => {
-    const createIndex = queue.findIndex((entry) => entry.kind === 'create' && entry.userId === userId && entry.tempId === itemId);
-    if (createIndex !== -1) {
-      const nextQueue = [...queue];
-      nextQueue[createIndex] = {
-        ...nextQueue[createIndex],
-        input,
-      };
-      return nextQueue;
-    }
-
-    const nextOperation = {
-      kind: 'update',
-      userId,
-      itemId,
-      input,
-    };
-    const existingIndex = queue.findIndex((entry) => entry.kind === 'update' && entry.userId === userId && entry.itemId === itemId);
-    if (existingIndex === -1) {
-      return [...queue, nextOperation];
-    }
-
-    const nextQueue = [...queue];
-    nextQueue[existingIndex] = nextOperation;
-    return nextQueue;
-  });
 }
 
 function removePendingCatalogOperation(predicate) {
@@ -458,26 +392,12 @@ export async function createCatalogItem(input) {
     }
   }
 
-  if (shouldBypassLocalPersistence(input)) {
-    const createdItem = await createHostedCatalogItem(userId, {
-      ...input,
-      created_at: input.created_at || new Date().toISOString(),
-    });
-    patchCachedCatalogItem(userId, createdItem.type, createdItem);
-    return createdItem;
-  }
-
-  const optimisticItem = normalizeCatalogItem(createLocalCatalogItem(userId, {
+  const createdItem = await createHostedCatalogItem(userId, {
     ...input,
     created_at: input.created_at || new Date().toISOString(),
-  }));
-  patchCachedCatalogItem(userId, optimisticItem.type, optimisticItem);
-  upsertPendingCatalogCreateOperation(userId, optimisticItem.id, {
-    ...input,
-    created_at: optimisticItem.created_at,
   });
-  void processPendingCatalogSyncQueue();
-  return optimisticItem;
+  patchCachedCatalogItem(userId, createdItem.type, createdItem);
+  return createdItem;
 }
 
 export async function updateCatalogItem(itemId, input) {
@@ -489,34 +409,10 @@ export async function updateCatalogItem(itemId, input) {
     return normalizeCatalogItem(updateLocalCatalogItem(userId, itemId, input));
   }
 
-  if (shouldBypassLocalPersistence(input)) {
-    const updatedItem = await updateHostedCatalogItem(userId, itemId, input);
-    patchCachedCatalogItem(userId, updatedItem.type, updatedItem);
-    removePendingCatalogOperation((entry) => entry.userId === userId && ((entry.kind === 'create' && entry.tempId === itemId) || (entry.kind === 'update' && entry.itemId === itemId)));
-    return updatedItem;
-  }
-
-  const previousItem = readLocalCatalogItems().find((item) => item.id === itemId) || null;
-  const optimisticItem = normalizeCatalogItem({
-    ...(previousItem || {}),
-    id: itemId,
-    user_id: userId,
-    title: input.title,
-    item_type: input.item_type,
-    type: input.item_type,
-    created_at: previousItem?.created_at || new Date().toISOString(),
-    kcal_per_100g: input.kcal_per_100g,
-    protein_g_per_100g: input.protein_g_per_100g,
-    carbs_g_per_100g: input.carbs_g_per_100g,
-    fat_g_per_100g: input.fat_g_per_100g,
-    unit_conversions: input.unit_conversions,
-    food_id: input.food_id ?? null,
-  });
-  upsertLocalCatalogItemSnapshot(optimisticItem);
-  patchCachedCatalogItem(userId, optimisticItem.type, optimisticItem);
-  upsertPendingCatalogUpdateOperation(userId, itemId, input);
-  void processPendingCatalogSyncQueue();
-  return optimisticItem;
+  const updatedItem = await updateHostedCatalogItem(userId, itemId, input);
+  patchCachedCatalogItem(userId, updatedItem.type, updatedItem);
+  removePendingCatalogOperation((entry) => entry.userId === userId && ((entry.kind === 'create' && entry.tempId === itemId) || (entry.kind === 'update' && entry.itemId === itemId)));
+  return updatedItem;
 }
 
 export async function deleteCatalogItem(itemId) {
@@ -564,6 +460,8 @@ export async function listCatalogItems(itemType) {
   const userId = await getCurrentUserId();
   if (!userId) throw new Error('Missing user ID');
 
+  await processPendingCatalogSyncQueue();
+
   const { data, error } = await supabase
     .from('meals')
     .select('id, user_id, title, type, created_at, kcal_per_100g, protein_g_per_100g, carbs_g_per_100g, fat_g_per_100g, unit_conversions, food_id')
@@ -605,6 +503,8 @@ export async function searchCatalogItems(itemType, query) {
 
   const userId = await getCurrentUserId();
   if (!userId) throw new Error('Missing user ID');
+
+  await processPendingCatalogSyncQueue();
 
   const { data, error } = await supabase
     .from('meals')
