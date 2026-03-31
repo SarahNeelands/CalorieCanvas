@@ -133,6 +133,11 @@ export async function getCurrentUserId() {
     return getStoredUserId();
   }
 
+  const storedUserId = getStoredUserId();
+  if (storedUserId) {
+    return storedUserId;
+  }
+
   const { data: { user } } = await supabase.auth.getUser();
   if (user?.id) {
     saveLocalUserId(user.id);
