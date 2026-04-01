@@ -34,9 +34,6 @@ export default function ProfileSetup() {
         window.location.replace('/login');
         return;
       }
-
-      if (!userId) return;
-      localStorage.setItem('user_id', userId);
     }
 
     createProfile();
