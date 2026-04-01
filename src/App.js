@@ -117,7 +117,14 @@ export default function App() {
     bootstrapAuth();
 
     const handleAuthChange = () => {
-      setCurrentUserId(isLocalAuth() ? (getStoredUserId() || undefined) : undefined);
+      const nextStoredUserId = getStoredUserId() || undefined;
+      if (!nextStoredUserId) {
+        setCurrentUserId(undefined);
+        setStatus('unauthorized');
+        return;
+      }
+
+      setCurrentUserId(isLocalAuth() ? nextStoredUserId : undefined);
       setStatus('checking');
       bootstrapAuth();
     };
