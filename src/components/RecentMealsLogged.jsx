@@ -1,6 +1,7 @@
 import React from "react";
+import LogMealModal from "./Meals/LogMealModal.jsx";
 import "../components/calories/RecentMeals.css";
-import { listMealLogs } from "../services/mealLogClient";
+import { deleteMealLog, listMealLogs } from "../services/mealLogClient";
 
 function formatDateTime(iso) {
   if (!iso) return "";
@@ -37,6 +38,7 @@ export default function RecentMealsLogged({ userId, limit = 3, title = "Recent M
   const [rows, setRows] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState(null);
+  const [editingRow, setEditingRow] = React.useState(null);
 
   const refetch = React.useCallback(async () => {
     try {
@@ -62,6 +64,16 @@ export default function RecentMealsLogged({ userId, limit = 3, title = "Recent M
     return () => window.removeEventListener("meal-logged", handler);
   }, [refetch]);
 
+  async function handleDelete(row) {
+    try {
+      setError(null);
+      await deleteMealLog(row.id, userId);
+      window.dispatchEvent(new CustomEvent("meal-logged", { detail: { deletedId: row.id } }));
+    } catch (e) {
+      setError(e);
+    }
+  }
+
   return (
     <section className="recent-meals">
       <h3 className="recent-meals__title">{title}</h3>
@@ -82,13 +94,31 @@ export default function RecentMealsLogged({ userId, limit = 3, title = "Recent M
                 )}
                 <div className="item__meta">{getDisplayAmount(r)}</div>
               </div>
-              <div className="kcal">
-                {Number(r.kcal || 0)} <span>kcal</span>
+              <div className="item__right">
+                <div className="kcal">
+                  {Number(r.kcal || 0)} <span>kcal</span>
+                </div>
+                <div className="item__actions--inline">
+                  <button type="button" className="item__quick-btn item__quick-btn--soft" onClick={() => setEditingRow(r)}>Edit</button>
+                  <button type="button" className="item__quick-btn item__quick-btn--soft" onClick={() => handleDelete(r)}>Delete</button>
+                </div>
               </div>
             </div>
           </div>
         ))}
       </div>
+      <LogMealModal
+        open={Boolean(editingRow)}
+        onClose={() => setEditingRow(null)}
+        userId={userId}
+        item={editingRow?.meal || null}
+        existingEntry={editingRow}
+        redirectAfterSave={false}
+        onSaved={() => {
+          setEditingRow(null);
+          void refetch();
+        }}
+      />
     </section>
   );
 }

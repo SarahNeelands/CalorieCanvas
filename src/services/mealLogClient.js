@@ -247,6 +247,73 @@ export async function createMealLog(payload) {
   return data;
 }
 
+export async function updateMealLog(logId, payload) {
+  const userId = payload.user_id || await getCurrentUserId();
+  if (!userId) throw new Error('Missing user ID');
+  if (!logId) throw new Error('Missing meal log ID');
+
+  if (isLocalAuth()) {
+    const logs = readLocalMealLogs();
+    const index = logs.findIndex((entry) => entry.id === logId && entry.user_id === userId);
+    if (index === -1) throw new Error('Meal log not found');
+
+    logs[index] = {
+      ...logs[index],
+      ...payload,
+      id: logId,
+      user_id: userId,
+    };
+    writeLocalMealLogs(logs);
+    return logs[index];
+  }
+
+  const dbPayload = {
+    meal_id: payload.meal_id,
+    food_id: payload.food_id ?? null,
+    qty: payload.qty,
+    unit_code: payload.unit_code,
+    grams_resolved: payload.grams_resolved,
+    logged_at: payload.logged_at,
+    kcal: payload.kcal,
+    protein_g: payload.protein_g,
+    carbs_g: payload.carbs_g,
+    fat_g: payload.fat_g,
+  };
+
+  const { data, error } = await supabase
+    .from('meal_logs')
+    .update(dbPayload)
+    .eq('id', logId)
+    .eq('user_id', userId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteMealLog(logId, userIdArg) {
+  const userId = userIdArg || await getCurrentUserId();
+  if (!userId) throw new Error('Missing user ID');
+  if (!logId) throw new Error('Missing meal log ID');
+
+  if (isLocalAuth()) {
+    const logs = readLocalMealLogs();
+    const nextLogs = logs.filter((entry) => !(entry.id === logId && entry.user_id === userId));
+    if (nextLogs.length === logs.length) throw new Error('Meal log not found');
+    writeLocalMealLogs(nextLogs);
+    return;
+  }
+
+  const { error } = await supabase
+    .from('meal_logs')
+    .delete()
+    .eq('id', logId)
+    .eq('user_id', userId);
+
+  if (error) throw error;
+}
+
 export async function listMealLogs({ userId = getStoredUserId(), limit = 3 } = {}) {
   if (!userId) throw new Error('Missing user ID');
 
@@ -270,6 +337,8 @@ export async function listMealLogs({ userId = getStoredUserId(), limit = 3 } = {
     .from('meal_logs')
     .select(`
       id,
+      meal_id,
+      food_id,
       logged_at,
       kcal,
       grams_resolved,
