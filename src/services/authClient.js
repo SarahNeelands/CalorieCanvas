@@ -27,6 +27,18 @@ export function clearStoredUserId() {
   }
 }
 
+async function clearInvalidHostedSession() {
+  clearStoredUserId();
+
+  if (!isLocalAuth()) {
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.warn('Failed to clear hosted auth session', error);
+    }
+  }
+}
+
 function readLocalAuthUsers() {
   try {
     const raw = localStorage.getItem(LOCAL_AUTH_USERS_KEY);
@@ -145,7 +157,7 @@ export async function getCurrentUserId() {
     return session.user.id;
   }
 
-  clearStoredUserId();
+  await clearInvalidHostedSession();
   return null;
 }
 
@@ -178,7 +190,7 @@ export async function validateStoredSession() {
   const resolvedUserId = user?.id;
 
   if (!resolvedUserId) {
-    clearStoredUserId();
+    await clearInvalidHostedSession();
     return false;
   }
 
