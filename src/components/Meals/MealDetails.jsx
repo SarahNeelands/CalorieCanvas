@@ -62,7 +62,7 @@ export default function MealDetails({
       </label>
 
       <label className="md-field">
-        <span>Servings (optional)</span>
+        <span>Servings</span>
         <input
           type="number"
           inputMode="decimal"
@@ -73,6 +73,9 @@ export default function MealDetails({
           onChange={(e) => onServingCountChange?.(e.target.value)}
         />
       </label>
+      <p style={{ margin: 0, color: "#667268", fontSize: 14 }}>
+        Enter total weight or servings. If you use servings, recipe weight will be inferred from the ingredients when possible.
+      </p>
     </div>
   );
 }

@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import Modal from '../ui/Modal.jsx';
 import { resolveToGrams, unitOptionsForFood } from "../../utils/units";
-import { createMealLog } from "../../services/mealLogClient";
+import { createMealLog, updateMealLog } from "../../services/mealLogClient";
 import { toMassValue } from "../../utils/nutrients";
 import "./LogMealModal.css";
 
@@ -133,7 +133,15 @@ function getDefaultUnit(item, availableUnits) {
   return availableUnits[0] || "g";
 }
 
-export default function LogMealModal({ open, onClose, userId, item }) {
+export default function LogMealModal({
+  open,
+  onClose,
+  userId,
+  item,
+  existingEntry = null,
+  redirectAfterSave = true,
+  onSaved,
+}) {
   const navigate = useNavigate();
   const [whenAt, setWhenAt] = React.useState(new Date().toISOString());
   const [qty, setQty] = React.useState("");
@@ -144,13 +152,13 @@ export default function LogMealModal({ open, onClose, userId, item }) {
 
   React.useEffect(() => {
     if (open) {
-      setWhenAt(new Date().toISOString());
-      setUnit(getDefaultUnit(item, availableUnits));
-      setQty("");
+      setWhenAt(existingEntry?.logged_at || new Date().toISOString());
+      setUnit(existingEntry?.unit_code || getDefaultUnit(item, availableUnits));
+      setQty(existingEntry?.qty ? String(existingEntry.qty) : "");
       setError(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open, existingEntry]);
 
   if (!open || !item) return null;
 
@@ -184,10 +192,15 @@ export default function LogMealModal({ open, onClose, userId, item }) {
         micros,
       };
 
-      await createMealLog(payload);
+      const savedEntry = existingEntry?.id
+        ? await updateMealLog(existingEntry.id, payload)
+        : await createMealLog(payload);
       window.dispatchEvent(new CustomEvent("meal-logged", { detail: { payload } }));
+      onSaved?.(savedEntry);
       onClose?.();
-      navigate("/", { replace: false });
+      if (redirectAfterSave) {
+        navigate("/", { replace: false });
+      }
     } catch (e) {
       setError(e);
     } finally {
@@ -235,7 +248,9 @@ export default function LogMealModal({ open, onClose, userId, item }) {
         {error && <div className="meal-log-modal__error">{String(error.message || error)}</div>}
         <div className="meal-log-modal__actions">
           <button type="button" className="meal-log-modal__secondary-btn" onClick={onClose} disabled={saving}>Cancel</button>
-          <button type="submit" className="meal-log-modal__primary-btn" disabled={saving}>{saving ? "Saving…" : "Log Meal Item"}</button>
+          <button type="submit" className="meal-log-modal__primary-btn" disabled={saving}>
+            {saving ? "Saving..." : existingEntry?.id ? "Save Changes" : "Log Meal Item"}
+          </button>
         </div>
       </form>
     </Modal>
