@@ -104,6 +104,11 @@ function profileHasAnyData(profile) {
   );
 }
 
+function formatAccountLabel({ accountEmail, isLocalAccount }) {
+  if (accountEmail) return accountEmail;
+  return isLocalAccount ? "Local account" : "Signed-in account";
+}
+
 export default function Profile({ user }) {
   const navigate = useNavigate();
   const [userId, setUserId] = React.useState(user?.id || null);
@@ -135,6 +140,10 @@ export default function Profile({ user }) {
   const [showCalories, setShowCalories] = React.useState(true);
   const [showMacros, setShowMacros] = React.useState(true);
   const [showMicros, setShowMicros] = React.useState(false);
+  const accountLabel = formatAccountLabel({
+    accountEmail,
+    isLocalAccount: isLocalAuth(),
+  });
 
   const applyProfile = React.useCallback((profile, options = {}) => {
     if (!profile) return;
@@ -405,7 +414,7 @@ export default function Profile({ user }) {
               <div className="profile-grid">
                 <div className="profile-field">
                   <span className="profile-field-label">Account</span>
-                  <strong>{accountEmail || userId || "Unavailable"}</strong>
+                  <strong>{accountLabel}</strong>
                 </div>
                 <div className="profile-field">
                   <span className="profile-field-label">Full Name</span>

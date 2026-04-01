@@ -133,16 +133,20 @@ export async function getCurrentUserId() {
     return getStoredUserId();
   }
 
-  const storedUserId = getStoredUserId();
-  if (storedUserId) {
-    return storedUserId;
-  }
-
   const { data: { user } } = await supabase.auth.getUser();
   if (user?.id) {
     saveLocalUserId(user.id);
+    return user.id;
   }
-  return user?.id || null;
+
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session?.user?.id) {
+    saveLocalUserId(session.user.id);
+    return session.user.id;
+  }
+
+  clearStoredUserId();
+  return null;
 }
 
 export async function getCurrentSession() {
@@ -170,16 +174,15 @@ export async function validateStoredSession() {
     return true;
   }
 
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) {
+  const { data: { user } } = await supabase.auth.getUser();
+  const resolvedUserId = user?.id;
+
+  if (!resolvedUserId) {
     clearStoredUserId();
     return false;
   }
 
-  if (session.user?.id) {
-    saveLocalUserId(session.user.id);
-  }
-
+  saveLocalUserId(resolvedUserId);
   return true;
 }
 

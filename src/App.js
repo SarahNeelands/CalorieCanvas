@@ -21,10 +21,11 @@ import ProfileSetup3 from './pages/ProfileSetup/ProfileSetup3';
 import ProfileSetup4 from './pages/ProfileSetup/ProfileSetup4';
 import QuickActionsFloating from './components/QuickActionsFloating';
 import MobileTabBar from './components/MobileTabBar';
-import { getCurrentUserId, validateStoredSession } from './services/authClient';
+import { getCurrentUserId, getStoredUserId, validateStoredSession } from './services/authClient';
 import { getProfileSetupResumePath, hasCompletedRequiredProfileSetup, hydrateProfileSetupState, ensureProfileSetupRequired } from './services/profileSetupProgress';
 import { getProfile } from './services/profileClient';
 import { processPendingCatalogSyncQueue } from './services/catalogClient';
+import { isLocalAuth } from './config/runtime';
 
 // Example: this would come from your DB call in a real app
 const mockUser = {
@@ -33,7 +34,7 @@ const mockUser = {
 
 function ProtectedRoute({ children, status, userId, allowIncompleteSetup = false }) {
   const location = useLocation();
-  const storedUserId = localStorage.getItem("user_id") || undefined;
+  const storedUserId = isLocalAuth() ? (getStoredUserId() || undefined) : undefined;
   const effectiveUserId = userId || storedUserId;
 
   if (status === 'checking' && !effectiveUserId) {
@@ -65,7 +66,9 @@ function ScrollToTop() {
 
 export default function App() {
   const [status, setStatus] = useState('checking');
-  const [currentUserId, setCurrentUserId] = useState(() => localStorage.getItem("user_id") || undefined);
+  const [currentUserId, setCurrentUserId] = useState(() => (
+    isLocalAuth() ? (getStoredUserId() || undefined) : undefined
+  ));
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
@@ -114,7 +117,7 @@ export default function App() {
     bootstrapAuth();
 
     const handleAuthChange = () => {
-      setCurrentUserId(localStorage.getItem("user_id") || undefined);
+      setCurrentUserId(isLocalAuth() ? (getStoredUserId() || undefined) : undefined);
       setStatus('checking');
       bootstrapAuth();
     };
