@@ -112,6 +112,7 @@ export default function LogMeal({ user }) {
   const [mealName, setMealName] = useState("");
   const [timestamp, setTimestamp] = useState("");
   const [totalWeight, setTotalWeight] = useState("");
+  const [servingCount, setServingCount] = useState("");
   const [savingMeal, setSavingMeal] = useState(false);
   const [saveError, setSaveError] = useState(null);
   const [editingMealId, setEditingMealId] = useState(null);
@@ -123,6 +124,7 @@ export default function LogMeal({ user }) {
     setMealName("");
     setTimestamp("");
     setTotalWeight("");
+    setServingCount("");
     setEditingMealId(null);
     navigate(location.pathname, { replace: true, state: {} });
   }, [location.pathname, location.state, navigate]);
@@ -138,6 +140,11 @@ export default function LogMeal({ user }) {
       draft.totalWeight === undefined || draft.totalWeight === null
         ? ""
         : String(draft.totalWeight)
+    );
+    setServingCount(
+      draft.servingCount === undefined || draft.servingCount === null
+        ? ""
+        : String(draft.servingCount)
     );
     setEditingMealId(draft.editingMealId || null);
 
@@ -164,11 +171,20 @@ export default function LogMeal({ user }) {
       storedConversions.serving_size?.qty ??
       storedConversions.quantity ??
       "";
+    const restoredServingCount =
+      storedConversions.servings_count ??
+      (
+        Number(storedConversions.total_weight_g) > 0 &&
+        Number(storedConversions.quantity) > 0
+          ? Number(storedConversions.total_weight_g) / Number(storedConversions.quantity)
+          : ""
+      );
 
     setIngredients(savedIngredients);
     setMealName(editMeal.title || "");
     setTimestamp(editMeal.created_at ? editMeal.created_at.slice(0, 16) : "");
     setTotalWeight(restoredWeight === "" ? "" : String(restoredWeight));
+    setServingCount(restoredServingCount === "" ? "" : String(restoredServingCount));
     setEditingMealId(editMeal.id || null);
 
     navigate(location.pathname, { replace: true, state: {} });
@@ -179,6 +195,7 @@ export default function LogMeal({ user }) {
     mealName,
     timestamp,
     totalWeight,
+    servingCount,
     editingMealId,
   };
 
@@ -198,6 +215,10 @@ export default function LogMeal({ user }) {
       const numericTotalWeight = Number(totalWeight || 0);
       if (!(numericTotalWeight > 0)) {
         throw new Error("Enter a total weight greater than 0.");
+      }
+      const numericServingCount = Number(servingCount || 0);
+      if (servingCount !== "" && !(numericServingCount > 0)) {
+        throw new Error("Enter a servings value greater than 0.");
       }
 
       const totals = ingredients.reduce(
@@ -235,6 +256,7 @@ export default function LogMeal({ user }) {
       );
 
       const scale = 100 / numericTotalWeight;
+      const gramsPerServing = numericServingCount > 0 ? numericTotalWeight / numericServingCount : null;
       const round2 = (value) => Math.round((value + Number.EPSILON) * 100) / 100;
 
       const payload = {
@@ -246,7 +268,8 @@ export default function LogMeal({ user }) {
         carbs_g_per_100g: round2(totals.carbs * scale),
         fat_g_per_100g: round2(totals.fat * scale),
         unit_conversions: {
-          quantity: numericTotalWeight,
+          quantity: gramsPerServing ? round2(gramsPerServing) : null,
+          quantity_label: gramsPerServing ? "serving" : null,
           macros_per_100g: {
             fiber: round2(totals.fiber * scale),
             sugar: round2(totals.sugar * scale),
@@ -261,10 +284,11 @@ export default function LogMeal({ user }) {
             vitaminC: round2(totals.vitaminC * scale),
           },
           serving_size: {
-            qty: numericTotalWeight,
-            unit: "g",
+            qty: gramsPerServing ? round2(gramsPerServing) : numericTotalWeight,
+            unit: gramsPerServing ? "serving" : "g",
           },
           total_weight_g: numericTotalWeight,
+          servings_count: numericServingCount > 0 ? round2(numericServingCount) : null,
           ingredients: ingredients.map((ingredient) => ({
             ...ingredient,
             name: ingredient.name || ingredient.title,
@@ -316,12 +340,14 @@ export default function LogMeal({ user }) {
             <div className="card card--details">
               <MealDetails
                 mealName={mealName}
-                timestamp={timestamp}
-                totalWeight={totalWeight}
-                onMealNameChange={setMealName}
-                onTimestampChange={setTimestamp}
-                onTotalWeightChange={setTotalWeight}
-              />
+              timestamp={timestamp}
+              totalWeight={totalWeight}
+              servingCount={servingCount}
+              onMealNameChange={setMealName}
+              onTimestampChange={setTimestamp}
+              onTotalWeightChange={setTotalWeight}
+              onServingCountChange={setServingCount}
+            />
             </div>
 
             {/* Bottom half */}
@@ -339,6 +365,7 @@ export default function LogMeal({ user }) {
             <MealSummary
               ingredients={ingredients}
               totalWeight={Number(totalWeight || 0)}
+              servingCount={Number(servingCount || 0)}
               saving={savingMeal}
               error={saveError}
               onSave={handleSaveMeal}

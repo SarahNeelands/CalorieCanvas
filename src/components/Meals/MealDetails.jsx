@@ -9,9 +9,11 @@ export default function MealDetails({
   mealName,
   timestamp,
   totalWeight,
+  servingCount,
   onMealNameChange,
   onTimestampChange,
   onTotalWeightChange,
+  onServingCountChange,
 }) {
   const [initialTimestamp, setInitialTimestamp] = useState("");
 
@@ -56,6 +58,19 @@ export default function MealDetails({
           placeholder="e.g., 350"
           value={totalWeight}
           onChange={(e) => onTotalWeightChange?.(e.target.value)}
+        />
+      </label>
+
+      <label className="md-field">
+        <span>Servings (optional)</span>
+        <input
+          type="number"
+          inputMode="decimal"
+          min="0"
+          step="any"
+          placeholder="e.g., 4"
+          value={servingCount}
+          onChange={(e) => onServingCountChange?.(e.target.value)}
         />
       </label>
     </div>

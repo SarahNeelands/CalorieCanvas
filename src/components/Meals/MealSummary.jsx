@@ -7,6 +7,7 @@ import "./MealSummary.css";
 export default function MealSummary({
   ingredients,
   totalWeight,
+  servingCount,
   saving = false,
   error = null,
   onSave,
@@ -15,6 +16,7 @@ export default function MealSummary({
 }) {
   const totalCalories = ingredients.reduce((sum, ing) => sum + (ing.calories || 0), 0);
   const per100g = totalWeight ? (totalCalories / totalWeight) * 100 : 0;
+  const caloriesPerServing = servingCount ? totalCalories / servingCount : 0;
 
   return (
     <div className="ms-root">
@@ -43,6 +45,8 @@ export default function MealSummary({
 
       <div className="ms-meta">
         <div>Weight: <strong>{totalWeight || 0} g</strong></div>
+        <div>Servings: <strong>{servingCount || 0}</strong></div>
+        {servingCount ? <div>Per Serving: <strong>{caloriesPerServing.toFixed(1)} kcal</strong></div> : null}
         <div>Per 100g: <strong>{per100g.toFixed(1)} kcal</strong></div>
       </div>
 

@@ -127,7 +127,7 @@ function getUnitLabel(item, unit) {
 }
 
 function getDefaultUnit(item, availableUnits) {
-  if (item?.type === "snack" && availableUnits.includes("quantity")) {
+  if (availableUnits.includes("quantity")) {
     return "quantity";
   }
   return availableUnits[0] || "g";
