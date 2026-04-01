@@ -4,9 +4,9 @@ import { isLocalAuth } from '../config/runtime';
 const LOCAL_AUTH_USERS_KEY = 'local_auth_users_v1';
 const LOCAL_USER_ID_KEY = 'user_id';
 
-function saveLocalUserId(userId) {
+function saveLocalUserId(userId, notify = true) {
   localStorage.setItem(LOCAL_USER_ID_KEY, userId);
-  if (typeof window !== 'undefined') {
+  if (notify && typeof window !== 'undefined') {
     window.dispatchEvent(new Event('cc-auth-changed'));
   }
 }
@@ -20,15 +20,15 @@ export function getStoredUserId() {
   return localStorage.getItem(LOCAL_USER_ID_KEY);
 }
 
-export function clearStoredUserId() {
+export function clearStoredUserId(notify = true) {
   localStorage.removeItem(LOCAL_USER_ID_KEY);
-  if (typeof window !== 'undefined') {
+  if (notify && typeof window !== 'undefined') {
     window.dispatchEvent(new Event('cc-auth-changed'));
   }
 }
 
 async function clearInvalidHostedSession() {
-  clearStoredUserId();
+  clearStoredUserId(false);
 
   if (!isLocalAuth()) {
     try {
@@ -199,9 +199,9 @@ export async function validateStoredSession() {
 }
 
 export async function signOutCurrentUser() {
-  clearStoredUserId();
-
   if (!isLocalAuth()) {
     await supabase.auth.signOut();
   }
+
+  clearStoredUserId();
 }
