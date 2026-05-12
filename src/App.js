@@ -21,6 +21,8 @@ import ProfileSetup3 from './pages/ProfileSetup/ProfileSetup3';
 import ProfileSetup4 from './pages/ProfileSetup/ProfileSetup4';
 import QuickActionsFloating from './components/QuickActionsFloating';
 import MobileTabBar from './components/MobileTabBar';
+import DailyAccuracyPrompt from './components/motivation/DailyAccuracyPrompt';
+import MotivationQueueWorker from './components/motivation/MotivationQueueWorker';
 import { getCurrentUserId, getStoredUserId, validateStoredSession } from './services/authClient';
 import { getProfileSetupResumePath, hasCompletedRequiredProfileSetup, hydrateProfileSetupState, ensureProfileSetupRequired } from './services/profileSetupProgress';
 import { getProfile } from './services/profileClient';
@@ -147,6 +149,8 @@ export default function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
+      <MotivationQueueWorker />
+      <DailyAccuracyPrompt currentUserId={currentUserId} />
       {/* floating quick actions live across all pages */}
       <QuickActionsFloating />
       <MobileTabBar />

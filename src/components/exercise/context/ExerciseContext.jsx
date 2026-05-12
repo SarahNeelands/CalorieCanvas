@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { supabase } from '../../../supabaseClient';
 import { isLocalAuth } from "../../../config/runtime";
+import { sendExerciseLoggedEvent } from "../../../services/motivationClient";
 
 const STORAGE_KEY = "exercise_page_state_v3";
 const ExerciseContext = createContext(null);
@@ -170,6 +171,7 @@ export function ExerciseProvider({ children, userId }) {
   function addLog({ typeId, minutes, timestampISO }) {
     const normalizedMinutes = Math.max(1, Math.min(1440, parseInt(minutes, 10) || 0));
     const normalizedTimestamp = new Date(timestampISO || new Date()).toISOString();
+    const matchedType = state.exerciseTypes.find((type) => type.id === typeId) || null;
     const log = {
       id: rid(),
       userId,
@@ -187,16 +189,27 @@ export function ExerciseProvider({ children, userId }) {
       return nextState;
     });
 
+    window.dispatchEvent(new CustomEvent("exercise-logged", { detail: log }));
+
     (async () => {
       try {
         if (!userId) return;
-        if (isLocalAuth()) return;
-        await supabase.from('exercise_logs').insert({
-          id: log.id,
-          user_id: userId,
-          type_id: typeId,
+        if (!isLocalAuth()) {
+          await supabase.from('exercise_logs').insert({
+            id: log.id,
+            user_id: userId,
+            type_id: typeId,
+            minutes: normalizedMinutes,
+            timestamp_iso: normalizedTimestamp,
+          });
+        }
+
+        await sendExerciseLoggedEvent({
+          userId,
           minutes: normalizedMinutes,
-          timestamp_iso: normalizedTimestamp,
+          timestampISO: normalizedTimestamp,
+          typeId,
+          typeName: matchedType?.name || null,
         });
       } catch {}
     })();

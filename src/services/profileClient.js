@@ -322,6 +322,16 @@ export function calculateDailyCalorieGoal(profile) {
   return Math.round(Math.min(4500, Math.max(1200, goal)));
 }
 
+export function calculateMaintenanceCalories(profile) {
+  const bmr = calculateBmr(profile);
+
+  if (!(bmr > 0)) {
+    return null;
+  }
+
+  return Math.round(Math.min(4500, Math.max(1200, bmr * resolveActivityFactor(profile))));
+}
+
 export async function getLatestWeightKg(userId = getStoredUserId()) {
   if (!userId) return null;
 

@@ -1,0 +1,48 @@
+.daily-accuracy-prompt {
+  display: grid;
+  gap: 1rem;
+}
+
+.daily-accuracy-prompt__copy {
+  margin: 0;
+  color: #28453d;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.daily-accuracy-prompt__actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.daily-accuracy-prompt__button {
+  min-width: 6rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0.8rem 1rem;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 120ms ease, opacity 120ms ease, background-color 120ms ease;
+}
+
+.daily-accuracy-prompt__button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.daily-accuracy-prompt__button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.daily-accuracy-prompt__button--secondary {
+  background: #f4efe6;
+  border-color: rgba(40, 69, 61, 0.12);
+  color: #28453d;
+}
+
+.daily-accuracy-prompt__button--primary {
+  background: #2f6a57;
+  color: #fffdf7;
+}
