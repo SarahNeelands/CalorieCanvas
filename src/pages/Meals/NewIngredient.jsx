@@ -35,7 +35,6 @@ const DEFAULT_MACROS = MACRO_FIELDS.reduce((acc, field) => {
 }, {});
 
 const SERVING_UNITS = ["g", "mg", "ml", "oz", "lb", "cup", "tbsp", "tsp", "piece"];
-
 const MASS_EQUIVALENTS = {
   mg: 0.001,
   g: 1,
@@ -100,6 +99,38 @@ function getServingGrams(qty, unit) {
   return numericQty * gramsPerUnit;
 }
 
+function normalizeMeasureRows(rows) {
+  return (Array.isArray(rows) ? rows : [])
+    .map((row) => ({
+      qty: row?.qty === undefined || row?.qty === null ? "" : String(row.qty),
+      unit: row?.unit || "cup",
+      grams: row?.grams === undefined || row?.grams === null ? "" : String(row.grams),
+    }))
+    .filter((row) => row.qty !== "" || row.grams !== "");
+}
+
+function getSavedMeasureRows(unitConversions = {}) {
+  const customMeasures = normalizeMeasureRows(unitConversions.custom_measures);
+  if (customMeasures.length > 0) {
+    return customMeasures;
+  }
+
+  return SERVING_UNITS
+    .filter((unit) => unit !== "g" && Number(unitConversions[unit]) > 0)
+    .map((unit) => ({
+      qty: "1",
+      unit,
+      grams: String(unitConversions[unit]),
+    }));
+}
+
+function getGramsPerUnitFromRows(rows, unit) {
+  const normalizedUnit = String(unit || "").trim().toLowerCase();
+  const match = rows.find((row) => row.unit === normalizedUnit && Number(row.qty) > 0 && Number(row.grams) > 0);
+  if (!match) return null;
+  return Number(match.grams) / Number(match.qty);
+}
+
 function readImageAsDataUrl(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -115,6 +146,7 @@ export default function NewIngredientPage({ user }) {
   const returnTo = location.state?.returnTo || "/meals/new";
   const existingIngredient = location.state?.ingredient || null;
   const existingServing = existingIngredient?.unit_conversions?.serving_size || {};
+  const existingConversions = existingIngredient?.unit_conversions || {};
   const existingMacros = existingIngredient?.unit_conversions?.macros || {};
   const existingMicros = existingIngredient?.unit_conversions?.micros || {};
   const existingPhoto = existingIngredient?.unit_conversions?.photo_data_url || "";
@@ -127,6 +159,7 @@ export default function NewIngredientPage({ user }) {
     existingServing.qty === undefined || existingServing.qty === null ? "" : String(existingServing.qty)
   );
   const [servingUnit, setServingUnit] = useState(existingServing.unit || "g");
+  const [measureRows, setMeasureRows] = useState(() => getSavedMeasureRows(existingConversions));
   const [macros, setMacros] = useState({
     ...DEFAULT_MACROS,
     ...Object.fromEntries(
@@ -165,6 +198,18 @@ export default function NewIngredientPage({ user }) {
       ...current,
       [key]: { ...current[key], unit },
     }));
+  }
+
+  function updateMeasureRow(index, changes) {
+    setMeasureRows((current) => current.map((row, i) => (i === index ? { ...row, ...changes } : row)));
+  }
+
+  function addMeasureRow() {
+    setMeasureRows((current) => [...current, { qty: "1", unit: "cup", grams: "" }]);
+  }
+
+  function removeMeasureRow(index) {
+    setMeasureRows((current) => current.filter((_, i) => i !== index));
   }
 
   async function handlePhotoChange(event) {
@@ -240,10 +285,26 @@ export default function NewIngredientPage({ user }) {
     };
 
     try {
-      const servingGrams = getServingGrams(payload.servingSize, payload.servingUnit);
+      const cleanedMeasureRows = normalizeMeasureRows(measureRows);
+      const invalidMeasure = cleanedMeasureRows.find((row) => !(Number(row.qty) > 0) || !(Number(row.grams) > 0));
+      if (invalidMeasure) {
+        throw new Error("Each alternate measure needs an amount and a gram weight.");
+      }
+
+      const unitConversions = Object.fromEntries(
+        cleanedMeasureRows.map((row) => [row.unit, Number((Number(row.grams) / Number(row.qty)).toFixed(4))])
+      );
+      const customServingGramsPerUnit = getGramsPerUnitFromRows(cleanedMeasureRows, payload.servingUnit);
+      const servingGrams =
+        Number(payload.servingSize) > 0 && customServingGramsPerUnit
+          ? Number(payload.servingSize) * customServingGramsPerUnit
+          : getServingGrams(payload.servingSize, payload.servingUnit);
+      if (!(servingGrams > 0)) {
+        const unitLabel = payload.servingUnit === "piece" ? "piece" : payload.servingUnit;
+        throw new Error(`Add an alternate measure that says how many grams are in 1 ${unitLabel}.`);
+      }
       const toPer100g = (value) => {
         const numericValue = Number(value || 0);
-        if (!(servingGrams > 0)) return numericValue;
         return numericValue * (100 / servingGrams);
       };
 
@@ -277,11 +338,17 @@ export default function NewIngredientPage({ user }) {
         carbs_g_per_100g: Number(macrosPer100g.carbs.toFixed(2)),
         fat_g_per_100g: Number(macrosPer100g.fat.toFixed(2)),
         unit_conversions: {
+          ...unitConversions,
           brand: payload.brand,
           serving_size: {
             qty: payload.servingSize,
             unit: payload.servingUnit,
           },
+          custom_measures: cleanedMeasureRows.map((row) => ({
+            qty: Number(row.qty),
+            unit: row.unit,
+            grams: Number(row.grams),
+          })),
           macros: payload.macros,
           macros_per_100g: {
             fiber: Number(macrosPer100g.fiber.toFixed(2)),
@@ -439,6 +506,87 @@ export default function NewIngredientPage({ user }) {
                 </select>
               </div>
             </Field>
+          </div>
+        </Section>
+
+        <Section title="Alternate Measures">
+          <div style={{ display: "grid", gap: 12 }}>
+            <p style={{ margin: 0, color: "#5f6f64" }}>
+              Add gram equivalents for ways you measure this ingredient, such as 1 cup = 240 g, 0.25 cup = 60 g, or 1 piece = 50 g.
+            </p>
+            {measureRows.map((row, index) => (
+              <div
+                key={`${row.unit}-${index}`}
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "minmax(80px, 1fr) minmax(100px, 1fr) auto minmax(90px, 1fr) auto",
+                  gap: 10,
+                  alignItems: "center",
+                  minWidth: 0,
+                }}
+              >
+                <input
+                  style={baseInputStyle()}
+                  type="text"
+                  inputMode="decimal"
+                  value={row.qty}
+                  onChange={(e) => updateMeasureRow(index, { qty: cleanDecimalInput(e.target.value) })}
+                  placeholder="1"
+                  aria-label="Measure amount"
+                />
+                <select
+                  style={baseInputStyle()}
+                  value={row.unit}
+                  onChange={(e) => updateMeasureRow(index, { unit: e.target.value })}
+                  aria-label="Measure unit"
+                >
+                  {SERVING_UNITS.filter((unit) => unit !== "g").map((unit) => (
+                    <option key={unit} value={unit}>{unit}</option>
+                  ))}
+                </select>
+                <span style={{ color: "#516257", fontWeight: 700 }}>equals</span>
+                <input
+                  style={baseInputStyle()}
+                  type="text"
+                  inputMode="decimal"
+                  value={row.grams}
+                  onChange={(e) => updateMeasureRow(index, { grams: cleanDecimalInput(e.target.value) })}
+                  placeholder="0"
+                  aria-label="Gram weight"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeMeasureRow(index)}
+                  style={{
+                    borderRadius: 999,
+                    padding: "10px 14px",
+                    background: "transparent",
+                    border: "1px solid rgba(22,50,39,0.18)",
+                    color: "#163227",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={addMeasureRow}
+              style={{
+                justifySelf: "start",
+                borderRadius: 999,
+                padding: "12px 18px",
+                background: "#eef5e8",
+                color: "#163227",
+                border: "1px solid rgba(22,50,39,0.12)",
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              Add Measure
+            </button>
           </div>
         </Section>
 

@@ -32,11 +32,16 @@ function scaleMicros(grams, per100g = {}) {
   );
 }
 
-function servingUnitToGrams(qty, unit) {
+function servingUnitToGrams(qty, unit, item) {
   const numericQty = Number(qty || 0);
   if (!(numericQty > 0)) return null;
 
   const normalizedUnit = String(unit || "g").trim().toLowerCase();
+  const customGramsPerUnit = Number(item?.unit_conversions?.[normalizedUnit] || 0);
+  if (customGramsPerUnit > 0) {
+    return numericQty * customGramsPerUnit;
+  }
+
   const gramsByUnit = {
     mg: 0.001,
     g: 1,
@@ -54,7 +59,7 @@ function servingUnitToGrams(qty, unit) {
 
 function derivePer100gFromServing(value, item, isMicro = false) {
   const serving = item?.unit_conversions?.serving_size;
-  const gramsPerServing = servingUnitToGrams(serving?.qty, serving?.unit);
+  const gramsPerServing = servingUnitToGrams(serving?.qty, serving?.unit, item);
   const numericValue = Number(value || 0);
 
   if (!(gramsPerServing > 0)) return 0;

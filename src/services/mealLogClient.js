@@ -40,9 +40,15 @@ function scalePer100gValue(value, grams) {
   return (Number(value || 0) * Number(grams || 0)) / 100;
 }
 
-function servingUnitToGrams(qty, unit) {
+function servingUnitToGrams(qty, unit, item) {
   const numericQty = Number(qty || 0);
   if (!(numericQty > 0)) return null;
+
+  const normalizedUnit = String(unit || "g").trim().toLowerCase();
+  const customGramsPerUnit = Number(item?.unit_conversions?.[normalizedUnit] || 0);
+  if (customGramsPerUnit > 0) {
+    return numericQty * customGramsPerUnit;
+  }
 
   const gramsByUnit = {
     mg: 0.001,
@@ -55,14 +61,13 @@ function servingUnitToGrams(qty, unit) {
     tsp: 4.92892,
   };
 
-  const normalizedUnit = String(unit || "g").trim().toLowerCase();
   if (!gramsByUnit[normalizedUnit]) return null;
   return numericQty * gramsByUnit[normalizedUnit];
 }
 
 function derivePer100gFromServingValue(entry, value) {
   const serving = entry?.meal?.unit_conversions?.serving_size;
-  const gramsPerServing = servingUnitToGrams(serving?.qty, serving?.unit);
+  const gramsPerServing = servingUnitToGrams(serving?.qty, serving?.unit, entry?.meal);
   if (!(gramsPerServing > 0)) return 0;
   return Number(value || 0) * (100 / gramsPerServing);
 }

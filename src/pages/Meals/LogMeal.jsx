@@ -21,8 +21,12 @@ const VOLUME_UNIT_TO_ML = {
   cup: 236.588,
 };
 
-function toComparableAmount(qty, unit) {
+function toComparableAmount(item, qty, unit) {
   if (!unit) return null;
+  const gramsPerUnit = Number(item?.unit_conversions?.[unit] || 0);
+  if (gramsPerUnit > 0) {
+    return { value: Number(qty || 0) * gramsPerUnit, kind: "mass" };
+  }
   if (MASS_UNIT_TO_GRAMS[unit]) {
     return { value: Number(qty || 0) * MASS_UNIT_TO_GRAMS[unit], kind: "mass" };
   }
@@ -46,8 +50,8 @@ function calculateRatio(item, qty, unit) {
     return 0;
   }
 
-  const actual = toComparableAmount(qty, unit);
-  const base = toComparableAmount(serving.qty, serving.unit);
+  const actual = toComparableAmount(item, qty, unit);
+  const base = toComparableAmount(item, serving.qty, serving.unit);
 
   if (actual && base && actual.kind === base.kind && base.value > 0) {
     return actual.value / base.value;
@@ -103,6 +107,11 @@ function estimateIngredientWeightGrams(item, qty, unit) {
   if (!(numericQty > 0)) return 0;
 
   const normalizedUnit = String(unit || "").trim().toLowerCase();
+  const gramsPerUnit = Number(item?.unit_conversions?.[normalizedUnit] || 0);
+  if (gramsPerUnit > 0) {
+    return numericQty * gramsPerUnit;
+  }
+
   if (MASS_UNIT_TO_GRAMS[normalizedUnit]) {
     return numericQty * MASS_UNIT_TO_GRAMS[normalizedUnit];
   }
@@ -116,8 +125,8 @@ function estimateIngredientWeightGrams(item, qty, unit) {
     return 0;
   }
 
-  const actual = toComparableAmount(numericQty, normalizedUnit);
-  const base = toComparableAmount(serving.qty, serving.unit);
+  const actual = toComparableAmount(item, numericQty, normalizedUnit);
+  const base = toComparableAmount(item, serving.qty, serving.unit);
   if (actual && base && actual.kind === base.kind && base.value > 0) {
     const servingWeight = estimateIngredientWeightGrams(item, serving.qty, serving.unit);
     if (servingWeight > 0) {
