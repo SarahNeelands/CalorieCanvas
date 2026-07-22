@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('node:path');
 const helmet = require('helmet');
 const database = require('./db');
 const { createAuthService } = require('./auth');
@@ -26,6 +27,7 @@ function createApp({
   authConfig,
   authPool,
   databaseClient = database,
+  frontendDirectory,
   logger = console,
   tokenDelivery,
 } = {}) {
@@ -50,6 +52,13 @@ function createApp({
   app.use('/api/weights', createWeightRouter({ pool }));
   app.use('/api/exercises', createExerciseDefinitionRouter({ pool }));
   app.use('/api/exercise-logs', createExerciseLogRouter({ pool }));
+
+  if (frontendDirectory) {
+    const staticDirectory = path.resolve(frontendDirectory);
+    const indexPath = path.join(staticDirectory, 'index.html');
+    app.use(express.static(staticDirectory, { index: false, maxAge: '1h' }));
+    app.get(/^(?!\/api(?:\/|$)).*/, (req, res) => res.sendFile(indexPath));
+  }
 
   app.use(notFoundHandler);
   app.use(createErrorHandler(logger));

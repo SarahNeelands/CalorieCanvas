@@ -58,6 +58,12 @@ python migration-tooling/export-legacy-sqlite.py --database=../backend/data/calo
 
 This is a manual-review export, not an automatic import. Confirm the identity mapping and legacy numeric profile enum semantics before creating an approved transformation. The 74 legacy catalog rows differ in count from the 70-row authoritative shared seed and must be compared by stable ID, never name.
 
+Run the non-writing stable-ID comparison directly against the immutable source:
+
+```powershell
+python migration-tooling/compare-legacy-sqlite.py --database=../backend/data/calorie_canvas.sqlite3 --catalog-source=../src/services/builtInIngredients.js
+```
+
 ## Transformations and replay
 
 - User UUIDs/emails/confirmation timestamps are retained. Emails are trimmed/lowercased. Every imported account has no password, requires reset, and has destination sessions removed transactionally.

@@ -1,9 +1,14 @@
 const { createApp } = require('./app');
 const { closeDatabase } = require('./db');
+const { createEmailDelivery } = require('./email');
 const { loadEnvironment } = require('./utils/env');
 
 const config = loadEnvironment();
-const app = createApp();
+const app = createApp({
+  authConfig: config.auth,
+  frontendDirectory: config.frontendDirectory,
+  tokenDelivery: createEmailDelivery(config.email),
+});
 const server = app.listen(config.port, config.host, () => {
   console.info(`Calorie Canvas API listening on http://${config.host}:${config.port}`);
 });

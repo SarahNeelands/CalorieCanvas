@@ -21,8 +21,14 @@ yarn-debug.log*
 yarn-error.log*
 node_modules
 .env.local
+.env.staging
+**/.env.staging
+.env.production
+**/.env.production
 *.sqlite
 *.sqlite3
+*.dump
+*.sql.gz
 
 # Sensitive migration exports and reconciliation reports
 /migration-exports/

@@ -25,4 +25,12 @@ Supabase meal and exercise timestamps are absolute instants, but the schema did 
 
 ## Known local SQLite audit
 
-The checked-in disposable SQLite file was inspected read-only on 2026-07-22: `auth_users=1`, `users=1`, `weight_entries=1` (distinct unit: `kg`), and `catalog_items=74`. The authoritative React seed currently has 70 rows, so the four-row count difference is an unresolved manual catalog review item. The legacy password value was neither read nor exported. These rows are not automatically merged with Supabase because identity and numeric enum meanings require owner confirmation.
+The retained SQLite file was inspected read-only on 2026-07-22:
+`auth_users=1`, `users=1`, `weight_entries=1` (distinct unit: `kg`), and
+`catalog_items=74`. Stable-ID comparison proves that all 70 SQLite shared rows
+exactly cover the 70 authoritative shared IDs, with none missing or unexpected.
+The remaining four are user-owned records: three belong to the single legacy UUID
+and one clearly marked test record has owner `test`. They are not shared-catalog
+additions and must not be seeded. Whether the legacy email/UUID corresponds to a
+current Supabase user remains unresolved until a real read-only Supabase export is
+available. The legacy password value was neither read nor exported.

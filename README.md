@@ -49,6 +49,10 @@ Server configuration:
 - `BCRYPT_ROUNDS`, cookie names, session/reset/verification TTLs, and auth rate-limit
   settings documented in `.env.example`.
 - `SESSION_COOKIE_SECURE` must be `true` behind production HTTPS.
+- `PUBLIC_APP_ORIGIN` is the exact public origin used in verification/reset links.
+- `EMAIL_PROVIDER=resend`, `RESEND_API_KEY`, `EMAIL_FROM`, retry/timeout settings,
+  and an optional staging-only `EMAIL_ALLOWED_RECIPIENTS` allowlist configure mail.
+- `FRONTEND_DIRECTORY` enables the single-container same-origin React build.
 
 No `REACT_APP_SUPABASE_*` variable or runtime-mode variable is supported.
 
@@ -99,6 +103,9 @@ The old Rust runtime has been retired. The unreviewed
 
 ## Deployment status
 
-Docker, Caddy, VPS staging, DNS cutover, and the production import are separate,
-not-yet-started phases. Do not run migration tooling against production or alter the
-Supabase project without explicit approval and the runbook safeguards.
+The single-host deployment package is defined by `Dockerfile` and
+`deploy/production/compose.yml`. Deployment, Caddy, backup/restore, verification,
+maintenance, and rollback instructions are in
+[docs/DEPLOYMENT_OPERATIONS.md](docs/DEPLOYMENT_OPERATIONS.md). This deployment
+uses a fresh database and must not run Supabase export/import tooling or alter the
+Supabase project.

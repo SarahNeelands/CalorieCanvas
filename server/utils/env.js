@@ -39,6 +39,13 @@ function validateOrigin(value, name = 'APP_ORIGINS') {
   return value;
 }
 
+function parseOptionalList(value) {
+  return [...new Set(String(value || '')
+    .split(',')
+    .map((entry) => entry.trim().toLowerCase())
+    .filter(Boolean))];
+}
+
 function parseOrigins(env) {
   const values = [env.APP_ORIGINS]
     .filter(Boolean)
@@ -69,8 +76,31 @@ function loadEnvironment(env = process.env) {
   const nodeEnv = env.NODE_ENV || 'development';
   const appOrigins = parseOrigins(env);
   const databaseUrl = validateDatabaseUrl(env.DATABASE_URL);
+  const publicAppOrigin = validateOrigin(env.PUBLIC_APP_ORIGIN, 'PUBLIC_APP_ORIGIN');
+  const emailProvider = (env.EMAIL_PROVIDER || 'disabled').trim().toLowerCase();
+  if (!['disabled', 'resend'].includes(emailProvider)) {
+    throw new Error('EMAIL_PROVIDER must be either disabled or resend.');
+  }
   if (nodeEnv === 'production' && !databaseUrl) throw new Error('DATABASE_URL is required in production.');
   if (nodeEnv === 'production' && appOrigins.length === 0) throw new Error('APP_ORIGINS is required in production.');
+  if (nodeEnv === 'production' && appOrigins.some((origin) => !origin.startsWith('https://'))) {
+    throw new Error('APP_ORIGINS must use HTTPS in production.');
+  }
+  if (nodeEnv === 'production' && emailProvider === 'disabled') {
+    throw new Error('EMAIL_PROVIDER=resend is required in production.');
+  }
+  if (emailProvider === 'resend' && !publicAppOrigin) {
+    throw new Error('PUBLIC_APP_ORIGIN is required when EMAIL_PROVIDER=resend.');
+  }
+  if (nodeEnv === 'production' && publicAppOrigin && !publicAppOrigin.startsWith('https://')) {
+    throw new Error('PUBLIC_APP_ORIGIN must use HTTPS in production.');
+  }
+  if (emailProvider === 'resend' && !env.RESEND_API_KEY) {
+    throw new Error('RESEND_API_KEY is required when EMAIL_PROVIDER=resend.');
+  }
+  if (emailProvider === 'resend' && !env.EMAIL_FROM) {
+    throw new Error('EMAIL_FROM is required when EMAIL_PROVIDER=resend.');
+  }
   const sessionTtlHours = parseInteger(
     env.SESSION_TTL_HOURS || '168',
     'SESSION_TTL_HOURS',
@@ -99,6 +129,22 @@ function loadEnvironment(env = process.env) {
     port: parsePort(env.SERVER_PORT || '3001'),
     databaseUrl,
     databaseSsl: parseBoolean(env.DATABASE_SSL || 'false', 'DATABASE_SSL'),
+    frontendDirectory: env.FRONTEND_DIRECTORY || null,
+    email: {
+      provider: emailProvider,
+      publicAppOrigin,
+      resendApiKey: env.RESEND_API_KEY || null,
+      from: env.EMAIL_FROM || null,
+      allowedRecipients: parseOptionalList(env.EMAIL_ALLOWED_RECIPIENTS),
+      requestTimeoutMs: parseInteger(
+        env.EMAIL_REQUEST_TIMEOUT_MS || '10000',
+        'EMAIL_REQUEST_TIMEOUT_MS',
+        1000,
+        60000
+      ),
+      maxAttempts: parseInteger(env.EMAIL_MAX_ATTEMPTS || '3', 'EMAIL_MAX_ATTEMPTS', 1, 5),
+      retryBaseMs: parseInteger(env.EMAIL_RETRY_BASE_MS || '250', 'EMAIL_RETRY_BASE_MS', 50, 5000),
+    },
     auth: {
       appOrigins,
       bcryptRounds: parseInteger(env.BCRYPT_ROUNDS || '12', 'BCRYPT_ROUNDS', 10, 15),

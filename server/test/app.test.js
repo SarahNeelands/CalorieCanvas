@@ -1,4 +1,7 @@
 const assert = require('node:assert/strict');
+const fs = require('node:fs/promises');
+const os = require('node:os');
+const path = require('node:path');
 const { afterEach, test } = require('node:test');
 const { createApp } = require('../app');
 
@@ -67,6 +70,27 @@ test('unknown endpoints return a JSON 404 response', async () => {
 
   assert.equal(response.status, 404);
   assert.deepEqual(await response.json(), { error: 'Not found.' });
+});
+
+test('configured frontend directory serves static assets and SPA routes without masking APIs', async () => {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'calorie-canvas-static-'));
+  await fs.writeFile(path.join(directory, 'index.html'), '<main>Calorie Canvas</main>');
+  await fs.writeFile(path.join(directory, 'asset.txt'), 'asset');
+  const app = createApp({
+    frontendDirectory: directory,
+    databaseClient: { async checkDatabase() {} },
+    logger: silentLogger,
+  });
+  const server = await new Promise((resolve) => {
+    const listener = app.listen(0, '127.0.0.1', () => resolve(listener));
+  });
+  openServers.add(server);
+  const baseUrl = `http://127.0.0.1:${server.address().port}`;
+
+  assert.equal(await (await fetch(`${baseUrl}/asset.txt`)).text(), 'asset');
+  assert.match(await (await fetch(`${baseUrl}/profile`)).text(), /Calorie Canvas/);
+  assert.equal((await fetch(`${baseUrl}/api/unknown`)).status, 404);
+  await fs.rm(directory, { recursive: true, force: true });
 });
 
 test('state-changing authentication requests reject an untrusted origin before database access', async () => {
