@@ -1,0 +1,123 @@
+.weight-modal {
+  display: grid;
+  gap: 1rem;
+  width: min(100%, 28rem);
+  margin: 0 auto;
+}
+
+.weight-modal__field {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.weight-modal__label {
+  font-family: Georgia, "Times New Roman", serif;
+  color: #143d33;
+  font-size: 1.08rem;
+  font-weight: 600;
+}
+
+.weight-modal__input,
+.weight-modal__select {
+  width: min(100%, 23.5rem);
+  box-sizing: border-box;
+  border: 1px solid rgba(20, 61, 51, 0.12);
+  border-radius: 1.1rem;
+  padding: 0.82rem 1rem;
+  background: rgba(255, 252, 247, 0.88);
+  color: #143d33;
+  font-size: 1.08rem;
+  outline: none;
+  appearance: none;
+}
+
+.weight-modal__input:focus,
+.weight-modal__select:focus {
+  border-color: rgba(115, 145, 119, 0.55);
+  box-shadow: 0 0 0 3px rgba(201, 217, 193, 0.42);
+}
+
+.weight-modal__select {
+  background-image: linear-gradient(45deg, transparent 50%, #143d33 50%),
+                    linear-gradient(135deg, #143d33 50%, transparent 50%);
+  background-position: calc(100% - 18px) calc(1em + 3px), calc(100% - 12px) calc(1em + 3px);
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+}
+
+.weight-modal__date-wrap {
+  position: relative;
+  width: min(100%, 23.5rem);
+}
+
+.weight-modal__input--date {
+  padding-right: 3.5rem;
+}
+
+.weight-modal__date-wrap::after {
+  content: "🗓";
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.35rem;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.weight-modal__actions {
+  display: block;
+}
+
+.weight-modal__btn {
+  border: none;
+  width: min(100%, 23.5rem);
+  border-radius: 1.25rem;
+  padding: 0.88rem 1.15rem;
+  background: linear-gradient(180deg, #64886f 0%, #5b7d67 100%);
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.18rem;
+  cursor: pointer;
+  box-shadow: 0 12px 24px rgba(68, 101, 79, 0.2);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.weight-modal__btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 26px rgba(68, 101, 79, 0.24);
+}
+
+@media (max-width: 600px) {
+  .weight-modal {
+    width: 100%;
+    gap: 0.82rem;
+  }
+
+  .weight-modal__label {
+    font-size: 1.02rem;
+  }
+
+  .weight-modal__input,
+  .weight-modal__select,
+  .weight-modal__date-wrap,
+  .weight-modal__btn {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .weight-modal__input,
+  .weight-modal__select,
+  .weight-modal__btn {
+    font-size: 0.96rem;
+  }
+
+  .weight-modal__btn {
+    padding: 0.78rem 1rem;
+  }
+
+  .weight-modal__date-wrap::after {
+    font-size: 1.2rem;
+    right: 0.9rem;
+  }
+}

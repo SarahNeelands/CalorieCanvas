@@ -1,0 +1,25 @@
+{
+  "short_name": "Calorie Canvas",
+  "name": "Calorie Canvas",
+  "icons": [
+    {
+      "src": "IconBackground.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    },
+    {
+      "src": "IconBackground.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "IconBackground.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#143d33",
+  "background_color": "#f4efe5"
+}

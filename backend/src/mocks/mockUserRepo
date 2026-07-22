@@ -1,0 +1,104 @@
+use async_trait::async_trait;
+use crate::models::user::{User, WeightEntry};
+use crate::repos::userRepo::UserRepository;
+
+pub struct MockUserRepo;
+
+#[async_trait]
+impl UserRepository for MockUserRepo {
+
+    async fn get_all_users(&self) -> Vec<User> {
+        vec![
+            mock_female_user(),
+            mock_male_user(),
+            mock_hormone_transition_user(),
+        ]
+    }
+
+    async fn get_user_by_id(&self, id: &str) -> Option<User> {
+        let users = self.get_all_users().await;
+        users.into_iter().find(|u| u.id == id)
+    }
+
+    async fn update_user_profile(&self, _user: &User) -> bool {
+        // Always "succeeds" in mock environment
+        true
+    }
+
+    async fn update_user_calorie_goal(&self, _id: &str, _calorie_goal: i32) -> bool {
+        true
+    }
+
+    async fn fetch_all_users_weight(&self, user_id: &str) -> Vec<(String, f64)> {
+        self.get_user_by_id(user_id)
+            .await
+            .map(|u| u.weights.into_iter().map(|w| (w.date, w.weight)).collect())
+            .unwrap_or_default()
+    }
+
+    async fn add_user_weight_entry(&self, user_id: &str, weight_entry: WeightEntry) -> bool {
+        println!("Mock add weight entry for {}: {:?}", user_id, weight_entry);
+        true
+    }
+
+    async fn add_user_goal_calorie(&self, user_id: &str, calorie_goal:i32)-> bool {
+        println!("Mock add calorie goal for {}: {}", user_id, calorie_goal);
+        true
+    }
+}
+
+
+/// -------------------------------
+/// Mock Data Generators
+/// -------------------------------
+
+fn mock_female_user() -> User {
+    User {
+        id: "user_female_01".into(),
+        name: "Alice".into(),
+        birthday: "1998-05-14".into(),
+        height_unit: "cm".into(),
+        height: 165.0,
+        weight_unit: "kg".into(),
+        goal_type: -300, // calorie deficit
+        activity_level: 2,
+        weights: vec![
+            WeightEntry { date: "2025-01-01".into(), weight: 60.0 },
+            WeightEntry { date: "2025-02-01".into(), weight: 59.5 },
+        ],
+    }
+}
+
+fn mock_male_user() -> User {
+    User {
+        id: "user_male_01".into(),
+        name: "John".into(),
+        birthday: "1995-09-22".into(),
+        height_unit: "cm".into(),
+        height: 178.0,
+        weight_unit: "kg".into(),
+        goal_type: 200, // slight surplus
+        activity_level: 3,
+        weights: vec![
+            WeightEntry { date: "2025-01-01".into(), weight: 82.0 },
+            WeightEntry { date: "2025-02-01".into(), weight: 81.2 },
+        ],
+    }
+}
+
+fn mock_hormone_transition_user() -> User {
+    User {
+        id: "user_transition_01".into(),
+        name: "Riley".into(),
+        birthday: "2000-03-10".into(),
+        height_unit: "cm".into(),
+        height: 168.0,
+        weight_unit: "kg".into(),
+        goal_type: -150, // gentle deficit
+        activity_level: 1,
+        weights: vec![
+            WeightEntry { date: "2025-01-01".into(), weight: 72.0 },
+            WeightEntry { date: "2025-02-01".into(), weight: 71.4 },
+        ],
+    }
+}

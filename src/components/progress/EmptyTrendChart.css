@@ -1,0 +1,78 @@
+.empty-trend-chart {
+  position: relative;
+  height: 100%;
+  min-height: inherit;
+  border-radius: 1rem;
+  padding: 2rem 0.25rem 0;
+  background: rgba(255, 248, 239, 0.18);
+  border: 1px dashed rgba(148, 120, 85, 0.3);
+}
+
+.empty-trend-chart__badge {
+  position: absolute;
+  top: 0.25rem;
+  left: 0.4rem;
+  z-index: 2;
+  padding: 0.22rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(255, 250, 244, 0.92);
+  border: 1px solid rgba(160, 130, 96, 0.24);
+  color: #6e5c49;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.empty-trend-chart__grid {
+  position: absolute;
+  inset: 0 0 1.5rem;
+  display: grid;
+  grid-template-rows: repeat(4, 1fr);
+  pointer-events: none;
+}
+
+.empty-trend-chart__grid span {
+  border-top: 1px dashed rgba(118, 101, 79, 0.22);
+}
+
+.empty-trend-chart__svg {
+  position: absolute;
+  inset: 0 0 1.5rem;
+  width: 100%;
+  height: calc(100% - 1.5rem);
+  overflow: visible;
+}
+
+.empty-trend-chart__path {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.9;
+}
+
+.empty-trend-chart__path--green {
+  stroke: #456f5d;
+}
+
+.empty-trend-chart__path--gold {
+  stroke: #ad7b36;
+}
+
+.empty-trend-chart__path--deep-green {
+  stroke: #2c5b49;
+}
+
+.empty-trend-chart__labels {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.25rem;
+  color: #6f685b;
+  font-size: 0.8rem;
+  text-align: center;
+}

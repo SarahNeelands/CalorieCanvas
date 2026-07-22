@@ -1,0 +1,100 @@
+// src/pages/Exercises.jsx
+import React, { useState, useEffect } from "react";
+import { useLocation, useNavigate } from 'react-router-dom';
+import { getCurrentUserId } from "../../services/authClient";
+
+// Context
+import { ExerciseProvider } from '../../components/exercise/context/ExerciseContext.jsx';
+
+// Page bits
+import ExercisePageHeader from '../../components/exercise/ExercisePageHeader.jsx';
+import DayLogsModal from '../../components/exercise/DayLogsModal.jsx';
+import LogExerciseModal from '../../components/exercise/LogExerciseModal.jsx';
+
+// Charts
+import DailyMinutesChart from '../../components/exercise/charts/DailyMinutesChart.jsx';
+import TypeBreakdownPie from '../../components/exercise/charts/TypeBreakdownPie.jsx';
+
+// UI
+import Card from '../../components/ui/Card.jsx';
+import NavBar from "../../components/NavBar.jsx";
+
+import "./Exercises.css";
+
+export default function Exercises({ user }) {
+  const [resolvedUserId, setResolvedUserId] = useState(user?.id || null);
+
+  useEffect(() => {
+    let active = true;
+
+    async function resolveUser() {
+      const nextUserId = user?.id || await getCurrentUserId();
+      if (active) {
+        setResolvedUserId(nextUserId || null);
+      }
+    }
+
+    resolveUser();
+    return () => {
+      active = false;
+    };
+  }, [user?.id]);
+
+  return (
+    <div className="ex-page">
+      <NavBar profileImageSrc={user?.avatar}/>
+      <ExerciseProvider userId={resolvedUserId}>
+        <ExercisePageInner />
+      </ExerciseProvider>
+    </div>
+  );
+}
+
+function ExercisePageInner() {
+  const [range, setRange] = useState("7");
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [logOpen, setLogOpen] = useState(false);
+  // respond to navigation state so QuickActionsFloating can open the modal
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(()=>{
+    if(location?.state?.openLog){
+      setLogOpen(true);
+      // clear state so re-navigation doesn't re-open
+      try{ navigate(location.pathname, { replace: true, state: {} }); }catch(e){}
+    }
+  }, [location, navigate]);
+
+  return (
+    <div className="exercise-back">
+      <div className="ex-container">
+        <ExercisePageHeader
+          range={range}
+          onChangeRange={setRange}
+          onLog={() => setLogOpen(true)}
+        />
+
+        <div className="ex-grid">
+          <Card title={`Minutes per day (last ${range} days)`}>
+            <DailyMinutesChart range={range} onSelectDate={(d) => setSelectedDate(d)} />
+            <p className="ex-hint">Click a bar to view that day's logs.</p>
+          </Card>
+
+          <Card title={`By type (last ${range} days)`}>
+            <TypeBreakdownPie range={range} />
+          </Card>
+        </div>
+
+        {selectedDate && (
+          <DayLogsModal
+            dateStr={selectedDate}
+            onClose={() => setSelectedDate(null)}
+          />
+        )}
+
+        {logOpen && <LogExerciseModal onClose={() => setLogOpen(false)} />}
+      </div>
+    </div>
+  );
+}

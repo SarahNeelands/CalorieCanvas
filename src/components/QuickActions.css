@@ -1,0 +1,271 @@
+:root {
+  --right-w: clamp(22rem, 25vw, 28rem); /* adjust min/max values as desired */
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr var(--right-w);
+  gap: 2rem;
+}
+
+
+.frame.quick-actions {
+  display: grid;
+  place-items: center;   /* centers both layers */
+  position: relative;
+  text-align: center;
+  /* optional */
+  aspect-ratio: 16 / 9;
+}
+
+.frame-bg {
+  grid-area: 1 / 1;
+  width: 80%;
+  height: auto;
+  object-fit: contain;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.qa-desktop {
+  grid-area: 1 / 1;     /* same cell as image */
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+
+.frame {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 1rem 1rem;
+  box-sizing: border-box;
+}
+
+
+/* keep content above background */
+.frame-title,
+.btn-container {
+  position: relative;
+  z-index: 1;
+}
+
+.frame-title {
+  font-weight: 800;
+  font-size: 1.25rem;
+  margin-bottom: 5px;
+}
+
+/* button layout */
+.btn-container {
+  display: grid;
+  gap: 5px;
+}
+
+/* Buttons */
+.btn {
+  padding: 0.75rem 0;
+  width: 10rem;
+  border-radius: 0.75rem;
+  font-weight: 700;
+  text-align: center;
+  transition: all 0.25s ease;
+  text-decoration: none;
+  display: block;
+  margin: 0.2rem auto;
+}
+
+.btn-solid {
+  background: #4F6B50;
+  color: white;
+  box-shadow: 0 0.125rem 0.375rem rgba(79, 107, 80, 0.3);
+  border: 0.0625rem solid rgba(79, 107, 80, 0.25);
+}
+.btn-solid:hover {
+  transform: translateY(-0.125rem);
+  box-shadow: 0 0.25rem 0.75rem rgba(79, 107, 80, 0.4);
+}
+
+.btn-soft {
+  background: rgba(79, 107, 80, 0.08);
+  color: #4F6B50;
+  border: 0.0625rem solid rgba(79, 107, 80, 0.25);
+  box-shadow: 0 0.125rem 0.375rem rgba(79, 107, 80, 0.3);
+}
+.btn-soft:hover {
+  transform: translateY(-0.125rem);
+  background: rgba(79, 107, 80, 0.15);
+}
+
+@media (max-width: 980px) {
+  .frame.quick-actions {
+    display: none;
+  }
+}
+
+@media (min-width: 981px) {
+  .qa-desktop {
+    transform: translateY(-0.9rem);
+  }
+
+  .frame-title {
+    margin-bottom: 0.15rem;
+  }
+
+  .btn-container {
+    gap: 0.1rem;
+  }
+
+  .btn {
+    margin: 0.08rem auto;
+  }
+}
+
+/* responsive tweak */
+@media (max-width: 600px) {
+  .btn {
+    width: 8.5rem;
+  }
+  .frame {
+    padding: 1.5rem 0.75rem;
+  }
+
+  /* On small screens, hide the full desktop quick actions and show a compact button */
+
+  .qa-mobile { display: flex; align-items: center; justify-content: center; position: relative; width:100%; }
+
+  .qa-mobile-btn{
+    background: transparent;
+    border: none;
+    padding: 0.25rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .qa-mobile-btn img{ width:48px; height:48px; display:block; }
+
+  .qa-mobile-menu{
+    position: absolute;
+    bottom: 56px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: #fff;
+    border-radius: 12px;
+    padding: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    min-width: 160px;
+    right: 12px;
+    z-index: 30;
+  }
+  .qa-mobile-item{
+    padding: 8px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #243E2D;
+    background: transparent;
+    font-weight:700;
+  }
+  .qa-mobile-item:hover{ background: rgba(79,107,80,0.06); }
+}
+
+/* Floating quick actions (global) */
+.qa-floating{
+  position:fixed;
+  right:18px;
+  bottom:calc(6.25rem + env(safe-area-inset-bottom, 0px));
+  z-index:10050;
+}
+.qa-floating-btn{
+  width:88px;
+  height:88px;
+  border:none;
+  background:transparent;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  padding:0;
+  position:relative;
+}
+.qa-floating-btn::before{
+  content:"";
+  position:absolute;
+  width:64px;
+  height:64px;
+  top:8px;
+  border-radius:999px;
+  background:rgba(251, 247, 238, 0.96);
+  box-shadow:
+    0 10px 22px rgba(76, 61, 41, 0.12),
+    inset 0 1px 0 rgba(255, 251, 244, 0.65);
+  z-index:0;
+}
+.qa-floating-btn img{ width:84px; height:84px; display:block; position:relative; z-index:1; }
+.qa-floating-menu{
+  position:absolute;
+  right:0;
+  bottom:78px;
+  min-width:182px;
+  background:rgba(251, 247, 238, 0.96);
+  padding:8px;
+  border-radius:16px;
+  border:1px solid rgba(79, 107, 80, 0.18);
+  box-shadow:0 10px 24px rgba(76, 61, 41, 0.1);
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.qa-floating-item{
+  border:none;
+  border-radius:12px;
+  border-bottom:1px solid rgba(79, 107, 80, 0.1);
+  background:rgba(79, 107, 80, 0.03);
+  padding:10px 12px;
+  text-align:left;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size:1rem;
+  font-weight:700;
+  color:#24483c;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.qa-floating-item:last-child{
+  border-bottom:none;
+}
+.qa-floating-item:hover{
+  background:rgba(79, 107, 80, 0.08);
+}
+
+/* ensure floating button visible on desktop and phone */
+@media (max-width: 420px){
+  .qa-floating{
+    right:12px;
+    bottom:calc(6rem + env(safe-area-inset-bottom, 0px));
+  }
+  .qa-floating-btn{ width:82px; height:82px; }
+  .qa-floating-btn::before{ width:60px; height:60px; top:7px; }
+  .qa-floating-btn img{ width:80px; height:80px; }
+}
+/* Enlarge quick actions area and buttons on large screens */
+@media (min-width: 1280px) {
+  .quick-actions-container {
+    padding: 2.5rem 2rem;
+  }
+  .quick-button {
+    font-size: 1.4rem;
+    padding: 1.2rem;
+  }
+}
+

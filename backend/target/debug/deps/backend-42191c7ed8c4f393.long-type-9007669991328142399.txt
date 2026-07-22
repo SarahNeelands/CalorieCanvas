@@ -1,0 +1,2 @@
+fn(State<MockDB>, axum::Json<ProfileCreate>) -> impl std::future::Future<Output = axum::Json<{type error}>> {user_api::create_profile}
+fn(State<MockDB>, axum::Json<ProfileCreate>) -> impl std::future::Future<Output = axum::Json<{type error}>> {user_api::create_profile}: Handler<_, _>

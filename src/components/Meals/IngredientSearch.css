@@ -1,0 +1,168 @@
+.cc-modal-surface:has(.ingredient-search-modal) {
+  width: min(90vw, 21.5rem);
+  height: min(92vh, 27.8rem);
+  max-height: min(92vh, 27.8rem);
+  border-radius: 1.7rem;
+}
+
+.cc-modal-surface:has(.ingredient-search-modal) .cc-modal-body {
+  padding: 0 0.9rem 0.95rem;
+  overflow: hidden;
+}
+
+.ingredient-search-modal {
+  height: 100%;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 0.55rem;
+}
+
+.ingredient-search-modal__toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding-bottom: 0.15rem;
+  background: linear-gradient(180deg, rgba(251, 247, 241, 0.98) 0%, rgba(251, 247, 241, 0.9) 100%);
+}
+
+.ingredient-search-modal__search {
+  position: relative;
+}
+
+.ingredient-search-modal__input {
+  width: 100%;
+  height: 2.45rem;
+  border: 1px solid rgba(35, 61, 50, 0.1);
+  border-radius: 0.95rem;
+  padding: 0 2.35rem 0 2.35rem;
+  background: rgba(255, 252, 248, 0.92);
+  color: var(--cc-ink);
+  font-size: 0.92rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 4px 14px rgba(28, 52, 42, 0.04);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%2391a09a' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 0.78rem center;
+}
+.ingredient-search-modal__input:focus {
+  border-color: var(--cc-accent);
+  box-shadow: 0 0 0 3px rgba(88, 119, 102, 0.12);
+  outline: none;
+}
+
+.ingredient-search-modal__clear {
+  position: absolute;
+  top: 50%;
+  right: 0.68rem;
+  transform: translateY(-50%);
+  width: 1.6rem;
+  height: 1.6rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #a4aea9;
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.ingredient-search-modal__results{
+  min-height:0;
+  overflow:auto;
+  padding-right: 0.2rem;
+}
+
+.ingredient-search-modal__results::-webkit-scrollbar {
+  width: 8px;
+}
+
+.ingredient-search-modal__results::-webkit-scrollbar-track {
+  background: rgba(34, 55, 46, 0.05);
+  border-radius: 999px;
+}
+
+.ingredient-search-modal__results::-webkit-scrollbar-thumb {
+  background: rgba(24, 63, 50, 0.18);
+  border-radius: 999px;
+}
+
+.is-list{ list-style:none; margin:0; padding:0; display:grid; gap:0.18rem; }
+.is-list li{
+  display:grid;
+  grid-template-columns:minmax(0, 1fr) auto;
+  align-items:center;
+  border:1px solid rgba(35, 61, 50, 0.06);
+  border-radius:0.25rem;
+  padding:0.4rem 0.55rem 0.4rem 0.7rem;
+  background: linear-gradient(180deg, rgba(254, 252, 248, 0.99) 0%, rgba(251, 248, 243, 0.99) 100%);
+  gap:0.65rem;
+  cursor:pointer;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.62), 0 3px 8px rgba(28, 52, 42, 0.03);
+  transition:border-color .16s ease, box-shadow .16s ease;
+}
+.is-list li:hover,
+.is-list li:focus-visible{
+  border-color:var(--cc-accent);
+  box-shadow:0 0 0 3px rgba(88, 119, 102, 0.12);
+  outline:none;
+}
+.is-main{
+  min-width:0;
+  display:flex;
+  align-items:center;
+}
+.is-list .name{
+  font-weight:700;
+  color:var(--cc-ink);
+  font-size: 0.96rem;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.is-actions{
+  display:flex;
+  align-items:center;
+  gap:0.45rem;
+  justify-self:end;
+}
+.edit{
+  height:1.85rem;
+  padding:0 0.68rem;
+  border-radius:0.22rem;
+  border:1px solid rgba(35, 61, 50, 0.12);
+  background:#fcf8f2;
+  color:var(--cc-ink);
+  font-weight:600;
+  font-size: 0.82rem;
+}
+.edit:hover{
+  border-color:var(--cc-accent);
+  color:var(--cc-accent);
+}
+.add{
+  width:1.85rem;
+  height:1.85rem;
+  border-radius:0.22rem;
+  border:1px solid var(--cc-accent);
+  background:#fcf8f2;
+  color:var(--cc-accent);
+  font-size:1.15rem;
+  line-height:0;
+}
+.add:hover{ background:var(--cc-accent); color:#fff; }
+
+@media (max-width: 640px) {
+  .cc-modal-surface:has(.ingredient-search-modal) {
+    width: min(92vw, 21rem);
+    height: min(84vh, 27rem);
+    max-height: min(84vh, 27rem);
+  }
+
+  .cc-modal-surface:has(.ingredient-search-modal) .cc-modal-body {
+    padding: 0 0.8rem 0.85rem;
+  }
+
+  .is-actions {
+    justify-content:flex-end;
+  }
+}
