@@ -1,13 +1,9 @@
-import { supabase } from '../supabaseClient';
-import { API_BASE_URL } from '../config/api';
-import { isLocalAuth } from '../config/runtime';
 import { getCurrentUserId, getStoredUserId } from './authClient';
+import { apiRequest } from './apiClient';
 
 const LOCAL_CATALOG_STORAGE_KEY = 'local_catalog_items_v1';
 const PENDING_CATALOG_SYNC_KEY = 'pending_catalog_sync_v1';
 const catalogCache = new Map();
-const LOCAL_BACKEND_RETRY_MS = 30000;
-let localBackendUnavailableUntil = 0;
 let pendingCatalogSyncPromise = null;
 
 function getCatalogCacheKey(userId, itemType) {
@@ -45,16 +41,6 @@ function stripCatalogPhotoData(unitConversions) {
   return nextUnitConversions;
 }
 
-function createLocalBackendUnreachableError() {
-  const error = new Error(
-    `Local backend unreachable at ${API_BASE_URL}. Check REACT_APP_API_BASE_URL in .env.local, then start the Rust server and try again.`
-  );
-  error.code = 'LOCAL_BACKEND_UNREACHABLE';
-  return error;
-}
-
-const loggedLocalReadFallbacks = new Set();
-
 function readLocalCatalogItems() {
   try {
     const raw = localStorage.getItem(LOCAL_CATALOG_STORAGE_KEY);
@@ -73,7 +59,15 @@ function readPendingCatalogSyncQueue() {
   try {
     const raw = localStorage.getItem(PENDING_CATALOG_SYNC_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) return [];
+    let changed = false;
+    const queue = parsed.map((operation) => {
+      if (operation?.operationId) return operation;
+      changed = true;
+      return { ...operation, operationId: createSecureUuid(), status: 'pending' };
+    });
+    if (changed) writePendingCatalogSyncQueue(queue);
+    return queue;
   } catch {
     return [];
   }
@@ -81,6 +75,19 @@ function readPendingCatalogSyncQueue() {
 
 function writePendingCatalogSyncQueue(queue) {
   localStorage.setItem(PENDING_CATALOG_SYNC_KEY, JSON.stringify(queue));
+}
+
+function createSecureUuid() {
+  if (window.crypto?.randomUUID) return window.crypto.randomUUID();
+  if (!window.crypto?.getRandomValues) {
+    throw new Error('Secure random number generation is unavailable.');
+  }
+  const bytes = new Uint8Array(16);
+  window.crypto.getRandomValues(bytes);
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = [...bytes].map((value) => value.toString(16).padStart(2, '0')).join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
 function updatePendingCatalogSyncQueue(updater) {
@@ -107,6 +114,10 @@ function replaceLocalCatalogItemSnapshot(previousId, nextItem) {
     .filter((entry, index, source) => source.findIndex((candidate) => candidate.id === entry.id) === index);
   nextItems.unshift(nextItem);
   writeLocalCatalogItems(nextItems);
+}
+
+function removeLocalCatalogItemSnapshot(itemId) {
+  writeLocalCatalogItems(readLocalCatalogItems().filter((item) => item.id !== itemId));
 }
 
 function patchCachedCatalogItem(userId, itemType, item) {
@@ -192,64 +203,31 @@ function saveLocalCatalogSnapshot(item) {
 }
 
 function queuePendingCatalogOperation(operation) {
+  const queuedOperation = {
+    operationId: operation.operationId || createSecureUuid(),
+    status: operation.status || 'pending',
+    ...operation,
+  };
   updatePendingCatalogSyncQueue((queue) => {
     const nextQueue = queue.filter((entry) => {
-      if (operation.kind === 'create') {
-        return !(entry.kind === 'create' && entry.userId === operation.userId && entry.tempId === operation.tempId);
+      if (queuedOperation.kind === 'create') {
+        return !(entry.kind === 'create' && entry.userId === queuedOperation.userId && entry.tempId === queuedOperation.tempId);
       }
 
-      if (operation.kind === 'update') {
-        if (entry.kind === 'create' && entry.userId === operation.userId && entry.tempId === operation.itemId) {
+      if (queuedOperation.kind === 'update') {
+        if (entry.kind === 'create' && entry.userId === queuedOperation.userId && entry.tempId === queuedOperation.itemId) {
           return false;
         }
 
-        return !(entry.kind === 'update' && entry.userId === operation.userId && entry.itemId === operation.itemId);
+        return !(entry.kind === 'update' && entry.userId === queuedOperation.userId && entry.itemId === queuedOperation.itemId);
       }
 
       return true;
     });
 
-    nextQueue.push(operation);
+    nextQueue.push(queuedOperation);
     return nextQueue;
   });
-}
-
-function updateLocalCatalogItem(userId, itemId, input) {
-  const items = readLocalCatalogItems();
-  const index = items.findIndex((item) => item.user_id === userId && item.id === itemId);
-
-  if (index === -1) {
-    throw new Error('Ingredient not found.');
-  }
-
-  const nextItem = {
-    ...items[index],
-    title: input.title,
-    item_type: input.item_type,
-    kcal_per_100g: input.kcal_per_100g,
-    protein_g_per_100g: input.protein_g_per_100g,
-    carbs_g_per_100g: input.carbs_g_per_100g,
-    fat_g_per_100g: input.fat_g_per_100g,
-    unit_conversions: input.unit_conversions,
-    food_id: input.food_id ?? items[index].food_id ?? null,
-  };
-
-  items[index] = nextItem;
-  writeLocalCatalogItems(items);
-  setCachedCatalogItems(userId, nextItem.item_type, listLocalCatalogItems(userId, nextItem.item_type));
-  return nextItem;
-}
-
-function deleteLocalCatalogItem(userId, itemId) {
-  const items = readLocalCatalogItems();
-  const nextItems = items.filter((item) => !(item.user_id === userId && item.id === itemId));
-
-  if (nextItems.length === items.length) {
-    throw new Error('Item not found.');
-  }
-
-  writeLocalCatalogItems(nextItems);
-  catalogCache.clear();
 }
 
 function listLocalCatalogItems(userId, itemType) {
@@ -258,117 +236,79 @@ function listLocalCatalogItems(userId, itemType) {
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 }
 
-function searchLocalCatalogItems(userId, itemType, query) {
-  const needle = query.trim().toLowerCase();
-  if (!needle) return [];
-
-  return listLocalCatalogItems(userId, itemType)
-    .filter((item) => item.title?.toLowerCase().includes(needle))
-    .slice(0, 20);
-}
-
-async function postLocal(path, body) {
-  if (Date.now() < localBackendUnavailableUntil) {
-    throw createLocalBackendUnreachableError();
-  }
-
-  let response;
-  try {
-    response = await fetch(`${API_BASE_URL}${path}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-  } catch (error) {
-    localBackendUnavailableUntil = Date.now() + LOCAL_BACKEND_RETRY_MS;
-    throw createLocalBackendUnreachableError();
-  }
-
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error(payload?.message || `Local catalog request failed with status ${response.status}.`);
-  }
-
-  return payload;
-}
-
-function logLocalReadFallback(path) {
-  if (loggedLocalReadFallbacks.has(path)) {
-    return;
-  }
-  loggedLocalReadFallbacks.add(path);
-  console.warn(
-    `[catalogClient] Falling back to local browser storage because the local backend is unavailable for ${path}.`
-  );
-}
-
-function getLocalCatalogUserId() {
-  return getStoredUserId() || 'anonymous';
-}
-
 async function syncPendingCatalogOperation(operation) {
-  if (operation.kind === 'create') {
-    const { data, error } = await supabase
-      .from('meals')
-      .insert({
-        user_id: operation.userId,
-        title: operation.input.title,
-        type: operation.input.item_type,
-        created_at: operation.input.created_at,
-        kcal_per_100g: operation.input.kcal_per_100g,
-        protein_g_per_100g: operation.input.protein_g_per_100g,
-        carbs_g_per_100g: operation.input.carbs_g_per_100g,
-        fat_g_per_100g: operation.input.fat_g_per_100g,
-        unit_conversions: operation.input.unit_conversions,
-        food_id: operation.input.food_id ?? null,
-      })
-      .select()
-      .single();
+  const serverOperation = {
+      operationId: operation.operationId,
+      kind: operation.kind,
+      ...(operation.itemId ? { itemId: operation.itemId } : {}),
+      ...(operation.tempId ? { tempId: operation.tempId } : {}),
+      ...(operation.input ? {
+        input: {
+          ...operation.input,
+          ...(operation.baseUpdatedAt ? { base_updated_at: operation.baseUpdatedAt } : {}),
+        },
+      } : {}),
+    };
+    const { payload, error } = await apiRequest('/catalog/sync', {
+      method: 'POST',
+      csrf: true,
+      body: { operations: [serverOperation] },
+    });
+    if (error) throw new Error(error.message);
+    const result = payload?.data?.operations?.[0];
+    if (!result) throw new Error('Catalog synchronization returned an invalid response.');
+    if (result.status === 'retryable') {
+      updatePendingCatalogSyncQueue((queue) => queue.map((entry) => (
+        entry.operationId === operation.operationId
+          ? { ...entry, status: 'retryable', lastError: result.error }
+          : entry
+      )));
+      throw new Error(result.error || 'Catalog synchronization will be retried.');
+    }
+    if (result.status === 'permanently_invalid') {
+      updatePendingCatalogSyncQueue((queue) => queue.map((entry) => (
+        entry.operationId === operation.operationId
+          ? { ...entry, status: 'permanently_invalid', lastError: result.error, errorCode: result.errorCode }
+          : entry
+      )));
+      return;
+    }
 
-    if (error) throw error;
-    const normalized = normalizeCatalogItem(data);
-    replaceLocalCatalogItemSnapshot(operation.tempId, normalized);
-    replaceCachedCatalogItem(operation.userId, normalized.type, operation.tempId, normalized);
-    removePendingCatalogOperation((entry) => entry.kind === 'create' && entry.userId === operation.userId && entry.tempId === operation.tempId);
-    return;
-  }
-
-  const { data, error } = await supabase
-    .from('meals')
-    .update({
-      title: operation.input.title,
-      type: operation.input.item_type,
-      kcal_per_100g: operation.input.kcal_per_100g,
-      protein_g_per_100g: operation.input.protein_g_per_100g,
-      carbs_g_per_100g: operation.input.carbs_g_per_100g,
-      fat_g_per_100g: operation.input.fat_g_per_100g,
-      unit_conversions: operation.input.unit_conversions,
-      food_id: operation.input.food_id ?? null,
-    })
-    .eq('id', operation.itemId)
-    .eq('user_id', operation.userId)
-    .select()
-    .single();
-
-  if (error) throw error;
-  const normalized = normalizeCatalogItem(data);
-  upsertLocalCatalogItemSnapshot(normalized);
-  replaceCachedCatalogItem(operation.userId, normalized.type, operation.itemId, normalized);
-  removePendingCatalogOperation((entry) => entry.kind === 'update' && entry.userId === operation.userId && entry.itemId === operation.itemId);
+    const normalized = result.item ? normalizeCatalogItem(result.item) : null;
+    if (operation.kind === 'create' && normalized) {
+      const operationWasCancelled = !readPendingCatalogSyncQueue().some(
+        (entry) => entry.operationId === operation.operationId
+      );
+      if (operationWasCancelled) {
+        queuePendingCatalogOperation({
+          kind: 'delete', userId: operation.userId, itemId: normalized.id,
+        });
+        removeLocalCatalogItemSnapshot(operation.tempId);
+        removeCachedCatalogItem(operation.userId, operation.tempId);
+        return;
+      }
+      replaceLocalCatalogItemSnapshot(operation.tempId, normalized);
+      replaceCachedCatalogItem(operation.userId, normalized.type, operation.tempId, normalized);
+    } else if (operation.kind === 'update' && normalized) {
+      upsertLocalCatalogItemSnapshot(normalized);
+      replaceCachedCatalogItem(operation.userId, normalized.type, operation.itemId, normalized);
+    } else if (operation.kind === 'delete' || operation.kind === 'archive') {
+      removeLocalCatalogItemSnapshot(operation.itemId);
+      removeCachedCatalogItem(operation.userId, operation.itemId);
+    }
+  removePendingCatalogOperation((entry) => entry.operationId === operation.operationId);
 }
 
 export function processPendingCatalogSyncQueue() {
-  if (isLocalAuth()) {
-    return Promise.resolve();
-  }
-
   if (pendingCatalogSyncPromise) {
     return pendingCatalogSyncPromise;
   }
 
   pendingCatalogSyncPromise = (async () => {
     while (true) {
-      const [nextOperation] = readPendingCatalogSyncQueue();
+      const nextOperation = readPendingCatalogSyncQueue().find(
+        (operation) => operation.status !== 'permanently_invalid'
+      );
       if (!nextOperation) {
         return;
       }
@@ -376,7 +316,12 @@ export function processPendingCatalogSyncQueue() {
       try {
         await syncPendingCatalogOperation(nextOperation);
       } catch (error) {
-        console.warn('Failed to sync pending catalog operation', error);
+        updatePendingCatalogSyncQueue((queue) => queue.map((entry) => (
+          entry.operationId === nextOperation.operationId
+            ? { ...entry, status: 'retryable', lastError: 'Catalog synchronization will be retried.' }
+            : entry
+        )));
+        console.warn('Failed to sync pending catalog operation.');
         return;
       }
     }
@@ -394,20 +339,6 @@ export async function createCatalogItem(input) {
     ...input,
     unit_conversions: stripCatalogPhotoData(input.unit_conversions),
   };
-
-  if (isLocalAuth()) {
-    try {
-      return await postLocal('/catalog/items', {
-        user_id: userId,
-        ...sanitizedInput,
-      });
-    } catch (error) {
-      if (error?.code === 'LOCAL_BACKEND_UNREACHABLE') {
-        return createLocalCatalogItem(userId, sanitizedInput);
-      }
-      throw error;
-    }
-  }
 
   const createdInput = {
     ...sanitizedInput,
@@ -433,10 +364,6 @@ export async function updateCatalogItem(itemId, input) {
     ...input,
     unit_conversions: stripCatalogPhotoData(input.unit_conversions),
   };
-
-  if (isLocalAuth()) {
-    return normalizeCatalogItem(updateLocalCatalogItem(userId, itemId, sanitizedInput));
-  }
 
   const existingItem =
     readLocalCatalogItems().find((item) => item.user_id === userId && item.id === itemId) ||
@@ -464,6 +391,7 @@ export async function updateCatalogItem(itemId, input) {
       userId,
       itemId,
       input: sanitizedInput,
+      baseUpdatedAt: existingItem?.updated_at || null,
     });
   }
 
@@ -477,106 +405,55 @@ export async function deleteCatalogItem(itemId) {
   if (!userId) throw new Error('Missing user ID');
   if (!itemId) throw new Error('Missing item ID');
 
-  if (isLocalAuth()) {
-    deleteLocalCatalogItem(userId, itemId);
-    return;
-  }
-
-  const { error } = await supabase
-    .from('meals')
-    .delete()
-    .eq('id', itemId)
-    .eq('user_id', userId);
-
-  if (error) throw error;
-  removeCachedCatalogItem(userId, itemId);
+  const pendingCreate = readPendingCatalogSyncQueue().find(
+      (entry) => entry.kind === 'create' && entry.userId === userId && entry.tempId === itemId
+    );
+    if (pendingCreate) {
+      removePendingCatalogOperation((entry) => entry.operationId === pendingCreate.operationId);
+    } else {
+      queuePendingCatalogOperation({ kind: 'delete', userId, itemId });
+    }
+    removeLocalCatalogItemSnapshot(itemId);
+    removeCachedCatalogItem(userId, itemId);
+    void processPendingCatalogSyncQueue();
+  return;
 }
 
 export async function listCatalogItems(itemType) {
-  if (isLocalAuth()) {
-    const userId = getLocalCatalogUserId();
-    try {
-      const data = await postLocal('/catalog/items/list', {
-        user_id: userId,
-        item_type: itemType,
-      });
-      const normalized = data.map(normalizeCatalogItem);
-      setCachedCatalogItems(userId, itemType, normalized);
-      return normalized;
-    } catch (error) {
-      if (error?.code === 'LOCAL_BACKEND_UNREACHABLE') {
-        logLocalReadFallback('/catalog/items/list');
-        const normalized = listLocalCatalogItems(userId, itemType).map(normalizeCatalogItem);
-        setCachedCatalogItems(userId, itemType, normalized);
-        return normalized;
-      }
-      throw error;
-    }
-  }
-
   const userId = await getCurrentUserId();
   if (!userId) throw new Error('Missing user ID');
 
   await processPendingCatalogSyncQueue();
 
-  const { data, error } = await supabase
-    .from('meals')
-    .select('id, user_id, title, type, created_at, kcal_per_100g, protein_g_per_100g, carbs_g_per_100g, fat_g_per_100g, unit_conversions, food_id')
-    .eq('user_id', userId)
-    .eq('type', itemType)
-    .order('created_at', { ascending: false })
-    .limit(200);
-
-  if (error) throw error;
-  const normalized = mergeCatalogItems(
-    getPendingCatalogSnapshots(userId, itemType),
-    (data || []).map(normalizeCatalogItem)
-  );
-  setCachedCatalogItems(userId, itemType, normalized);
-  void processPendingCatalogSyncQueue();
+  const { payload, error } = await apiRequest(
+      `/catalog/items?item_type=${encodeURIComponent(itemType)}&limit=200`
+    );
+    if (error) throw new Error(error.message);
+    const normalized = mergeCatalogItems(
+      getPendingCatalogSnapshots(userId, itemType),
+      (payload?.data || []).map(normalizeCatalogItem)
+    );
+    setCachedCatalogItems(userId, itemType, normalized);
+    void processPendingCatalogSyncQueue();
   return normalized;
 }
 
 export async function searchCatalogItems(itemType, query) {
   if (!query?.trim()) return [];
 
-  if (isLocalAuth()) {
-    const userId = getLocalCatalogUserId();
-    try {
-      const data = await postLocal('/catalog/items/search', {
-        user_id: userId,
-        item_type: itemType,
-        query,
-      });
-      return data.map(normalizeCatalogItem);
-    } catch (error) {
-      if (error?.code === 'LOCAL_BACKEND_UNREACHABLE') {
-        logLocalReadFallback('/catalog/items/search');
-        return searchLocalCatalogItems(userId, itemType, query).map(normalizeCatalogItem);
-      }
-      throw error;
-    }
-  }
-
   const userId = await getCurrentUserId();
   if (!userId) throw new Error('Missing user ID');
 
   await processPendingCatalogSyncQueue();
 
-  const { data, error } = await supabase
-    .from('meals')
-    .select('id, user_id, title, type, created_at, kcal_per_100g, protein_g_per_100g, carbs_g_per_100g, fat_g_per_100g, unit_conversions, food_id')
-    .eq('user_id', userId)
-    .eq('type', itemType)
-    .ilike('title', `%${query.trim()}%`)
-    .order('created_at', { ascending: false })
-    .limit(20);
-
-  if (error) throw error;
-  void processPendingCatalogSyncQueue();
+  const { payload, error } = await apiRequest(
+      `/catalog/items?item_type=${encodeURIComponent(itemType)}&query=${encodeURIComponent(query.trim())}&limit=20`
+    );
+    if (error) throw new Error(error.message);
+    void processPendingCatalogSyncQueue();
   return mergeCatalogItems(
-    getPendingCatalogSnapshots(userId, itemType, query),
-    (data || []).map(normalizeCatalogItem)
+      getPendingCatalogSnapshots(userId, itemType, query),
+      (payload?.data || []).map(normalizeCatalogItem)
   );
 }
 
@@ -588,11 +465,15 @@ export function getCachedCatalogItems(itemType, userId = getStoredUserId()) {
     return cached;
   }
 
-  if (isLocalAuth()) {
-    const normalized = listLocalCatalogItems(userId, itemType).map(normalizeCatalogItem);
-    setCachedCatalogItems(userId, itemType, normalized);
-    return normalized;
-  }
-
   return getPendingCatalogSnapshots(userId, itemType);
+}
+
+export async function archiveCatalogItem(itemId) {
+  const userId = await getCurrentUserId();
+  if (!userId) throw new Error('Missing user ID');
+  if (!itemId) throw new Error('Missing item ID');
+  queuePendingCatalogOperation({ kind: 'archive', userId, itemId });
+  removeLocalCatalogItemSnapshot(itemId);
+  removeCachedCatalogItem(userId, itemId);
+  void processPendingCatalogSyncQueue();
 }

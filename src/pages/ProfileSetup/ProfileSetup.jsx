@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './ProfileSetup.css';
 import { getCurrentUserId } from '../../services/authClient';
-import { isLocalAuth } from '../../config/runtime';
 import {
   getProfileSetupState,
   persistProfileSetupState,
@@ -30,7 +29,7 @@ export default function ProfileSetup() {
 
     async function createProfile() {
       const userId = await getCurrentUserId();
-      if (!userId && !isLocalAuth()) {
+      if (!userId) {
         window.location.replace('/login');
         return;
       }
@@ -70,29 +69,22 @@ export default function ProfileSetup() {
       });
     }
 
+    if (!userId) return setMsg('Session expired. Please log in.');
     setSaving(true);
     updateProfileSetupState(nextState);
-    setSaving(false);
-    navigate('/profile-setup-2');
-
-    if (isLocalAuth() || !userId) {
-      return;
-    }
-
-    void updateProfile(
-      {
+    try {
+      await updateProfile({
         display_name: name.trim(),
         dob: dob || null,
         gender: gender || null,
-      },
-      userId
-    ).catch((error) => {
-      console.warn('Failed to save profile setup step 1', error);
-    });
-
-    void persistProfileSetupState(nextState, userId).catch((error) => {
-      console.warn('Failed to persist profile setup progress', error);
-    });
+      }, userId);
+      await persistProfileSetupState(nextState, userId);
+      navigate('/profile-setup-2');
+    } catch (error) {
+      setMsg(error.message || 'Failed to save profile setup progress.');
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (

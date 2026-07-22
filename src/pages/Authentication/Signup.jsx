@@ -23,7 +23,7 @@ export default function Signup() {
     setMsg(null);
 
     if (!email || !pw) return setMsg('Please enter email and password.');
-    if (pw.length < 6) return setMsg('Password must be at least 6 characters.');
+    if (pw.length < 8) return setMsg('Password must be at least 8 characters.');
     if (pw !== pw2) return setMsg('Passwords do not match.');
 
     setLoading(true);

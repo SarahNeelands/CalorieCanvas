@@ -7,7 +7,10 @@ export default function ExerciseLogForm({ types, onAddNewType, onSubmit }) {
 const [query, setQuery] = useState("");
 const [selected, setSelected] = useState(null);
 const [minutes, setMinutes] = useState("");
-const [dateTime, setDateTime] = useState(() => new Date().toISOString().slice(0, 16));
+const [dateTime, setDateTime] = useState(() => {
+  const now = new Date();
+  return new Date(now.getTime() - now.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
+});
 
 
 return (

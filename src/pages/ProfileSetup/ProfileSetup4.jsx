@@ -1,18 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../../supabaseClient';
 import './ProfileSetup.css';
 import { getCurrentUserId } from '../../services/authClient';
-import { isLocalAuth } from '../../config/runtime';
 import {
   completeProfileSetupPersisted,
   completeProfileSetup,
   getProfileSetupState,
-  persistProfileSetupState,
   setProfileSetupStep,
   updateProfileSetupState,
 } from '../../services/profileSetupProgress';
-import { saveLocalProfile } from '../../services/profileClient';
+import { getCachedProfile, updateProfile } from '../../services/profileClient';
 
 export default function ProfileSetup4() {
   const navigate = useNavigate();
@@ -52,57 +49,29 @@ export default function ProfileSetup4() {
       return setMsg('Session expired. Please log in.');
     }
 
-    const draft = getProfileSetupState();
-
-    if (!isLocalAuth()) {
-      const { error } = await supabase
-        .from('profiles')
-        .upsert(
-          {
-            user_id: userId,
-            pref_show_calories: prefs.show_calories,
-            pref_show_macros: prefs.show_macros,
-            pref_show_micros: prefs.show_micros,
-            pref_show_exercise: prefs.show_exercise,
-            pref_show_weight: prefs.show_weight,
-          },
-          { onConflict: 'user_id' }
-        );
-
-      if (error) {
-        setSaving(false);
-        return setMsg(error.message);
-      }
+    try {
+      await updateProfile({
+        ...(getCachedProfile(userId) || {}),
+        pref_show_calories: prefs.show_calories,
+        pref_show_macros: prefs.show_macros,
+        pref_show_micros: prefs.show_micros,
+        pref_show_exercise: prefs.show_exercise,
+        pref_show_weight: prefs.show_weight,
+      }, userId);
+    } catch (error) {
+      setSaving(false);
+      return setMsg(error.message);
     }
-
-    saveLocalProfile(userId, {
-      display_name: draft.name || null,
-      dob: draft.dob || null,
-      gender: draft.gender || null,
-      height_cm: draft.heightCm ?? null,
-      weight_kg: draft.weightKg ?? null,
-      activity_level: draft.activityLevel || 'sedentary',
-      goal_weight_intent: draft.goal || 'maintain',
-      goal_muscle_intent: draft.muscle || 'maintain',
-      target_weight_kg: draft.targetWeight ? Number(draft.targetWeight) : null,
-      target_body_fat_pct: draft.targetBf ? Number(draft.targetBf) : null,
-      pref_show_calories: prefs.show_calories,
-      pref_show_macros: prefs.show_macros,
-      pref_show_micros: prefs.show_micros,
-      pref_show_exercise: prefs.show_exercise,
-      pref_show_weight: prefs.show_weight,
-    });
 
     updateProfileSetupState({ prefs, completed: true, lastStep: null });
     completeProfileSetup();
 
-    if (!isLocalAuth()) {
-      try {
-        await persistProfileSetupState({ prefs }, userId);
-        await completeProfileSetupPersisted(userId);
-      } catch (error) {
-        console.warn('Failed to persist completed profile setup state', error);
-      }
+    try {
+      await completeProfileSetupPersisted(userId);
+    } catch (error) {
+      updateProfileSetupState({ completed: false, lastStep: '/profile-setup-4' });
+      setSaving(false);
+      return setMsg(error.message);
     }
 
     setSaving(false);

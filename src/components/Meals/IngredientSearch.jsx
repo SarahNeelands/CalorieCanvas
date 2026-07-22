@@ -7,7 +7,6 @@ import React, { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./IngredientSearch.css";
 import { getCachedCatalogItems, listCatalogItems } from "../../services/catalogClient";
-import { BUILT_IN_INGREDIENTS } from "../../services/builtInIngredients";
 import Modal from "../ui/Modal";
 
 function mapIngredientResult(item) {
@@ -34,10 +33,7 @@ function mergeIngredientResults(current, incoming) {
 }
 
 export default function IngredientSearch({ onSelect, onClose, mealDraft }) {
-  const initialResults = mergeIngredientResults(
-    getCachedCatalogItems("ingredient").map(mapIngredientResult),
-    BUILT_IN_INGREDIENTS.map(mapIngredientResult)
-  );
+  const initialResults = getCachedCatalogItems("ingredient").map(mapIngredientResult);
   const [q, setQ] = useState("");
   const [allResults, setAllResults] = useState(initialResults);
   const [results, setResults] = useState(initialResults);

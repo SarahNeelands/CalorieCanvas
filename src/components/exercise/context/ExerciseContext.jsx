@@ -1,6 +1,15 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { supabase } from '../../../supabaseClient';
-import { isLocalAuth } from "../../../config/runtime";
+import {
+  archiveExerciseDefinition,
+  createExerciseDefinition,
+  createExerciseLog,
+  deleteExerciseLog,
+  listExerciseDefinitions,
+  listExerciseLogs,
+  syncLocalExerciseState,
+  updateExerciseDefinition,
+  updateExerciseLog,
+} from '../../../services/exerciseClient';
 
 const STORAGE_KEY = "exercise_page_state_v3";
 const ExerciseContext = createContext(null);
@@ -14,7 +23,7 @@ const DEFAULT_TYPES = [
 ];
 const DEFAULT_STATE = { userId: null, exerciseTypes: DEFAULT_TYPES, logs: [] };
 
-const rid = () => Math.random().toString(36).slice(2, 10);
+const rid = () => window.crypto?.randomUUID?.() || Math.random().toString(36).slice(2, 10);
 
 function startOfDay(date) {
   const next = new Date(date);
@@ -69,7 +78,11 @@ export function ExerciseProvider({ children, userId }) {
 
   useEffect(() => {
     if (!userId || state.userId === userId) return;
-    setState((current) => ({ ...current, userId }));
+    setState((current) => (
+      current.userId && current.userId !== userId
+        ? { ...DEFAULT_STATE, userId }
+        : { ...current, userId }
+    ));
   }, [userId, state.userId]);
 
   useEffect(() => {
@@ -78,44 +91,27 @@ export function ExerciseProvider({ children, userId }) {
     async function hydrate() {
       try {
         if (!userId) return;
-        if (isLocalAuth()) {
-          if (!mounted) return;
-          setState((current) => ({ ...current, userId }));
-          return;
+        const localState = readStoredState();
+        if (!localState.userId || localState.userId === userId) {
+          const builtInIds = new Set(DEFAULT_TYPES.map((type) => type.id));
+          await syncLocalExerciseState(userId, {
+            definitions: (localState.exerciseTypes || []).filter((type) => !builtInIds.has(type.id)),
+            logs: (localState.logs || []).filter((log) => !log.userId || log.userId === userId),
+          }).catch(() => null);
         }
 
-        const { data: types, error: typesError } = await supabase
-          .from('exercise_types')
-          .select('*')
-          .eq('user_id', userId);
-
-        if (typesError) throw typesError;
-
-        const { data: logs, error: logsError } = await supabase
-          .from('exercise_logs')
-          .select('*')
-          .eq('user_id', userId)
-          .order('timestamp_iso', { ascending: false })
-          .limit(200);
-
-        if (logsError) throw logsError;
+        const [types, logs] = await Promise.all([
+          listExerciseDefinitions(userId),
+          listExerciseLogs(userId, { limit: 200 }),
+        ]);
 
         if (!mounted) return;
-
-        const localState = readStoredState();
-        const remoteLogs = (logs || []).map((log) => ({
-          id: log.id,
-          userId: log.user_id,
-          typeId: log.type_id,
-          minutes: log.minutes,
-          timestampISO: log.timestamp_iso,
-        }));
 
         setState((current) => ({
           ...current,
           userId,
           exerciseTypes: mergeExerciseTypes(types && types.length ? types : [], mergeExerciseTypes(current.exerciseTypes, localState.exerciseTypes)),
-          logs: mergeLogs(remoteLogs, mergeLogs(current.logs, localState.logs)),
+          logs: mergeLogs(logs || [], mergeLogs(current.logs, localState.logs)),
         }));
       } catch {
         if (!mounted) return;
@@ -159,8 +155,8 @@ export function ExerciseProvider({ children, userId }) {
     (async () => {
       try {
         if (!userId) return;
-        if (isLocalAuth()) return;
-        await supabase.from('exercise_types').insert({ id: nextType.id, user_id: userId, name: nextType.name });
+        const saved = await createExerciseDefinition(userId, nextType);
+        if (saved) setState((current) => ({ ...current, exerciseTypes: mergeExerciseTypes([saved], current.exerciseTypes) }));
       } catch {}
     })();
 
@@ -190,14 +186,8 @@ export function ExerciseProvider({ children, userId }) {
     (async () => {
       try {
         if (!userId) return;
-        if (isLocalAuth()) return;
-        await supabase.from('exercise_logs').insert({
-          id: log.id,
-          user_id: userId,
-          type_id: typeId,
-          minutes: normalizedMinutes,
-          timestamp_iso: normalizedTimestamp,
-        });
+        const saved = await createExerciseLog(userId, log);
+        if (saved) setState((current) => ({ ...current, logs: mergeLogs([saved], current.logs) }));
       } catch {}
     })();
   }
@@ -206,11 +196,37 @@ export function ExerciseProvider({ children, userId }) {
     return (state.logs || []).filter((log) => log.userId === userId && ymd(log.timestampISO) === dateStr);
   }
 
+  async function editExerciseType(typeId, patch) {
+    const saved = await updateExerciseDefinition(userId, typeId, patch);
+    setState((current) => ({ ...current, exerciseTypes: mergeExerciseTypes([saved], current.exerciseTypes) }));
+    return saved;
+  }
+
+  async function archiveExerciseType(typeId) {
+    await archiveExerciseDefinition(userId, typeId);
+    setState((current) => ({ ...current, exerciseTypes: current.exerciseTypes.filter((type) => type.id !== typeId) }));
+  }
+
+  async function editLog(log) {
+    const saved = await updateExerciseLog(userId, log.serverId || log.id, log);
+    setState((current) => ({ ...current, logs: mergeLogs([saved], current.logs) }));
+    return saved;
+  }
+
+  async function removeLog(log) {
+    await deleteExerciseLog(userId, log.serverId || log.id);
+    setState((current) => ({ ...current, logs: current.logs.filter((item) => item.id !== log.id) }));
+  }
+
   const value = {
     state,
     typesById,
     addExerciseType,
     addLog,
+    editExerciseType,
+    archiveExerciseType,
+    editLog,
+    removeLog,
     logsForDate,
     helpers: { startOfDay, ymd },
   };

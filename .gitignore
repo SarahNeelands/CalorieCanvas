@@ -8,12 +8,10 @@
 # testing
 /coverage
 
-# production
-/build
-
 # misc
 .DS_Store
 .env.local
+/server/.env
 .env.development.local
 .env.test.local
 .env.production.local
@@ -23,3 +21,11 @@ yarn-debug.log*
 yarn-error.log*
 node_modules
 .env.local
+*.sqlite
+*.sqlite3
+
+# Sensitive migration exports and reconciliation reports
+/migration-exports/
+/migration-reports/
+/server/migration-exports/
+/server/migration-reports/

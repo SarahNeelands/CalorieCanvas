@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { supabase } from '../../supabaseClient';
 import './Login.css';
-import { isLocalAuth } from '../../config/runtime';
-import { signIn } from '../../services/authClient';
+import { requestPasswordReset, signIn } from '../../services/authClient';
 import {
   ensureProfileSetupRequired,
   getProfileSetupResumePath,
@@ -35,7 +33,7 @@ export default function Login() {
 
     setLoading(false);
     if (error) {
-      setMsg(error.message);
+      setMsg('Unable to sign in. If your account was migrated, use Forgot password to create a new password.');
       return;
     }
 
@@ -53,14 +51,9 @@ export default function Login() {
   }
 
   async function onForgot() {
-    if (isLocalAuth()) {
-      setMsg('Password reset is only wired for Supabase right now.');
-      return;
-    }
-
     if (!email) return setMsg('Enter your email above first.');
     setMsg('Sending reset email...');
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    const { error } = await requestPasswordReset(email, {
       redirectTo: `${window.location.origin}/reset`,
     });
     setMsg(error ? `Error: ${error.message}` : 'Reset link sent. Check your email.');
