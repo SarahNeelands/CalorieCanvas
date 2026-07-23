@@ -74,38 +74,55 @@ function createAuthService({ pool, config, tokenDelivery = {} }) {
       throw new AuthError('Unable to create account.');
     }
 
+    // Default direct service consumers to the safer legacy behavior. The
+    // environment loader explicitly supplies false while verification is paused.
+    const emailVerificationRequired = config.emailVerificationRequired !== false;
     const passwordHash = await hashPassword(password, config.bcryptRounds);
-    const rawToken = generateSecret();
-    const tokenDigest = digestSecret(rawToken);
+    const rawToken = emailVerificationRequired ? generateSecret() : null;
+    const tokenDigest = rawToken ? digestSecret(rawToken) : null;
     const result = await withTransaction(pool, async (client) => {
       const inserted = await client.query(
         `INSERT INTO users (
-           id, email, password_hash, must_reset_password, password_changed_at
-         ) VALUES ($1, $2, $3, false, now())
+           id, email, password_hash, must_reset_password, password_changed_at,
+           email_verified_at
+         ) VALUES ($1, $2, $3, false, now(), $4)
          ON CONFLICT DO NOTHING
          RETURNING id, email`,
-        [crypto.randomUUID(), normalizedEmail, passwordHash]
+        [
+          crypto.randomUUID(),
+          normalizedEmail,
+          passwordHash,
+          emailVerificationRequired ? null : new Date(),
+        ]
       );
       if (inserted.rowCount === 0) return null;
 
       const user = inserted.rows[0];
-      await client.query(
-        `INSERT INTO email_verification_tokens (id, user_id, token_digest, expires_at)
-         VALUES ($1, $2, $3, $4)`,
-        [
-          crypto.randomUUID(),
-          user.id,
-          tokenDigest,
-          createExpiry(config.emailVerificationTtlMinutes * 60 * 1000),
-        ]
-      );
-      return user;
+      if (emailVerificationRequired) {
+        await client.query(
+          `INSERT INTO email_verification_tokens (id, user_id, token_digest, expires_at)
+           VALUES ($1, $2, $3, $4)`,
+          [
+            crypto.randomUUID(),
+            user.id,
+            tokenDigest,
+            createExpiry(config.emailVerificationTtlMinutes * 60 * 1000),
+          ]
+        );
+        return { session: null, user };
+      }
+
+      return { session: await createSession(client, user.id), user };
     });
 
-    if (result) {
-      await deliverEmailVerification({ email: result.email, token: rawToken });
+    if (result && emailVerificationRequired) {
+      await deliverEmailVerification({ email: result.user.email, token: rawToken });
     }
-    return { accepted: true };
+    return {
+      accepted: true,
+      session: result?.session || null,
+      user: publicUser(result?.user),
+    };
   }
 
   async function login({ email, password, previousSessionDigest }) {

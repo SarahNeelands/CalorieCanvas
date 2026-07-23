@@ -15,6 +15,30 @@ npm ci
 npm --prefix server ci
 ```
 
+The shortest local test path requires only Docker:
+
+```powershell
+docker compose -f deploy/local/compose.yml up --build
+```
+
+Open `http://127.0.0.1:3001`. The local Compose stack builds the frontend and API,
+runs migrations automatically, and starts an isolated PostgreSQL container.
+New accounts are signed in immediately because email verification is temporarily
+disabled. No email provider or secret is needed.
+
+The database is available to backend integration tests on port `5433`:
+
+```powershell
+$env:TEST_DATABASE_URL='postgresql://caloriecanvas:local-only-password@127.0.0.1:5433/caloriecanvas'
+npm run test:backend:integration
+```
+
+Stop the stack with `docker compose -f deploy/local/compose.yml down`. To delete
+only its disposable local database and start fresh, use the same command with
+`--volumes`.
+
+For separate frontend and backend processes, install both dependency trees:
+
 Copy the relevant values from `.env.example` into local, uncommitted environment
 files. Then create the schema and start both processes:
 
@@ -48,6 +72,8 @@ Server configuration:
 - `APP_ORIGINS` — comma-separated trusted browser origins; required in production.
 - `BCRYPT_ROUNDS`, cookie names, session/reset/verification TTLs, and auth rate-limit
   settings documented in `.env.example`.
+- `EMAIL_VERIFICATION_REQUIRED` is temporarily `false`; set it to `true` to restore
+  verification-token delivery and the pre-login verification gate.
 - `SESSION_COOKIE_SECURE` must be `true` behind production HTTPS.
 - `PUBLIC_APP_ORIGIN` is the exact public origin used in verification/reset links.
 - `EMAIL_PROVIDER=resend`, `RESEND_API_KEY`, `EMAIL_FROM`, retry/timeout settings,
@@ -96,6 +122,8 @@ Its source URL is used solely by the server-side migration tooling and must neve
 prefixed `REACT_APP_` or bundled into React. The complete guarded export/import
 runbook is [server/migration-tooling/README.md](server/migration-tooling/README.md),
 with mappings in [server/migration-tooling/INVENTORY.md](server/migration-tooling/INVENTORY.md).
+The repository-wide dependency audit and phased plan are in
+[docs/MIGRATION_AUDIT_AND_PLAN.md](docs/MIGRATION_AUDIT_AND_PLAN.md).
 
 The old Rust runtime has been retired. The unreviewed
 `backend/data/calorie_canvas.sqlite3` is intentionally retained read-only; see

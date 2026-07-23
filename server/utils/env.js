@@ -151,6 +151,10 @@ function loadEnvironment(env = process.env) {
       cookieName: env.SESSION_COOKIE_NAME || 'cc_session',
       csrfCookieName: env.CSRF_COOKIE_NAME || 'cc_csrf',
       cookieSecure,
+      emailVerificationRequired: parseBoolean(
+        env.EMAIL_VERIFICATION_REQUIRED || 'false',
+        'EMAIL_VERIFICATION_REQUIRED'
+      ),
       sessionTtlHours,
       sessionRenewalThresholdHours,
       passwordResetTtlMinutes: parseInteger(

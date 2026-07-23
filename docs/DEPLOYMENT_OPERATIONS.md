@@ -20,7 +20,10 @@ docker network inspect shared-net >/dev/null
 
 Use the existing Resend key, a verified sender, and only approved recipients. The
 database password in `DATABASE_URL` must be the URL-encoded form of
-`POSTGRES_PASSWORD`.
+`POSTGRES_PASSWORD`. `EMAIL_VERIFICATION_REQUIRED=false` temporarily signs new
+accounts in immediately; change it to `true` to restore verification before login.
+Password-reset delivery still requires the email provider while verification is
+paused.
 
 ## Validate, build, migrate, and start
 

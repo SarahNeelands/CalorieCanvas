@@ -43,7 +43,7 @@ async function request(baseUrl, path, { body, cookie, csrfToken, method = 'POST'
   });
 }
 
-async function createHarness({ rateLimits } = {}) {
+async function createHarness({ emailVerificationRequired = true, rateLimits } = {}) {
   const schema = `auth_${crypto.randomUUID().replaceAll('-', '')}`;
   const adminPool = new Pool({ connectionString });
   await adminPool.query(`CREATE SCHEMA ${quoteIdentifier(schema)}`);
@@ -64,6 +64,7 @@ async function createHarness({ rateLimits } = {}) {
       cookieName: 'cc_session',
       csrfCookieName: 'cc_csrf',
       cookieSecure: false,
+      emailVerificationRequired,
       sessionTtlHours: 24,
       sessionRenewalThresholdHours: 12,
       passwordResetTtlMinutes: 60,
@@ -96,6 +97,40 @@ async function createHarness({ rateLimits } = {}) {
     },
   };
 }
+
+integrationTest('signup creates an authenticated session while email verification is paused', async () => {
+  const harness = await createHarness({ emailVerificationRequired: false });
+  try {
+    const signup = await request(harness.baseUrl, '/api/auth/signup', {
+      body: { email: 'Local@Test.example ', password: 'local password' },
+    });
+    assert.equal(signup.status, 202);
+    const payload = await signup.json();
+    const cookies = readCookies(signup);
+    assert.equal(payload.data.user.email, 'local@test.example');
+    assert.equal(payload.data.session.user.id, payload.data.user.id);
+    assert.ok(payload.csrfToken);
+    assert.ok(cookies);
+    assert.equal(harness.delivered.verifications.size, 0);
+
+    const stored = await harness.pool.query(
+      `SELECT email_verified_at,
+              (SELECT count(*)::int FROM email_verification_tokens WHERE user_id = users.id) AS token_count
+       FROM users WHERE id = $1`,
+      [payload.data.user.id]
+    );
+    assert.ok(stored.rows[0].email_verified_at);
+    assert.equal(stored.rows[0].token_count, 0);
+
+    const session = await request(harness.baseUrl, '/api/auth/session', {
+      cookie: cookies,
+      method: 'GET',
+    });
+    assert.equal((await session.json()).session.user.id, payload.data.user.id);
+  } finally {
+    await harness.cleanup();
+  }
+});
 
 integrationTest('signup, verification, sessions, login, logout, reset, and password change are secure', async () => {
   const harness = await createHarness();

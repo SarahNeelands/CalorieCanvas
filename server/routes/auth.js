@@ -36,8 +36,19 @@ function createAuthRouter({ authService, config }) {
   const resetPasswordLimiter = createLimiter(config, config.rateLimits.passwordAction);
 
   router.post('/signup', signupLimiter, async (req, res) => {
-    await authService.signUp(req.body || {});
-    res.status(202).json({ message: 'If the address can be registered, verification instructions will be sent.' });
+    const result = await authService.signUp(req.body || {});
+    if (result.session) setAuthenticationCookies(res, config, result.session);
+    res.status(202).json({
+      message: result.session
+        ? 'Account created.'
+        : 'If the address can be registered, verification instructions will be sent.',
+      data: {
+        user: result.user,
+        session: result.session && result.user ? { user: result.user } : null,
+      },
+      error: null,
+      csrfToken: result.session?.rawCsrfToken || null,
+    });
   });
 
   router.post('/login', loginLimiter, async (req, res) => {

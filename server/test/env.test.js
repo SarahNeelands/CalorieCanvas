@@ -26,6 +26,7 @@ test('environment loader supplies local development defaults', () => {
       cookieName: 'cc_session',
       csrfCookieName: 'cc_csrf',
       cookieSecure: false,
+      emailVerificationRequired: false,
       sessionTtlHours: 168,
       sessionRenewalThresholdHours: 24,
       passwordResetTtlMinutes: 60,
@@ -53,6 +54,14 @@ test('environment loader accepts explicit server and PostgreSQL settings', () =>
   assert.equal(config.host, '0.0.0.0');
   assert.equal(config.port, 4100);
   assert.equal(config.databaseSsl, true);
+});
+
+test('email verification can be restored explicitly', () => {
+  assert.equal(loadEnvironment({ EMAIL_VERIFICATION_REQUIRED: 'true' }).auth.emailVerificationRequired, true);
+  assert.throws(
+    () => loadEnvironment({ EMAIL_VERIFICATION_REQUIRED: 'sometimes' }),
+    /EMAIL_VERIFICATION_REQUIRED/
+  );
 });
 
 test('environment loader accepts multiple unique trusted origins', () => {

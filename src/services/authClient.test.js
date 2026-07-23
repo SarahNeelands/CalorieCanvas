@@ -57,15 +57,26 @@ test('Express sign-in and session calls preserve the existing public response sh
   expect(document.cookie).not.toContain('cc_csrf');
 });
 
-test('signup and password reset requests keep data/error return values', async () => {
+test('signup stores the immediately authenticated user while verification is paused', async () => {
   global.fetch
-    .mockResolvedValueOnce(response(202, { message: 'accepted' }))
+    .mockResolvedValueOnce(response(202, {
+      data: {
+        user: { id: 'new-user', email: 'new@example.com' },
+        session: { user: { id: 'new-user', email: 'new@example.com' } },
+      },
+      error: null,
+      csrfToken: 'signup-csrf',
+    }))
     .mockResolvedValueOnce(response(202, { message: 'accepted' }));
 
   await expect(signUp({ email: 'new@example.com', password: 'password' })).resolves.toEqual({
-    data: { user: null, session: null },
+    data: {
+      user: { id: 'new-user', email: 'new@example.com' },
+      session: { user: { id: 'new-user', email: 'new@example.com' } },
+    },
     error: null,
   });
+  expect(getStoredUserId()).toBe('new-user');
   await expect(requestPasswordReset('new@example.com')).resolves.toEqual({ data: {}, error: null });
 });
 

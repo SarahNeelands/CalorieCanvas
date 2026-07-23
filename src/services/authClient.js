@@ -47,9 +47,13 @@ async function getExpressSession() {
 
 export async function signUp({ email, password }) {
   const result = await expressRequest('/signup', { method: 'POST', body: { email, password } });
-  return result.error
-    ? { data: null, error: result.error }
+  if (result.error) return { data: null, error: result.error };
+  const payload = result.payload?.data
+    ? { data: result.payload.data, error: null }
     : { data: { user: null, session: null }, error: null };
+  const userId = payload.data?.user?.id;
+  if (payload.data?.session && userId) replaceStoredSessionUser(userId);
+  return payload;
 }
 
 export async function signIn({ email, password }) {
