@@ -248,13 +248,12 @@ integrationTest('signup, verification, sessions, login, logout, reset, and passw
     const resetCsrf = resetPayload.csrfToken;
     assert.notEqual(resetCookie, loginCookie);
     const resetState = await harness.pool.query(
-      `SELECT u.password_hash, u.must_reset_password, t.consumed_at
+      `SELECT u.password_hash, t.consumed_at
        FROM users u JOIN password_reset_tokens t ON t.user_id = u.id
        WHERE t.token_digest = $1`,
       [digestSecret(resetToken)]
     );
     assert.equal(await bcrypt.compare('replacement password', resetState.rows[0].password_hash), true);
-    assert.equal(resetState.rows[0].must_reset_password, false);
     assert.ok(resetState.rows[0].consumed_at);
 
     const oldSession = await request(harness.baseUrl, '/api/auth/session', {
@@ -280,40 +279,6 @@ integrationTest('signup, verification, sessions, login, logout, reset, and passw
     assert.equal(wrongLogin.status, 401);
     assert.equal(missingLogin.status, 401);
     assert.deepEqual(await wrongLogin.json(), await missingLogin.json());
-  } finally {
-    await harness.cleanup();
-  }
-});
-
-integrationTest('a migrated user with no Supabase password hash can reset into an application session', async () => {
-  const harness = await createHarness();
-  try {
-    const userId = crypto.randomUUID();
-    await harness.pool.query(
-      `INSERT INTO users (
-         id, email, password_hash, must_reset_password, email_verified_at
-       ) VALUES ($1, $2, NULL, true, now())`,
-      [userId, 'migrated@example.com']
-    );
-
-    await request(harness.baseUrl, '/api/auth/forgot-password', {
-      body: { email: 'migrated@example.com' },
-    });
-    const token = harness.delivered.resets.get('migrated@example.com');
-    assert.ok(token);
-    const reset = await request(harness.baseUrl, '/api/auth/reset-password', {
-      body: { token, password: 'application password' },
-    });
-    assert.equal(reset.status, 200);
-    assert.ok(readCookies(reset));
-
-    const migrated = await harness.pool.query(
-      'SELECT id, password_hash, must_reset_password FROM users WHERE id = $1',
-      [userId]
-    );
-    assert.equal(migrated.rows[0].id, userId);
-    assert.equal(migrated.rows[0].must_reset_password, false);
-    assert.equal(await bcrypt.compare('application password', migrated.rows[0].password_hash), true);
   } finally {
     await harness.cleanup();
   }

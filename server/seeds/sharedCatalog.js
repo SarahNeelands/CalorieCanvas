@@ -1,5 +1,5 @@
 const crypto = require('node:crypto');
-const { loadSharedCatalog } = require('../migration-tooling/lib/sharedCatalog');
+const { loadSharedCatalog } = require('./sharedCatalogLoader');
 
 const SEED_NAME = 'shared_catalog_v1';
 

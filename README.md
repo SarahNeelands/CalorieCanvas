@@ -2,8 +2,7 @@
 
 Calorie Canvas is a React application backed by Express and PostgreSQL. Express is
 the only supported application runtime: the browser never connects directly to a
-database or to Supabase. Legacy browser data is retained only for explicit,
-authenticated recovery/import flows.
+database. Accounts and their data are created natively by this application.
 
 ## Local development
 
@@ -139,32 +138,19 @@ one editable list. Recipes may be saved as drafts while awaiting their final coo
 weight. Drafts cannot be logged or pinned as usuals until a final weight or serving
 count makes portion nutrition calculable.
 
-Migration `013_create_food_usuals.sql` adds the user-owned shortcut table. Run the
-normal migration command before testing these features against an existing
-development database.
+Migrations `013_create_food_usuals.sql` and `014_require_native_accounts.sql` add
+the user-owned shortcut table and enforce fresh application-owned accounts. Run
+the normal migration command before testing against an existing development
+database.
 
 `build/` is intentionally versioned in this repository. Commit only the final
 verified build output, not intermediate bundles.
-
-## Read-only migration sources
-
-Supabase is retained only as a read-only export, verification, and rollback source.
-Its source URL is used solely by the server-side migration tooling and must never be
-prefixed `REACT_APP_` or bundled into React. The complete guarded export/import
-runbook is [server/migration-tooling/README.md](server/migration-tooling/README.md),
-with mappings in [server/migration-tooling/INVENTORY.md](server/migration-tooling/INVENTORY.md).
-The repository-wide dependency audit and phased plan are in
-[docs/MIGRATION_AUDIT_AND_PLAN.md](docs/MIGRATION_AUDIT_AND_PLAN.md).
-
-The old Rust runtime has been retired. The unreviewed
-`backend/data/calorie_canvas.sqlite3` is intentionally retained read-only; see
-[backend/README.md](backend/README.md) and use the legacy exporter for manual review.
 
 ## Deployment status
 
 The single-host deployment package is defined by `Dockerfile` and
 `deploy/production/compose.yml`. Deployment, Caddy, backup/restore, verification,
 maintenance, and rollback instructions are in
-[docs/DEPLOYMENT_OPERATIONS.md](docs/DEPLOYMENT_OPERATIONS.md). This deployment
-uses a fresh database and must not run Supabase export/import tooling or alter the
-Supabase project.
+[docs/DEPLOYMENT_OPERATIONS.md](docs/DEPLOYMENT_OPERATIONS.md). The application
+supports fresh PostgreSQL-backed accounts only; there is no legacy account-import
+path.

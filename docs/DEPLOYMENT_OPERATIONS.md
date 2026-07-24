@@ -1,8 +1,8 @@
 # Calorie Canvas deployment operations
 
-This runbook is exclusively for `https://caloriecanvas.serenx.net` and a fresh,
-empty PostgreSQL database. Do not run Supabase export/import tooling and do not
-import the retained SQLite database.
+This runbook is exclusively for `https://caloriecanvas.serenx.net` and its
+PostgreSQL database. Accounts are created natively by this application; legacy
+account imports are not supported.
 
 ## Install and configure
 
@@ -36,7 +36,7 @@ docker compose --profile tools --env-file .env.production -f deploy/production/c
 docker compose --env-file .env.production -f deploy/production/compose.yml up -d app
 ```
 
-Verification must report 13 migrations, latest version 13, one seed ledger row,
+Verification must report 14 migrations, latest version 14, one seed ledger row,
 70 shared catalog items, five shared exercise definitions, zero users, and zero
 sessions before application testing.
 

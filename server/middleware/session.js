@@ -26,15 +26,14 @@ function createSessionMiddleware({ pool, config }) {
 
       const sessionDigest = digestSecret(rawSessionId);
       const result = await pool.query(
-        `SELECT u.id, u.email, u.email_verified_at, u.must_reset_password, u.account_status,
+        `SELECT u.id, u.email, u.email_verified_at, u.account_status,
                 s.expire, s.sess
          FROM sessions s
          JOIN users u ON u.id = s.user_id
          WHERE s.sid = $1
            AND s.expire > now()
            AND u.account_status = 'active'
-           AND u.email_verified_at IS NOT NULL
-           AND NOT u.must_reset_password`,
+           AND u.email_verified_at IS NOT NULL`,
         [sessionDigest]
       );
 
@@ -87,7 +86,6 @@ function requireAuthentication(req, res, next) {
     !req.auth?.user
     || req.auth.user.account_status !== 'active'
     || !req.auth.user.email_verified_at
-    || req.auth.user.must_reset_password
   ) {
     return res.status(401).json({ error: 'Authentication required.' });
   }

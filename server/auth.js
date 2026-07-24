@@ -74,8 +74,6 @@ function createAuthService({ pool, config, tokenDelivery = {} }) {
       throw new AuthError('Unable to create account.');
     }
 
-    // Default direct service consumers to the safer legacy behavior. The
-    // environment loader explicitly supplies false while verification is paused.
     const emailVerificationRequired = config.emailVerificationRequired !== false;
     const passwordHash = await hashPassword(password, config.bcryptRounds);
     const rawToken = emailVerificationRequired ? generateSecret() : null;
@@ -83,9 +81,8 @@ function createAuthService({ pool, config, tokenDelivery = {} }) {
     const result = await withTransaction(pool, async (client) => {
       const inserted = await client.query(
         `INSERT INTO users (
-           id, email, password_hash, must_reset_password, password_changed_at,
-           email_verified_at
-         ) VALUES ($1, $2, $3, false, now(), $4)
+           id, email, password_hash, password_changed_at, email_verified_at
+         ) VALUES ($1, $2, $3, now(), $4)
          ON CONFLICT DO NOTHING
          RETURNING id, email`,
         [
@@ -131,7 +128,7 @@ function createAuthService({ pool, config, tokenDelivery = {} }) {
 
     return withTransaction(pool, async (client) => {
       const selected = await client.query(
-        `SELECT id, email, password_hash, must_reset_password, email_verified_at, account_status
+        `SELECT id, email, password_hash, email_verified_at, account_status
          FROM users WHERE email = $1 FOR UPDATE`,
         [normalizedEmail]
       );
@@ -142,7 +139,6 @@ function createAuthService({ pool, config, tokenDelivery = {} }) {
         && user
         && user.account_status === 'active'
         && user.email_verified_at
-        && !user.must_reset_password
         && user.password_hash;
 
       if (!canLogin) throw new AuthError(INVALID_CREDENTIALS, 401);
@@ -225,7 +221,7 @@ function createAuthService({ pool, config, tokenDelivery = {} }) {
       );
       await client.query(
         `UPDATE users
-         SET password_hash = $1, must_reset_password = false, password_changed_at = now()
+         SET password_hash = $1, password_changed_at = now()
          WHERE id = $2`,
         [passwordHash, user.id]
       );
@@ -259,7 +255,7 @@ function createAuthService({ pool, config, tokenDelivery = {} }) {
 
       await client.query(
         `UPDATE users
-         SET password_hash = $1, must_reset_password = false, password_changed_at = now()
+         SET password_hash = $1, password_changed_at = now()
          WHERE id = $2`,
         [passwordHash, user.id]
       );
@@ -309,7 +305,7 @@ function createAuthService({ pool, config, tokenDelivery = {} }) {
 
     return withTransaction(pool, async (client) => {
       const selected = await client.query(
-        `SELECT t.id AS token_id, u.id, u.email, u.account_status, u.must_reset_password
+        `SELECT t.id AS token_id, u.id, u.email, u.account_status
          FROM email_verification_tokens t
          JOIN users u ON u.id = t.user_id
          WHERE t.token_digest = $1
@@ -330,9 +326,7 @@ function createAuthService({ pool, config, tokenDelivery = {} }) {
         'UPDATE users SET email_verified_at = COALESCE(email_verified_at, now()) WHERE id = $1',
         [user.id]
       );
-      const session = user.must_reset_password
-        ? null
-        : await rotateSession(client, user.id, previousSessionDigest);
+      const session = await rotateSession(client, user.id, previousSessionDigest);
       return { user: publicUser(user), session };
     });
   }
