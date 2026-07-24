@@ -5,13 +5,29 @@ import './WeightModal.css';
 export default function WeightModal({ open = true, onClose, onSave }){
   const [value, setValue] = useState('');
   const [unit, setUnit] = useState('kg');
-  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(() => {
+    const now = new Date();
+    return new Date(now.getTime() - (now.getTimezoneOffset() * 60_000)).toISOString().slice(0, 10);
+  });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
 
-  function save(){
+  async function save(){
     const v = Number(value);
-    if(Number.isNaN(v)) return;
-    onSave?.({ value: v, unit, date });
-    onClose?.();
+    if(!(v > 0)) {
+      setError('Enter a valid weight.');
+      return;
+    }
+    setSaving(true);
+    setError('');
+    try {
+      await onSave?.({ value: v, unit, date });
+      onClose?.();
+    } catch (saveError) {
+      setError(saveError.message || 'Weight could not be saved.');
+    } finally {
+      setSaving(false);
+    }
   }
 
   if(!open) return null;
@@ -51,7 +67,10 @@ export default function WeightModal({ open = true, onClose, onSave }){
           </div>
         </div>
         <div className="weight-modal__actions">
-          <button className="weight-modal__btn" onClick={save}>Log Weight</button>
+          {error && <div role="alert">{error}</div>}
+          <button className="weight-modal__btn" onClick={save} disabled={saving}>
+            {saving ? 'Saving…' : 'Log Weight'}
+          </button>
         </div>
       </div>
     </Modal>

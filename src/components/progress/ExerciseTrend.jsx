@@ -57,7 +57,9 @@ function scopeLabel(s) {
 }
 
 function formatExerciseDay(dateStr) {
-  const date = new Date(dateStr);
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(String(dateStr || ''))
+    ? new Date(`${dateStr}T12:00:00`)
+    : new Date(dateStr);
   if (!Number.isFinite(date.getTime())) return String(dateStr || '');
   return date.toLocaleDateString(undefined, { month: 'numeric', day: 'numeric' });
 }
@@ -75,7 +77,7 @@ function buildExerciseDailySeries(data, scope) {
   } else {
     const firstPoint = (data || [])[0];
     if (firstPoint?.date) {
-      const firstDate = new Date(firstPoint.date);
+      const firstDate = new Date(`${firstPoint.date}T12:00:00`);
       if (Number.isFinite(firstDate.getTime())) {
         startDate = firstDate;
       }
@@ -87,7 +89,7 @@ function buildExerciseDailySeries(data, scope) {
   const series = [];
   const cursor = new Date(startDate);
   while (cursor <= today) {
-    const dateStr = cursor.toISOString().slice(0, 10);
+    const dateStr = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}-${String(cursor.getDate()).padStart(2, '0')}`;
     const point = pointsByDate.get(dateStr);
     series.push(
       point

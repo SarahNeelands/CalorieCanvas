@@ -17,7 +17,6 @@ import {
   signOutCurrentUser,
 } from "../../services/authClient";
 import { completeProfileSetup } from "../../services/profileSetupProgress";
-import { isLocalAuth } from "../../config/runtime";
 
 const activityOptions = [
   { value: "sedentary", label: "Sedentary", help: "Mostly sitting with minimal exercise." },
@@ -104,9 +103,9 @@ function profileHasAnyData(profile) {
   );
 }
 
-function formatAccountLabel({ accountEmail, isLocalAccount }) {
+function formatAccountLabel({ accountEmail }) {
   if (accountEmail) return accountEmail;
-  return isLocalAccount ? "Local account" : "Signed-in account";
+  return "Signed-in account";
 }
 
 export default function Profile({ user }) {
@@ -142,7 +141,6 @@ export default function Profile({ user }) {
   const [showMicros, setShowMicros] = React.useState(false);
   const accountLabel = formatAccountLabel({
     accountEmail,
-    isLocalAccount: isLocalAuth(),
   });
 
   const applyProfile = React.useCallback((profile, options = {}) => {
@@ -296,19 +294,11 @@ export default function Profile({ user }) {
 
     try {
       setSaving(true);
-      saveLocalProfile(userId, nextProfile);
-      setSavedProfile(nextProfile);
+      const persistedProfile = await updateProfile(nextProfile, userId);
+      saveLocalProfile(userId, persistedProfile);
+      setSavedProfile(persistedProfile);
       setIsEditing(false);
       setMsg("Profile saved.");
-
-      if (isLocalAuth()) {
-        await updateProfile(nextProfile, userId);
-      } else {
-        void updateProfile(nextProfile, userId).catch((error) => {
-          console.warn("Failed to sync profile update", error);
-          setMsg(error.message || "Profile saved locally. Cloud sync failed.");
-        });
-      }
     } catch (error) {
       setMsg(error.message || "Failed to save profile.");
     } finally {

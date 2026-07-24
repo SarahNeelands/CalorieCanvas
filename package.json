@@ -3,7 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@supabase/supabase-js": "^2.78.0",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
@@ -20,6 +19,13 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
+    "build:frontend": "react-scripts build",
+    "test:frontend": "react-scripts test --watchAll=false",
+    "start:backend": "npm --prefix server start",
+    "build:backend": "npm --prefix server run build",
+    "test:backend": "npm --prefix server test",
+    "test:backend:integration": "npm --prefix server run test:integration",
+    "migrate:backend": "npm --prefix server run migrate",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {

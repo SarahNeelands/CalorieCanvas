@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './ProfileSetup.css';
 import { getCurrentUserId } from '../../services/authClient';
-import { isLocalAuth } from '../../config/runtime';
 import {
   getProfileSetupState,
   persistProfileSetupState,
@@ -129,26 +128,18 @@ export default function ProfileSetup2() {
     };
 
     updateProfileSetupState(nextState);
-    setSaving(false);
-    navigate('/profile-setup-3');
-
-    if (isLocalAuth()) {
-      return;
-    }
-
-    void updateProfile(
-      {
+    try {
+      await updateProfile({
         height_cm: Number(finalHeightCm.toFixed(1)),
         weight_kg: Number(finalWeightKg.toFixed(1)),
-      },
-      userId
-    ).catch((error) => {
-      console.warn('Failed to save profile setup step 2', error);
-    });
-
-    void persistProfileSetupState(nextState, userId).catch((error) => {
-      console.warn('Failed to persist profile setup progress', error);
-    });
+      }, userId);
+      await persistProfileSetupState(nextState, userId);
+      navigate('/profile-setup-3');
+    } catch (error) {
+      setMsg(error.message || 'Failed to save profile setup progress.');
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (

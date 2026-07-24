@@ -1,0 +1,126 @@
+name: caloriecanvas
+
+x-app-image: &app-image
+  image: caloriecanvas:${CALORIE_CANVAS_IMAGE_TAG:-local}
+  build:
+    context: ../..
+    dockerfile: Dockerfile
+
+x-app-environment: &app-environment
+  NODE_ENV: production
+  SERVER_HOST: 0.0.0.0
+  SERVER_PORT: 3001
+  FRONTEND_DIRECTORY: /app/public
+  DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+  DATABASE_SSL: "false"
+  APP_ORIGINS: https://caloriecanvas.serenx.net
+  PUBLIC_APP_ORIGIN: https://caloriecanvas.serenx.net
+  BCRYPT_ROUNDS: ${BCRYPT_ROUNDS:-12}
+  SESSION_COOKIE_NAME: ${SESSION_COOKIE_NAME:-cc_session}
+  CSRF_COOKIE_NAME: ${CSRF_COOKIE_NAME:-cc_csrf}
+  SESSION_COOKIE_SECURE: "true"
+  SESSION_TTL_HOURS: ${SESSION_TTL_HOURS:-168}
+  SESSION_RENEWAL_THRESHOLD_HOURS: ${SESSION_RENEWAL_THRESHOLD_HOURS:-24}
+  PASSWORD_RESET_TTL_MINUTES: ${PASSWORD_RESET_TTL_MINUTES:-60}
+  EMAIL_VERIFICATION_REQUIRED: ${EMAIL_VERIFICATION_REQUIRED:-false}
+  EMAIL_VERIFICATION_TTL_MINUTES: ${EMAIL_VERIFICATION_TTL_MINUTES:-1440}
+  AUTH_RATE_LIMIT_WINDOW_MINUTES: ${AUTH_RATE_LIMIT_WINDOW_MINUTES:-15}
+  LOGIN_RATE_LIMIT_MAX: ${LOGIN_RATE_LIMIT_MAX:-10}
+  SIGNUP_RATE_LIMIT_MAX: ${SIGNUP_RATE_LIMIT_MAX:-5}
+  PASSWORD_ACTION_RATE_LIMIT_MAX: ${PASSWORD_ACTION_RATE_LIMIT_MAX:-5}
+  EMAIL_PROVIDER: resend
+  RESEND_API_KEY: ${RESEND_API_KEY:?RESEND_API_KEY is required}
+  EMAIL_FROM: ${EMAIL_FROM:?EMAIL_FROM is required}
+  EMAIL_ALLOWED_RECIPIENTS: ${EMAIL_ALLOWED_RECIPIENTS:?EMAIL_ALLOWED_RECIPIENTS is required}
+  EMAIL_REQUEST_TIMEOUT_MS: ${EMAIL_REQUEST_TIMEOUT_MS:-10000}
+  EMAIL_MAX_ATTEMPTS: ${EMAIL_MAX_ATTEMPTS:-3}
+  EMAIL_RETRY_BASE_MS: ${EMAIL_RETRY_BASE_MS:-250}
+
+services:
+  db:
+    image: postgres:16.9-bookworm
+    environment:
+      POSTGRES_DB: caloriecanvas
+      POSTGRES_USER: caloriecanvas_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - database
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U caloriecanvas_user -d caloriecanvas"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    restart: unless-stopped
+    shm_size: 128mb
+    mem_limit: 768m
+    cpus: 1.0
+    security_opt:
+      - no-new-privileges:true
+
+  app:
+    <<: *app-image
+    environment:
+      <<: *app-environment
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      database:
+      shared-net:
+        aliases:
+          - caloriecanvas-app
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3001/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    stop_grace_period: 30s
+    mem_limit: 512m
+    cpus: 1.0
+
+  migrate:
+    <<: *app-image
+    profiles: ["tools"]
+    environment:
+      NODE_ENV: migration
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+      DATABASE_SSL: "false"
+    command: ["node", "server/migrations/run.js"]
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - database
+    restart: "no"
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  postgres-data:
+    name: caloriecanvas-postgres-data
+
+networks:
+  database:
+    name: caloriecanvas-database
+    internal: true
+  shared-net:
+    external: true
+    name: shared-net

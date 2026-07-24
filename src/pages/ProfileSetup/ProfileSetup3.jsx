@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../../supabaseClient';
 import './ProfileSetup.css';
 import { getCurrentUserId } from '../../services/authClient';
 import {
@@ -9,7 +8,7 @@ import {
   setProfileSetupStep,
   updateProfileSetupState,
 } from '../../services/profileSetupProgress';
-import { saveLocalProfile } from '../../services/profileClient';
+import { saveLocalProfile, updateProfile } from '../../services/profileClient';
 
 export default function ProfileSetup3() {
   const navigate = useNavigate();
@@ -164,8 +163,7 @@ export default function ProfileSetup3() {
     setSaving(false);
     navigate('/profile-setup-4');
 
-    void supabase.from('profiles').upsert({
-      user_id: userId,
+    void updateProfile({
       height_cm: Number(finalHeight.toFixed(1)),
       weight_kg: Number(finalWeight.toFixed(1)),
       activity_level: activityLevel || 'sedentary',
@@ -173,10 +171,8 @@ export default function ProfileSetup3() {
       goal_muscle_intent: muscle,
       target_weight_kg: tw ? twNum : null,
       target_body_fat_pct: tb ? tbNum : null,
-    }, { onConflict: 'user_id' }).then(({ error }) => {
-      if (error) {
-        console.warn('Failed to save profile setup step 3', error);
-      }
+    }, userId).catch((error) => {
+      console.warn('Failed to save profile setup step 3', error);
     });
 
     void persistProfileSetupState(nextState, userId).catch((error) => {

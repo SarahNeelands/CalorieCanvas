@@ -1,2 +1,37 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+
+# misc
+.DS_Store
+.env.local
+/server/.env
+.env.development.local
+.env.test.local
+.env.production.local
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 node_modules
 .env.local
+.env.staging
+**/.env.staging
+.env.production
+**/.env.production
+*.sqlite
+*.sqlite3
+*.dump
+*.sql.gz
+
+# Sensitive migration exports and reconciliation reports
+/migration-exports/
+/migration-reports/
+/server/migration-exports/
+/server/migration-reports/

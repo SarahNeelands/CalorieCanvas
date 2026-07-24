@@ -1,6 +1,5 @@
-import { supabase } from '../supabaseClient';
-import { isLocalAuth } from '../config/runtime';
 import { getCurrentUserId, getStoredUserId } from './authClient';
+import { apiRequest } from './apiClient';
 import { getProfileSetupState } from './profileSetupProgress';
 
 const LOCAL_PROFILES_KEY = 'local_profiles_v1';
@@ -66,15 +65,6 @@ function getLatestLegacyWeightKg() {
   return toKgFromLegacyWeight(latest.value, latest.unit);
 }
 
-function getLatestLocalWeightKg(userId) {
-  const latest = readLegacyWeights()
-    .filter((entry) => entry && typeof entry === 'object' && (!entry.user_id || entry.user_id === userId))
-    .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')))[0];
-
-  if (!latest) return null;
-  return toKgFromLegacyWeight(latest.value, latest.unit);
-}
-
 function normalizeProfileShape(profile, draft, userId) {
   const latestLegacyWeightKg = getLatestLegacyWeightKg();
   const legacyHeightCm = toCmFromLegacyHeight(profile?.height, profile?.heightUnit);
@@ -134,14 +124,7 @@ export async function updateProfile(profile, userIdArg) {
   }
 
   const normalizedProfile = normalizeProfileShape(profile || {}, {}, userId);
-  saveLocalProfile(userId, normalizedProfile);
-
-  if (isLocalAuth()) {
-    return normalizedProfile;
-  }
-
   const payload = {
-    user_id: userId,
     display_name: normalizedProfile.display_name,
     dob: normalizedProfile.dob,
     gender: normalizedProfile.gender,
@@ -160,61 +143,27 @@ export async function updateProfile(profile, userIdArg) {
     pref_show_weight: normalizedProfile.pref_show_weight,
   };
 
-  const { error } = await supabase.from('profiles').upsert(payload, { onConflict: 'user_id' });
-  if (error) throw error;
-
-  return normalizedProfile;
+  const result = await apiRequest('/profile', { method: 'PUT', csrf: true, body: payload });
+  if (result.error) throw new Error(result.error.message);
+  const responseProfile = result.payload?.data || normalizedProfile;
+  const responseUserId = responseProfile.user_id || userId;
+  const savedProfile = normalizeProfileShape(responseProfile, {}, responseUserId);
+  saveLocalProfile(responseUserId, savedProfile);
+  return savedProfile;
 }
 
 export async function getProfile(userId = getStoredUserId()) {
   if (!userId) return null;
 
-  const localProfiles = readLocalProfiles();
-  const localProfile = localProfiles[userId] || null;
   const draft = getProfileSetupState();
-
-  if (isLocalAuth()) {
-    const fallbackProfile = localProfile;
-
-    if (!fallbackProfile && !draft?.heightCm && !draft?.weightKg) {
-      return null;
-    }
-
-    return normalizeProfileShape(fallbackProfile || {}, draft, userId);
-  }
-
-  const { data, error } = await supabase
-    .from('profiles')
-    .select(`
-      user_id,
-      display_name,
-      dob,
-      gender,
-      height_cm,
-      weight_kg,
-      activity_level,
-      goal_weight_intent,
-      goal_muscle_intent,
-      calorie_goal,
-      target_weight_kg,
-      target_body_fat_pct,
-      pref_show_calories,
-      pref_show_macros,
-      pref_show_micros,
-      pref_show_exercise,
-      pref_show_weight
-    `)
-    .eq('user_id', userId)
-    .maybeSingle();
-
-  if (error) throw error;
-
-  const fallbackProfile = data || localProfile || {};
-  if (!data && !localProfile && !draft?.heightCm && !draft?.weightKg) {
-    return null;
-  }
-
-  return normalizeProfileShape(fallbackProfile, draft, userId);
+  const result = await apiRequest('/profile');
+  if (result.error) throw new Error(result.error.message);
+  const data = result.payload?.data || null;
+  if (!data && !draft?.heightCm && !draft?.weightKg) return null;
+  const responseUserId = data?.user_id || userId;
+  const normalized = normalizeProfileShape(data || {}, draft, responseUserId);
+  if (data) saveLocalProfile(responseUserId, normalized);
+  return normalized;
 }
 
 function calculateAge(dob) {
@@ -325,20 +274,8 @@ export function calculateDailyCalorieGoal(profile) {
 export async function getLatestWeightKg(userId = getStoredUserId()) {
   if (!userId) return null;
 
-  if (isLocalAuth()) {
-    return getLatestLocalWeightKg(userId);
-  }
-
-  const { data, error } = await supabase
-    .from('weights')
-    .select('date,value,unit')
-    .eq('user_id', userId)
-    .order('date', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (error) throw error;
-  if (!data) return null;
-
-  return toKgFromLegacyWeight(data.value, data.unit);
+  const result = await apiRequest('/profile/latest-weight');
+  if (result.error) throw new Error(result.error.message);
+  const data = result.payload?.data;
+  return data ? toKgFromLegacyWeight(data.value, data.unit) : null;
 }

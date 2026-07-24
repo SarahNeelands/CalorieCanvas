@@ -1,0 +1,67 @@
+name: caloriecanvas-local
+
+services:
+  db:
+    image: postgres:16.9-bookworm
+    environment:
+      POSTGRES_DB: caloriecanvas
+      POSTGRES_USER: caloriecanvas
+      POSTGRES_PASSWORD: local-only-password
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U caloriecanvas -d caloriecanvas"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  migrate:
+    image: caloriecanvas:local
+    environment:
+      NODE_ENV: migration
+      DATABASE_URL: postgresql://caloriecanvas:local-only-password@db:5432/caloriecanvas
+      DATABASE_SSL: "false"
+    command: ["node", "server/migrations/run.js"]
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  app:
+    image: caloriecanvas:local
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: development
+      SERVER_HOST: 0.0.0.0
+      SERVER_PORT: 3001
+      FRONTEND_DIRECTORY: /app/public
+      DATABASE_URL: postgresql://caloriecanvas:local-only-password@db:5432/caloriecanvas
+      DATABASE_SSL: "false"
+      APP_ORIGINS: http://127.0.0.1:3001,http://localhost:3001
+      PUBLIC_APP_ORIGIN: http://127.0.0.1:3001
+      SESSION_COOKIE_SECURE: "false"
+      EMAIL_VERIFICATION_REQUIRED: "false"
+      EMAIL_PROVIDER: disabled
+    ports:
+      - "127.0.0.1:3001:3001"
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3001/api/ready').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+    name: caloriecanvas-local-postgres-data

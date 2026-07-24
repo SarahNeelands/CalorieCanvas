@@ -15,6 +15,8 @@ import SnackDetails  from "./pages/Meals/SnackDetails";
 import DefaultImage from "./components/images/defaultprofile.png"
 import Login from './pages/Authentication/Login';
 import Signup from './pages/Authentication/Signup';
+import ResetPassword from './pages/Authentication/ResetPassword';
+import VerifyEmail from './pages/Authentication/VerifyEmail';
 import ProfileSetup from './pages/ProfileSetup/ProfileSetup';
 import ProfileSetup2 from './pages/ProfileSetup/ProfileSetup2';
 import ProfileSetup3 from './pages/ProfileSetup/ProfileSetup3';
@@ -25,7 +27,6 @@ import { getCurrentUserId, getStoredUserId, validateStoredSession } from './serv
 import { getProfileSetupResumePath, hasCompletedRequiredProfileSetup, hydrateProfileSetupState, ensureProfileSetupRequired } from './services/profileSetupProgress';
 import { getProfile } from './services/profileClient';
 import { processPendingCatalogSyncQueue } from './services/catalogClient';
-import { isLocalAuth } from './config/runtime';
 
 // Example: this would come from your DB call in a real app
 const mockUser = {
@@ -34,8 +35,7 @@ const mockUser = {
 
 function ProtectedRoute({ children, status, userId, allowIncompleteSetup = false }) {
   const location = useLocation();
-  const storedUserId = isLocalAuth() ? (getStoredUserId() || undefined) : undefined;
-  const effectiveUserId = userId || storedUserId;
+  const effectiveUserId = userId;
 
   if (status === 'checking' && !effectiveUserId) {
     return null;
@@ -66,9 +66,7 @@ function ScrollToTop() {
 
 export default function App() {
   const [status, setStatus] = useState('checking');
-  const [currentUserId, setCurrentUserId] = useState(() => (
-    isLocalAuth() ? (getStoredUserId() || undefined) : undefined
-  ));
+  const [currentUserId, setCurrentUserId] = useState(undefined);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
@@ -124,7 +122,7 @@ export default function App() {
         return;
       }
 
-      setCurrentUserId(isLocalAuth() ? nextStoredUserId : undefined);
+      setCurrentUserId(undefined);
       setStatus('checking');
       bootstrapAuth();
     };
@@ -168,6 +166,8 @@ export default function App() {
         <Route path="/snacks/new" element={<ProtectedRoute status={status} userId={currentUserId}><SnackDetails user={currentUser} /></ProtectedRoute>} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/reset" element={<ResetPassword />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/profile-setup" element={<ProtectedRoute status={status} userId={currentUserId} allowIncompleteSetup={true}><ProfileSetup /></ProtectedRoute>} />
         <Route path="/profile-setup-2" element={<ProtectedRoute status={status} userId={currentUserId} allowIncompleteSetup={true}><ProfileSetup2 /></ProtectedRoute>} />
         <Route path="/profile-setup-3" element={<ProtectedRoute status={status} userId={currentUserId} allowIncompleteSetup={true}><ProfileSetup3 /></ProtectedRoute>} />

@@ -221,7 +221,7 @@ function buildLineSegments(points, chartBottom) {
 
 function getPointTimestamp(point, index) {
   const rawDate = point?.date || point?.logged_at || point?.timestampISO || point?.timestamp_iso || null;
-  const parsed = rawDate ? new Date(rawDate).getTime() : Number.NaN;
+  const parsed = rawDate ? parseChartDate(rawDate).getTime() : Number.NaN;
   if (Number.isFinite(parsed)) {
     return parsed + index;
   }
@@ -252,9 +252,15 @@ function selectLabelIndexes(length) {
 
 function formatXAxisLabel(point) {
   const rawDate = point?.date || point?.logged_at || point?.timestampISO || point?.timestamp_iso || point?.label;
-  const date = new Date(rawDate);
+  const date = parseChartDate(rawDate);
   if (Number.isFinite(date.getTime())) {
     return date.toLocaleDateString(undefined, { month: 'numeric', day: 'numeric' });
   }
   return String(point?.label || '');
+}
+
+function parseChartDate(rawDate) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(String(rawDate || ''))
+    ? new Date(`${rawDate}T12:00:00`)
+    : new Date(rawDate);
 }
