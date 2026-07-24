@@ -5,6 +5,7 @@ import MacrosSummary from "../../components/calories/MacrosSummary";
 import MicrosSummary from "../../components/calories/MicrosSummary";
 import QuickActions from "../../components/QuickActions";
 import RecentMealsLogged from "../../components/RecentMealsLogged";
+import MyUsuals from "../../components/MyUsuals";
 import { macroTargetsByProfile, microTargetsByProfile } from "../../components/calories/nutrientTargets";
 import { getCurrentUserId } from "../../services/authClient";
 import { getDailyMealLogSummary } from "../../services/mealLogClient";
@@ -158,6 +159,9 @@ export default function Dashboard({ user }) {
             )}
           </div>
         )}
+        <div className="dashboard-usuals">
+          <MyUsuals userId={resolvedUserId} />
+        </div>
         <div className="dashboard-recent">
           <RecentMealsLogged userId={resolvedUserId} />
         </div>

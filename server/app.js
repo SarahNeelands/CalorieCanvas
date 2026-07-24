@@ -11,6 +11,7 @@ const { createAuthRouter } = require('./routes/auth');
 const { createCatalogRouter } = require('./routes/catalog');
 const { createHealthRouter } = require('./routes/health');
 const { createMealLogRouter } = require('./routes/mealLog');
+const { createUsualRouter } = require('./routes/usual');
 const { createProfileRouter } = require('./routes/profile');
 const { createWeightRouter } = require('./routes/weight');
 const { createExerciseDefinitionRouter, createExerciseLogRouter } = require('./routes/exercise');
@@ -49,6 +50,7 @@ function createApp({
   app.use('/api/profile', createProfileRouter({ pool }));
   app.use('/api/catalog', createCatalogRouter({ pool }));
   app.use('/api/meal-logs', createMealLogRouter({ pool }));
+  app.use('/api/usuals', createUsualRouter({ pool }));
   app.use('/api/weights', createWeightRouter({ pool }));
   app.use('/api/exercises', createExerciseDefinitionRouter({ pool }));
   app.use('/api/exercise-logs', createExerciseLogRouter({ pool }));

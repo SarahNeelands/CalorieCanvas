@@ -13,9 +13,10 @@ export default function MealSummary({
   onSave,
   onLogPortion,
   isEditing = false,
+  recipeComplete = false,
 }) {
   const totalCalories = ingredients.reduce((sum, ing) => sum + (ing.calories || 0), 0);
-  const per100g = totalWeight ? (totalCalories / totalWeight) * 100 : 0;
+  const per100g = recipeComplete && totalWeight ? (totalCalories / totalWeight) * 100 : 0;
   const caloriesPerServing = servingCount ? totalCalories / servingCount : 0;
 
   return (
@@ -44,19 +45,24 @@ export default function MealSummary({
       </div>
 
       <div className="ms-meta">
-        <div>Weight: <strong>{totalWeight || 0} g</strong></div>
+        <div>Weight: <strong>{recipeComplete ? `${totalWeight || 0} g` : "waiting"}</strong></div>
         <div>Servings: <strong>{servingCount || 0}</strong></div>
         {servingCount ? <div>Per Serving: <strong>{caloriesPerServing.toFixed(1)} kcal</strong></div> : null}
         <div>Per 100g: <strong>{per100g.toFixed(1)} kcal</strong></div>
+      </div>
+      <div className={recipeComplete ? "ms-status ms-status--complete" : "ms-status ms-status--draft"}>
+        {recipeComplete
+          ? "Recipe is ready to log."
+          : "Draft: add the final cooked weight or servings after cooking."}
       </div>
 
       {error && <div className="ms-error">{String(error.message || error)}</div>}
 
       <div className="ms-actions">
         <button className="btn save" onClick={onSave} disabled={saving}>
-          {saving ? "Saving..." : isEditing ? "Save Changes" : "Save Meal"}
+          {saving ? "Saving..." : isEditing ? "Save Changes" : recipeComplete ? "Save Meal" : "Save Draft"}
         </button>
-        <button className="btn ghost" type="button" onClick={onLogPortion} disabled={saving}>
+        <button className="btn ghost" type="button" onClick={onLogPortion} disabled={saving || !recipeComplete}>
           Log a Portion
         </button>
       </div>

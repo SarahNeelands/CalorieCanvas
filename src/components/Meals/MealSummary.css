@@ -30,6 +30,14 @@
   border-radius:12px;
   padding:10px 12px;
 }
+.ms-status{
+  border-radius:10px;
+  padding:0.65rem 0.75rem;
+  font-size:0.9rem;
+  font-weight:700;
+}
+.ms-status--complete{ background:#edf4e9; color:#35523e; }
+.ms-status--draft{ background:#fff6df; color:#765b23; }
 
 .btn{
   min-height:2.5rem; border-radius:12px; border:1px solid var(--cc-accent); cursor:pointer; font:inherit; font-size:15px; font-weight:700;

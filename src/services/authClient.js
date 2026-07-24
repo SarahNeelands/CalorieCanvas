@@ -10,11 +10,11 @@ function notifyAuthChange() {
   if (typeof window !== 'undefined') window.dispatchEvent(new Event('cc-auth-changed'));
 }
 
-function replaceStoredSessionUser(userId, { notify = true } = {}) {
+function replaceStoredSessionUser(userId, { notify = true, forceNotify = false } = {}) {
   if (!userId) return;
   const previous = localStorage.getItem(LOCAL_USER_ID_KEY);
   localStorage.setItem(LOCAL_USER_ID_KEY, userId);
-  if (notify && previous !== userId) notifyAuthChange();
+  if (notify && (forceNotify || previous !== userId)) notifyAuthChange();
 }
 
 export function setStoredUserId(userId) {
@@ -67,7 +67,7 @@ export async function signIn({ email, password }) {
     clearInvalidSession();
     return { data: null, error: { message: 'Unable to establish an authenticated session.' } };
   }
-  replaceStoredSessionUser(userId);
+  replaceStoredSessionUser(userId, { forceNotify: true });
   return result.payload;
 }
 

@@ -18,26 +18,33 @@ npm --prefix server ci
 The shortest local test path requires only Docker:
 
 ```powershell
-docker compose -f deploy/local/compose.yml up --build
+npm run local:up
 ```
 
 Open `http://127.0.0.1:3001`. The local Compose stack builds the frontend and API,
 runs migrations automatically, and starts an isolated PostgreSQL container.
-New accounts are signed in immediately because email verification is temporarily
-disabled. No email provider or secret is needed.
+By default, new accounts are signed in immediately and no email secret is needed.
+To exercise real verification and password-reset delivery with the ignored
+`.env.production` Resend settings, run `npm run local:email:up` instead.
 
-The database is available to backend integration tests on port `5433`:
+The database is available to backend integration tests on port `55435` by
+default. Set `CALORIE_CANVAS_DB_PORT` before starting Compose if that port is
+already occupied:
 
 ```powershell
-$env:TEST_DATABASE_URL='postgresql://caloriecanvas:local-only-password@127.0.0.1:5433/caloriecanvas'
+$env:TEST_DATABASE_URL='postgresql://caloriecanvas:local-only-password@127.0.0.1:55435/caloriecanvas'
 npm run test:backend:integration
 ```
 
-Stop the stack with `docker compose -f deploy/local/compose.yml down`. To delete
+Stop the stack with `npm run local:down`. To delete
 only its disposable local database and start fresh, use the same command with
-`--volumes`.
+`-- --volumes`.
 
-For separate frontend and backend processes, install both dependency trees:
+For separate frontend and backend processes, install both dependency trees.
+You may also leave `npm run local:up` running and start the React development
+server with `npm start`. A page at either `localhost:3000` or
+`127.0.0.1:3000` automatically calls the API using the matching hostname on port
+3001, which keeps development session cookies on the same site.
 
 Copy the relevant values from `.env.example` into local, uncommitted environment
 files. Then create the schema and start both processes:
@@ -72,8 +79,8 @@ Server configuration:
 - `APP_ORIGINS` — comma-separated trusted browser origins; required in production.
 - `BCRYPT_ROUNDS`, cookie names, session/reset/verification TTLs, and auth rate-limit
   settings documented in `.env.example`.
-- `EMAIL_VERIFICATION_REQUIRED` is temporarily `false`; set it to `true` to restore
-  verification-token delivery and the pre-login verification gate.
+- `EMAIL_VERIFICATION_REQUIRED` enables verification-token delivery and the
+  pre-login verification gate; production defaults it to `true`.
 - `SESSION_COOKIE_SECURE` must be `true` behind production HTTPS.
 - `PUBLIC_APP_ORIGIN` is the exact public origin used in verification/reset links.
 - `EMAIL_PROVIDER=resend`, `RESEND_API_KEY`, `EMAIL_FROM`, retry/timeout settings,
@@ -111,6 +118,30 @@ $env:CI='true'
 npm run test:frontend -- --watchAll=false
 npm run build:frontend
 ```
+
+## Faster food logging
+
+The dashboard includes account-scoped **My Usuals** shortcuts. A usual stores a
+catalog item plus the signed-in user's default portion (for example, two chocolate
+squares or 25 g of Cheetos). One tap creates a normal PostgreSQL meal-log row,
+updates daily totals, and offers immediate undo. Repeated logs remain separate
+events for timestamps and undo, while the recent-food interface groups them into a
+single daily total.
+
+**Rebuild My Day** supports transactional bulk entry of saved foods and
+calorie-only estimates. The server validates every row before committing the
+batch and rolls the complete transaction back if any catalog item is inaccessible
+to the signed-in account.
+
+The recipe builder keeps ingredient search open for multiple selections, accepts
+multiline ingredient lists for reviewed catalog matching, and presents amounts in
+one editable list. Recipes may be saved as drafts while awaiting their final cooked
+weight. Drafts cannot be logged or pinned as usuals until a final weight or serving
+count makes portion nutrition calculable.
+
+Migration `013_create_food_usuals.sql` adds the user-owned shortcut table. Run the
+normal migration command before testing these features against an existing
+development database.
 
 `build/` is intentionally versioned in this repository. Commit only the final
 verified build output, not intermediate bundles.

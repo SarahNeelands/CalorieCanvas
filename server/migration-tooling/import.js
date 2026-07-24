@@ -86,7 +86,7 @@ async function importMigration({ pool, data, dryRun = false, failAfter = null })
   try {
     await client.query('BEGIN');
     const migration = await client.query('SELECT name FROM app_migrations ORDER BY version DESC LIMIT 1');
-    if (migration.rows[0]?.name !== '012_create_data_seed_ledger.sql') throw new Error('Destination migrations through 012 are required.');
+    if (migration.rows[0]?.name !== '013_create_food_usuals.sql') throw new Error('Destination migrations through 013 are required.');
 
     const validUsers = new Set();
     for (const source of data.tables.authUsers || []) {

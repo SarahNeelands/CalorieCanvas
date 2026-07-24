@@ -20,10 +20,9 @@ docker network inspect shared-net >/dev/null
 
 Use the existing Resend key, a verified sender, and only approved recipients. The
 database password in `DATABASE_URL` must be the URL-encoded form of
-`POSTGRES_PASSWORD`. `EMAIL_VERIFICATION_REQUIRED=false` temporarily signs new
-accounts in immediately; change it to `true` to restore verification before login.
-Password-reset delivery still requires the email provider while verification is
-paused.
+`POSTGRES_PASSWORD`. Keep `EMAIL_VERIFICATION_REQUIRED=true` so new accounts must
+verify their email before login. Password-reset delivery also requires the email
+provider.
 
 ## Validate, build, migrate, and start
 
@@ -37,7 +36,7 @@ docker compose --profile tools --env-file .env.production -f deploy/production/c
 docker compose --env-file .env.production -f deploy/production/compose.yml up -d app
 ```
 
-Verification must report 12 migrations, latest version 12, one seed ledger row,
+Verification must report 13 migrations, latest version 13, one seed ledger row,
 70 shared catalog items, five shared exercise definitions, zero users, and zero
 sessions before application testing.
 

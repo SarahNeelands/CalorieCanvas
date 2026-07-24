@@ -116,35 +116,47 @@ function insertValues(userId, input, snapshot, source, position) {
   ];
 }
 
-async function createMealLog(pool, userId, input) {
-  return withTransaction(pool, async (client) => {
-    const resolved = await resolveSnapshot(client, userId, input.meal_id, input.item_snapshot);
-    const mealType = input.meal_type || (resolved.snapshot.type === 'snack' ? 'snack' : 'other');
-    await lockSection(client, userId, input.log_date, mealType);
-    let position = input.position;
-    if (position === undefined) {
-      const next = await client.query(
-        `SELECT COALESCE(MAX(position), -1) + 1 AS position FROM meal_logs
-         WHERE user_id = $1 AND log_date = $2 AND meal_type = $3`,
-        [userId, input.log_date, mealType]
-      );
-      position = Number(next.rows[0].position);
-    } else {
-      await shiftPositions(client, userId, input.log_date, mealType, position, 1);
-    }
-    const result = await client.query(
-      `INSERT INTO meal_logs (
-         user_id, meal_id, catalog_source, food_id, item_snapshot, qty, unit_code,
-         grams_resolved, logged_at, log_date, timezone_offset_minutes, meal_type, position,
-         kcal, protein_g, carbs_g, fat_g, fiber_g, sugar_g, cholesterol_mg, sodium_mg,
-         potassium_mg, calcium_mg, iron_mg, vitamin_a_mcg, vitamin_c_mg
-       ) VALUES (
-         $1, $2, $3, $4, $5::jsonb, $6, $7, $8, $9, $10, $11, $12, $13,
-         $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26
-       ) RETURNING ${MEAL_LOG_COLUMNS}`,
-      insertValues(userId, { ...input, meal_type: mealType }, resolved.snapshot, resolved.source, position)
+async function createMealLogWithClient(client, userId, input) {
+  const resolved = await resolveSnapshot(client, userId, input.meal_id, input.item_snapshot);
+  const mealType = input.meal_type || (resolved.snapshot.type === 'snack' ? 'snack' : 'other');
+  await lockSection(client, userId, input.log_date, mealType);
+  let position = input.position;
+  if (position === undefined) {
+    const next = await client.query(
+      `SELECT COALESCE(MAX(position), -1) + 1 AS position FROM meal_logs
+       WHERE user_id = $1 AND log_date = $2 AND meal_type = $3`,
+      [userId, input.log_date, mealType]
     );
-    return normalizeMealLog(result.rows[0]);
+    position = Number(next.rows[0].position);
+  } else {
+    await shiftPositions(client, userId, input.log_date, mealType, position, 1);
+  }
+  const result = await client.query(
+    `INSERT INTO meal_logs (
+       user_id, meal_id, catalog_source, food_id, item_snapshot, qty, unit_code,
+       grams_resolved, logged_at, log_date, timezone_offset_minutes, meal_type, position,
+       kcal, protein_g, carbs_g, fat_g, fiber_g, sugar_g, cholesterol_mg, sodium_mg,
+       potassium_mg, calcium_mg, iron_mg, vitamin_a_mcg, vitamin_c_mg
+     ) VALUES (
+       $1, $2, $3, $4, $5::jsonb, $6, $7, $8, $9, $10, $11, $12, $13,
+       $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26
+     ) RETURNING ${MEAL_LOG_COLUMNS}`,
+    insertValues(userId, { ...input, meal_type: mealType }, resolved.snapshot, resolved.source, position)
+  );
+  return normalizeMealLog(result.rows[0]);
+}
+
+async function createMealLog(pool, userId, input) {
+  return withTransaction(pool, (client) => createMealLogWithClient(client, userId, input));
+}
+
+async function createMealLogsBatch(pool, userId, inputs) {
+  return withTransaction(pool, async (client) => {
+    const entries = [];
+    for (const input of inputs) {
+      entries.push(await createMealLogWithClient(client, userId, input));
+    }
+    return entries;
   });
 }
 
@@ -310,6 +322,7 @@ async function getMealLogDay(queryable, userId, logDate) {
 
 module.exports = {
   createMealLog,
+  createMealLogsBatch,
   deleteMealLogDay,
   deleteMealLog,
   emptyTotals,

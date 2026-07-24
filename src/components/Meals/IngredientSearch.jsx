@@ -32,7 +32,7 @@ function mergeIngredientResults(current, incoming) {
   return Array.from(merged.values());
 }
 
-export default function IngredientSearch({ onSelect, onClose, mealDraft }) {
+export default function IngredientSearch({ onSelect, onClose, mealDraft, selectedIds = [] }) {
   const initialResults = getCachedCatalogItems("ingredient").map(mapIngredientResult);
   const [q, setQ] = useState("");
   const [allResults, setAllResults] = useState(initialResults);
@@ -124,6 +124,10 @@ export default function IngredientSearch({ onSelect, onClose, mealDraft }) {
               </button>
             ) : null}
           </div>
+          <div className="ingredient-search-modal__selection">
+            <span>{selectedIds.length} selected</span>
+            <button type="button" onClick={onClose}>Done adding</button>
+          </div>
         </div>
 
         <div className="ingredient-search-modal__results">
@@ -137,11 +141,13 @@ export default function IngredientSearch({ onSelect, onClose, mealDraft }) {
           )}
           {results.length > 0 && (
             <ul className="is-list">
-              {results.map((r) => (
-                <li key={r.id} onClick={() => onSelect?.(r)} role="button" tabIndex={0} onKeyDown={(e) => {
+              {results.map((r) => {
+                const isSelected = selectedIds.includes(r.id);
+                return (
+                <li className={isSelected ? "is-selected" : ""} key={r.id} onClick={() => !isSelected && onSelect?.(r)} role="button" tabIndex={0} onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
-                    onSelect?.(r);
+                    if (!isSelected) onSelect?.(r);
                   }
                 }}>
                   <div className="is-main">
@@ -154,13 +160,13 @@ export default function IngredientSearch({ onSelect, onClose, mealDraft }) {
                     }} type="button">
                       Edit
                     </button>
-                    <button className="add" onClick={(e) => {
+                    <button className="add" disabled={isSelected} onClick={(e) => {
                       e.stopPropagation();
-                      onSelect?.(r);
-                    }} title="Add" type="button">+</button>
+                      if (!isSelected) onSelect?.(r);
+                    }} title={isSelected ? "Already added" : "Add"} type="button">{isSelected ? "✓" : "+"}</button>
                   </div>
                 </li>
-              ))}
+              )})}
             </ul>
           )}
         </div>

@@ -95,6 +95,11 @@
   width: 100%;
 }
 
+.dashboard-usuals {
+  width: 100%;
+  margin-top: 0.35rem;
+}
+
 .dashboard-section-title {
   margin: 0 0 0.45rem;
   font-size: 1.15rem;

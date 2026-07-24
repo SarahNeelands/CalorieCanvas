@@ -5,6 +5,8 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import IngredientSearch from "./IngredientSearch";
+import { listCatalogItems } from "../../services/catalogClient";
+import { findBestIngredientMatch, parseIngredientList } from "../../utils/ingredientListParser";
 import "./Ingredients.css";
 
 const MASS_UNIT_TO_GRAMS = {
@@ -118,6 +120,12 @@ function availableUnits(item) {
 
 export default function Ingredients({ ingredients = [], onIngredientsChange, mealDraft }) {
   const [showSearch, setShowSearch] = useState(false);
+  const [showPaste, setShowPaste] = useState(false);
+  const [pasteText, setPasteText] = useState("");
+  const [parsedRows, setParsedRows] = useState([]);
+  const [pasteCatalog, setPasteCatalog] = useState([]);
+  const [pasteLoading, setPasteLoading] = useState(false);
+  const [pasteError, setPasteError] = useState("");
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -132,10 +140,60 @@ export default function Ingredients({ ingredients = [], onIngredientsChange, mea
   }, [ingredients, onIngredientsChange]);
 
   const handleAdd = (ing) => {
+    if (ingredients.some((item) => item.id === ing.id)) return;
     const nextIngredient = normalizeIngredient(ing);
     pushIngredients([...ingredients, nextIngredient]);
-    setShowSearch(false);
   };
+
+  async function analyzePaste() {
+    const parsed = parseIngredientList(pasteText);
+    if (!parsed.length) {
+      setPasteError("Paste at least one ingredient line.");
+      return;
+    }
+    try {
+      setPasteLoading(true);
+      setPasteError("");
+      const catalog = pasteCatalog.length ? pasteCatalog : await listCatalogItems("ingredient");
+      setPasteCatalog(catalog);
+      setParsedRows(parsed.map((row) => ({
+        ...row,
+        matchedId: findBestIngredientMatch(row, catalog)?.id || "",
+      })));
+    } catch (error) {
+      setPasteError(error.message || "Unable to match the ingredient list.");
+    } finally {
+      setPasteLoading(false);
+    }
+  }
+
+  function updateParsedRow(index, changes) {
+    setParsedRows((current) => current.map((row, rowIndex) => (
+      rowIndex === index ? { ...row, ...changes } : row
+    )));
+  }
+
+  function addParsedIngredients() {
+    const selected = parsedRows.flatMap((row) => {
+      const item = pasteCatalog.find((candidate) => candidate.id === row.matchedId);
+      if (!item || !(Number(row.qty) > 0)) return [];
+      const next = {
+        ...normalizeIngredient(item),
+        qty: row.qty,
+        unit: row.unit,
+        preparation_note: row.note || "",
+      };
+      return [{
+        ...next,
+        calories: calculateIngredientCalories(next, next.qty, next.unit),
+      }];
+    });
+    const existingIds = new Set(ingredients.map((item) => item.id));
+    pushIngredients([...ingredients, ...selected.filter((item) => !existingIds.has(item.id))]);
+    setShowPaste(false);
+    setPasteText("");
+    setParsedRows([]);
+  }
 
   function updateIngredient(index, changes) {
     const updated = ingredients.map((ingredient, i) => {
@@ -160,8 +218,10 @@ export default function Ingredients({ ingredients = [], onIngredientsChange, mea
       <header className="ing-head row-between">
         <h3>Add to Meal</h3>
         <div className="ing-actions">
-          <button className="btn" onClick={() => setShowSearch(true)}>Search</button>
+          <button type="button" className="btn" onClick={() => setShowSearch(true)}>Search</button>
+          <button type="button" className="btn btn--ghost" onClick={() => setShowPaste((value) => !value)}>Paste List</button>
           <button
+            type="button"
             className="btn btn--ghost"
             onClick={() => navigate("/ingredients/new", {
               state: {
@@ -175,6 +235,83 @@ export default function Ingredients({ ingredients = [], onIngredientsChange, mea
         </div>
       </header>
 
+      {showPaste && (
+        <div className="ing-paste">
+          <label>
+            <span>Paste one ingredient per line</span>
+            <textarea
+              value={pasteText}
+              onChange={(event) => setPasteText(event.target.value)}
+              placeholder={"600g chicken breast\n300 g dry rice\n1 tbsp olive oil\n2 bell peppers"}
+            />
+          </label>
+          <div className="ing-paste__actions">
+            <button type="button" className="btn" onClick={analyzePaste} disabled={pasteLoading}>
+              {pasteLoading ? "Matching…" : "Match ingredients"}
+            </button>
+            <button type="button" className="btn btn--ghost" onClick={() => setShowPaste(false)}>Cancel</button>
+          </div>
+          {pasteError && <p className="ing-paste__error">{pasteError}</p>}
+          {parsedRows.length > 0 && (
+            <div className="ing-paste__review">
+              <div className="ing-paste__review-head">
+                <strong>Review matches</strong>
+                <span>{parsedRows.filter((row) => row.matchedId && Number(row.qty) > 0).length} ready</span>
+              </div>
+              {parsedRows.map((row, index) => (
+                <div className="ing-paste__row" key={row.id}>
+                  <div className="ing-paste__source">{row.raw}</div>
+                  <select
+                    aria-label={`Catalog match for ${row.name}`}
+                    value={row.matchedId}
+                    onChange={(event) => updateParsedRow(index, { matchedId: event.target.value })}
+                  >
+                    <option value="">Choose ingredient…</option>
+                    {pasteCatalog.map((item) => (
+                      <option value={item.id} key={item.id}>{item.title}</option>
+                    ))}
+                  </select>
+                  <input
+                    aria-label={`Amount for ${row.name}`}
+                    type="number"
+                    min="0"
+                    step="any"
+                    inputMode="decimal"
+                    value={row.qty}
+                    placeholder="Amount"
+                    onChange={(event) => updateParsedRow(index, { qty: event.target.value })}
+                  />
+                  <select
+                    aria-label={`Unit for ${row.name}`}
+                    value={row.unit}
+                    onChange={(event) => updateParsedRow(index, { unit: event.target.value })}
+                  >
+                    {["mg", "g", "oz", "lb", "ml", "cup", "tbsp", "tsp", "piece"].map((option) => (
+                      <option value={option} key={option}>{option}</option>
+                    ))}
+                  </select>
+                </div>
+              ))}
+              <button
+                type="button"
+                className="btn ing-paste__add-all"
+                disabled={!parsedRows.some((row) => row.matchedId && Number(row.qty) > 0)}
+                onClick={addParsedIngredients}
+              >
+                Add all matched ingredients
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {ingredients.length > 0 && (
+        <div className="ing-table-head" aria-hidden="true">
+          <span>Ingredient</span>
+          <span>Amount and unit</span>
+          <span>Action</span>
+        </div>
+      )}
       <ul className="ing-list">
         {ingredients.map((ing, i) => (
           <li key={`${ing.id ?? ing.name}-${i}`} className="ing-item">
@@ -210,7 +347,7 @@ export default function Ingredients({ ingredients = [], onIngredientsChange, mea
                 </div>
               </label>
 
-              <button className="ing-remove" onClick={() => removeIngredient(i)}>
+              <button type="button" className="ing-remove" onClick={() => removeIngredient(i)}>
                 Remove
               </button>
             </div>
@@ -225,6 +362,7 @@ export default function Ingredients({ ingredients = [], onIngredientsChange, mea
         <IngredientSearch
           onSelect={handleAdd}
           onClose={() => setShowSearch(false)}
+          selectedIds={ingredients.map((ingredient) => ingredient.id)}
           mealDraft={mealDraft}
         />
       )}

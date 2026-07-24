@@ -19,6 +19,59 @@
 .ing-list{
   list-style:none; margin:0; padding:0.75rem 0 0; overflow:visible; flex:1;
 }
+.ing-table-head{
+  display:grid;
+  grid-template-columns:minmax(0, 1fr) minmax(220px, auto) 5.5rem;
+  gap:1rem;
+  padding:0.75rem 0.75rem 0;
+  color:#667268;
+  font-size:0.78rem;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:0.04em;
+}
+.ing-paste{
+  display:grid;
+  gap:0.75rem;
+  margin:0.75rem 0 0;
+  padding:0.85rem;
+  border:1px solid rgba(79,107,80,0.2);
+  border-radius:12px;
+  background:rgba(255,255,255,0.72);
+}
+.ing-paste label{ display:grid; gap:0.35rem; color:var(--cc-ink); font-weight:700; }
+.ing-paste textarea{
+  width:100%;
+  min-height:8rem;
+  resize:vertical;
+  box-sizing:border-box;
+  border:1px solid var(--cc-border);
+  border-radius:10px;
+  padding:0.7rem;
+  font:inherit;
+}
+.ing-paste__actions{ display:flex; gap:0.5rem; flex-wrap:wrap; }
+.ing-paste__error{ margin:0; color:#8c1d18; }
+.ing-paste__review{ display:grid; gap:0.55rem; }
+.ing-paste__review-head{ display:flex; justify-content:space-between; gap:1rem; color:#526157; }
+.ing-paste__row{
+  display:grid;
+  grid-template-columns:minmax(8rem, 1fr) minmax(10rem, 1.3fr) 6rem 5rem;
+  gap:0.4rem;
+  align-items:center;
+}
+.ing-paste__source{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#526157; font-size:0.85rem; }
+.ing-paste__row input,
+.ing-paste__row select{
+  min-width:0;
+  width:100%;
+  box-sizing:border-box;
+  border:1px solid var(--cc-border);
+  border-radius:8px;
+  padding:0.5rem;
+  font:inherit;
+}
+.ing-paste__add-all{ width:100%; }
 .ing-item{
   display:grid; grid-template-columns: minmax(0, 1fr) auto; align-items:center;
   gap: 1rem; padding:0.75rem; background:#fff; border:1px solid var(--cc-border);
@@ -105,6 +158,14 @@
     align-items:start;
     gap:0.75rem;
     padding:0.8rem;
+  }
+  .ing-table-head{ display:none; }
+  .ing-paste__row{
+    grid-template-columns:minmax(0, 1fr) 5.5rem;
+  }
+  .ing-paste__source,
+  .ing-paste__row select:first-of-type{
+    grid-column:1 / -1;
   }
 
   .ing-controls{

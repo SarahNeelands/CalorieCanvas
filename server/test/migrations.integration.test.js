@@ -60,6 +60,7 @@ integrationTest('authentication migrations create the required schema and remain
       'exercise_definitions',
       'exercise_logs',
       'exercise_sync_operations',
+      'food_usuals',
       'meal_logs',
       'meals',
       'password_reset_tokens',
@@ -87,6 +88,7 @@ integrationTest('authentication migrations create the required schema and remain
       { version: 10, name: '010_create_exercises.sql' },
       { version: 11, name: '011_preserve_weight_original_unit.sql' },
       { version: 12, name: '012_create_data_seed_ledger.sql' },
+      { version: 13, name: '013_create_food_usuals.sql' },
     ]);
 
     const sharedSeed = await database.pool.query(
@@ -163,6 +165,7 @@ integrationTest('authentication migrations create the required schema and remain
         'exercise_definitions_user_id_fkey',
         'exercise_logs_user_id_fkey',
         'exercise_sync_operations_user_id_fkey',
+        'food_usuals_user_id_fkey',
         'meal_logs_user_id_fkey',
         'meals_user_id_fkey',
         'password_reset_tokens_user_id_fkey',
@@ -237,6 +240,7 @@ integrationTest('authentication migrations create the required schema and remain
       'exercise_logs_user_source_unique',
       'exercise_logs_user_date_idx',
       'exercise_sync_operations_created_at_idx',
+      'idx_food_usuals_user_position',
     ]) {
       assert.ok(indexes.includes(required), `missing index ${required}`);
     }
@@ -247,7 +251,7 @@ integrationTest('authentication migrations create the required schema and remain
       WHERE tgrelid IN (
         'users'::regclass, 'sessions'::regclass, 'profiles'::regclass,
         'meal_logs'::regclass, 'meals'::regclass, 'shared_catalog_items'::regclass,
-        'weights'::regclass
+        'weights'::regclass, 'food_usuals'::regclass
         , 'exercise_definitions'::regclass, 'exercise_logs'::regclass
       )
         AND NOT tgisinternal
@@ -255,6 +259,7 @@ integrationTest('authentication migrations create the required schema and remain
     assert.deepEqual(triggers, [
       'exercise_definitions_set_updated_at',
       'exercise_logs_set_updated_at',
+      'food_usuals_set_updated_at',
       'meal_logs_set_updated_at',
       'meals_set_updated_at',
       'profiles_set_updated_at',

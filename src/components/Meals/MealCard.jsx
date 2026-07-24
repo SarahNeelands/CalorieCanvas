@@ -11,6 +11,7 @@ function formatDateTime(iso) {
 
 export default function MealCard({ item, onClick, onEdit, onDelete }) {
   const { title, created_at, kcal_per_100g } = item;
+  const isDraft = item?.unit_conversions?.recipe_status === "awaiting_final_weight";
   return (
     <div className="item">
       <button
@@ -23,9 +24,13 @@ export default function MealCard({ item, onClick, onEdit, onDelete }) {
           <div className="item__main">
             <div className="item__top-row">
               <h4 className="item__title" style={{ margin: 0 }}>{title}</h4>
-              <div className="kcal">
-                {Number(kcal_per_100g ?? 0)} <span>kcal / 100g</span>
-              </div>
+              {isDraft ? (
+                <div className="item__draft-badge">Needs final weight</div>
+              ) : (
+                <div className="kcal">
+                  {Number(kcal_per_100g ?? 0)} <span>kcal / 100g</span>
+                </div>
+              )}
             </div>
             <div className="item__bottom-row">
               <p className="item__time" style={{ margin: 0 }}>{formatDateTime(created_at)}</p>

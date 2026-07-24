@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/static/css/main.0d158787.css",
-    "main.js": "/static/js/main.c8a53c7c.js",
+    "main.css": "/static/css/main.8760840a.css",
+    "main.js": "/static/js/main.78d38e07.js",
     "static/js/453.61c4a022.chunk.js": "/static/js/453.61c4a022.chunk.js",
     "static/media/Iphone_Watercolor_Background.png": "/static/media/Iphone_Watercolor_Background.b63df6190eb54bad78c4.png",
     "static/media/Background_Blue.png": "/static/media/Background_Blue.10a2f20e6696c7767c20.png",
@@ -14,12 +14,12 @@
     "static/media/LoginSignupFrame.png": "/static/media/LoginSignupFrame.a7e1cebde6c12996e1be.png",
     "static/media/defaultprofile.png": "/static/media/defaultprofile.b11f45a152bb037786cd.png",
     "index.html": "/index.html",
-    "main.0d158787.css.map": "/static/css/main.0d158787.css.map",
-    "main.c8a53c7c.js.map": "/static/js/main.c8a53c7c.js.map",
+    "main.8760840a.css.map": "/static/css/main.8760840a.css.map",
+    "main.78d38e07.js.map": "/static/js/main.78d38e07.js.map",
     "453.61c4a022.chunk.js.map": "/static/js/453.61c4a022.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.0d158787.css",
-    "static/js/main.c8a53c7c.js"
+    "static/css/main.8760840a.css",
+    "static/js/main.78d38e07.js"
   ]
 }

@@ -57,6 +57,25 @@ test('Express sign-in and session calls preserve the existing public response sh
   expect(document.cookie).not.toContain('cc_csrf');
 });
 
+test('successful sign-in refreshes app auth state when the same user ID is already stored', async () => {
+  localStorage.setItem('user_id', 'user-1');
+  const authChanged = jest.fn();
+  window.addEventListener('cc-auth-changed', authChanged);
+  global.fetch.mockResolvedValueOnce(response(200, {
+    data: {
+      user: { id: 'user-1', email: 'user@example.com' },
+      session: { user: { id: 'user-1', email: 'user@example.com' } },
+    },
+    error: null,
+    csrfToken: 'csrf-one',
+  }));
+
+  await signIn({ email: 'user@example.com', password: 'password' });
+
+  expect(authChanged).toHaveBeenCalledTimes(1);
+  window.removeEventListener('cc-auth-changed', authChanged);
+});
+
 test('signup stores the immediately authenticated user while verification is paused', async () => {
   global.fetch
     .mockResolvedValueOnce(response(202, {
