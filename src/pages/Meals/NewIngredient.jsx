@@ -519,6 +519,61 @@ export default function NewIngredientPage({ user }) {
           </Field>
         </Section>
 
+        <Section title="Paste Nutrition Values">
+          <div style={{ display: "grid", gap: 12 }}>
+            <p style={{ margin: 0, color: "#5f6f64" }}>
+              Paste the nutrition values for this ingredient in any order. You can copy a nutrition label, use commas, or put one value on each line.
+            </p>
+            <textarea
+              style={{
+                ...baseInputStyle(),
+                minHeight: 150,
+                resize: "vertical",
+                lineHeight: 1.5,
+              }}
+              value={nutritionPaste}
+              onChange={(event) => setNutritionPaste(event.target.value)}
+              placeholder={"Serving size: 30 g\nProtein 12 g, Calories 180\nSodium: 300 mg\nCarbs 8 g\nFat 9 g"}
+              aria-label="Paste nutrition values"
+            />
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <button
+                type="button"
+                onClick={handleNutritionPaste}
+                disabled={!nutritionPaste.trim()}
+                style={{
+                  borderRadius: 999,
+                  padding: "12px 18px",
+                  background: nutritionPaste.trim() ? "#163227" : "#9aa59f",
+                  color: "#fff",
+                  border: 0,
+                  fontWeight: 700,
+                  cursor: nutritionPaste.trim() ? "pointer" : "not-allowed",
+                }}
+              >
+                Fill Nutrition Fields
+              </button>
+              {nutritionPaste ? (
+                <button
+                  type="button"
+                  onClick={() => setNutritionPaste("")}
+                  style={{
+                    borderRadius: 999,
+                    padding: "12px 18px",
+                    background: "transparent",
+                    color: "#163227",
+                    border: "1px solid rgba(22,50,39,0.18)",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  Clear
+                </button>
+              ) : null}
+            </div>
+          </div>
+        </Section>
+
         <Section title="Serving Size">
           <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", minWidth: 0 }}>
             <Field label="Serving Size" hint="What nutrition values below refer to.">
@@ -623,61 +678,6 @@ export default function NewIngredientPage({ user }) {
             >
               Add Measure
             </button>
-          </div>
-        </Section>
-
-        <Section title="Paste Nutrition Values">
-          <div style={{ display: "grid", gap: 12 }}>
-            <p style={{ margin: 0, color: "#5f6f64" }}>
-              Paste labeled values in any order. You can copy a nutrition label, use commas, or put one value on each line.
-            </p>
-            <textarea
-              style={{
-                ...baseInputStyle(),
-                minHeight: 150,
-                resize: "vertical",
-                lineHeight: 1.5,
-              }}
-              value={nutritionPaste}
-              onChange={(event) => setNutritionPaste(event.target.value)}
-              placeholder={"Serving size: 30 g\nProtein 12 g, Calories 180\nSodium: 300 mg\nCarbs 8 g\nFat 9 g"}
-              aria-label="Paste nutrition values"
-            />
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <button
-                type="button"
-                onClick={handleNutritionPaste}
-                disabled={!nutritionPaste.trim()}
-                style={{
-                  borderRadius: 999,
-                  padding: "12px 18px",
-                  background: nutritionPaste.trim() ? "#163227" : "#9aa59f",
-                  color: "#fff",
-                  border: 0,
-                  fontWeight: 700,
-                  cursor: nutritionPaste.trim() ? "pointer" : "not-allowed",
-                }}
-              >
-                Fill Nutrition Fields
-              </button>
-              {nutritionPaste ? (
-                <button
-                  type="button"
-                  onClick={() => setNutritionPaste("")}
-                  style={{
-                    borderRadius: 999,
-                    padding: "12px 18px",
-                    background: "transparent",
-                    color: "#163227",
-                    border: "1px solid rgba(22,50,39,0.18)",
-                    fontWeight: 700,
-                    cursor: "pointer",
-                  }}
-                >
-                  Clear
-                </button>
-              ) : null}
-            </div>
           </div>
         </Section>
 
