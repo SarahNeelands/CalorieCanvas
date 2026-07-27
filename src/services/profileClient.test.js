@@ -5,7 +5,12 @@ jest.mock('./authClient', () => ({
 }));
 jest.mock('./apiClient', () => ({ apiRequest: (...args) => mockApiRequest(...args) }));
 jest.mock('./profileSetupProgress', () => ({ getProfileSetupState: () => ({}) }));
-import { getLatestWeightKg, getProfile, updateProfile } from './profileClient';
+import {
+  getLatestWeightKg,
+  getProfile,
+  resolveDailyCalorieGoal,
+  updateProfile,
+} from './profileClient';
 
 beforeEach(() => {
   localStorage.clear();
@@ -59,4 +64,31 @@ test('Express reads retain normalized profile and latest-weight return values', 
   const profile = await getProfile('session-user');
   expect(profile).toEqual(expect.objectContaining({ user_id: 'session-user', display_name: 'Alice' }));
   await expect(getLatestWeightKg('session-user')).resolves.toBeCloseTo(70, 3);
+});
+
+test('calculated calorie goal follows current weight when no explicit goal is set', () => {
+  const profile = {
+    dob: '1990-01-01',
+    gender: 'male',
+    height_cm: 180,
+    activity_level: 'moderately_active',
+    goal_weight_intent: 'maintain',
+    calorie_goal: null,
+  };
+  const lighterGoal = resolveDailyCalorieGoal({ ...profile, weight_kg: 70 });
+  const heavierGoal = resolveDailyCalorieGoal({ ...profile, weight_kg: 90 });
+  expect(heavierGoal).toBeGreaterThan(lighterGoal);
+});
+
+test('explicit calorie goal is preserved when weight changes', () => {
+  const profile = {
+    dob: '1990-01-01',
+    gender: 'female',
+    height_cm: 165,
+    activity_level: 'lightly_active',
+    goal_weight_intent: 'normal_loss',
+    calorie_goal: 2100,
+  };
+  expect(resolveDailyCalorieGoal({ ...profile, weight_kg: 60 })).toBe(2100);
+  expect(resolveDailyCalorieGoal({ ...profile, weight_kg: 90 })).toBe(2100);
 });

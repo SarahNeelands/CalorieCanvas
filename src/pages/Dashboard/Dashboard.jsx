@@ -9,7 +9,7 @@ import MyUsuals from "../../components/MyUsuals";
 import { macroTargetsByProfile, microTargetsByProfile } from "../../components/calories/nutrientTargets";
 import { getCurrentUserId } from "../../services/authClient";
 import { getDailyMealLogSummary } from "../../services/mealLogClient";
-import { calculateDailyCalorieGoal, getProfile } from "../../services/profileClient";
+import { getProfile, resolveDailyCalorieGoal } from "../../services/profileClient";
 import "./Dashboard.css";
 
 
@@ -60,7 +60,7 @@ export default function Dashboard({ user }) {
       if (profileResult.status === "fulfilled") {
         const profile = profileResult.value;
         setProfile(profile || null);
-        setGoal(Number(profile?.calorie_goal) > 0 ? Number(profile.calorie_goal) : calculateDailyCalorieGoal(profile));
+        setGoal(resolveDailyCalorieGoal(profile));
         setShowCalories(profile?.pref_show_calories !== false);
         setShowMacros(profile?.pref_show_macros !== false);
         setShowMicros(Boolean(profile?.pref_show_micros));

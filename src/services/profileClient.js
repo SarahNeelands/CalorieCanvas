@@ -271,6 +271,11 @@ export function calculateDailyCalorieGoal(profile) {
   return Math.round(Math.min(4500, Math.max(1200, goal)));
 }
 
+export function resolveDailyCalorieGoal(profile) {
+  const explicitGoal = Number(profile?.calorie_goal);
+  return explicitGoal > 0 ? explicitGoal : calculateDailyCalorieGoal(profile);
+}
+
 export async function getLatestWeightKg(userId = getStoredUserId()) {
   if (!userId) return null;
 

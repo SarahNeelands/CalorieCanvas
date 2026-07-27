@@ -174,7 +174,7 @@ export default function Ingredients({
     if (created && createdRow) {
       const nextIngredient = ingredientFromPasteRow(created, createdRow);
       if (!ingredients.some((item) => item.id === created.id)) {
-        pushIngredients([...ingredients, nextIngredient]);
+        onIngredientsChange?.([...ingredients, nextIngredient]);
       }
       setPasteCatalog((current) => [created, ...current.filter((item) => item.id !== created.id)]);
       onPasteDraftChange?.({
@@ -184,7 +184,7 @@ export default function Ingredients({
         createdForRowId: null,
       });
     }
-  }, [ingredients, onPasteDraftChange, pasteDraft]);
+  }, [ingredients, onIngredientsChange, onPasteDraftChange, pasteDraft]);
 
   useEffect(() => {
     if (!pasteDraft || !Array.isArray(pasteDraft.parsedRows) || !pasteDraft.parsedRows.length) return undefined;

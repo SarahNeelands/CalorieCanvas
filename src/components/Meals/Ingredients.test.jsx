@@ -5,7 +5,7 @@ import { listCatalogItems } from "../../services/catalogClient";
 jest.mock("react-router-dom", () => ({
   useLocation: () => ({ pathname: "/meals/new" }),
   useNavigate: () => jest.fn(),
-}));
+}), { virtual: true });
 
 jest.mock("../../services/catalogClient", () => ({
   listCatalogItems: jest.fn(),

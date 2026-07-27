@@ -79,6 +79,19 @@
   opacity: 0.42;
 }
 
+.line-trend-chart__reference-label {
+  font-size: 3.2px;
+  font-weight: 700;
+  opacity: 0.72;
+  paint-order: stroke;
+  stroke: rgba(255, 253, 247, 0.9);
+  stroke-width: 0.8px;
+}
+
+.line-trend-chart__reference-label--gold { fill: #526b3e; }
+.line-trend-chart__reference-label--green { fill: #4d7a63; }
+.line-trend-chart__reference-label--deep-green { fill: #2f5f4d; }
+
 .line-trend-chart__dot {
   stroke: #fff8ef;
   stroke-width: 1.5;
