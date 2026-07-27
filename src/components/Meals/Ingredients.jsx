@@ -154,24 +154,57 @@ export default function Ingredients({
   }, [ingredients, onIngredientsChange]);
 
   useEffect(() => {
-    if (!pasteDraft?.createdIngredient || !pasteDraft?.createdForRowId) return;
-    const created = pasteDraft.createdIngredient;
-    setPasteCatalog((current) => [created, ...current.filter((item) => item.id !== created.id)]);
-    setParsedRows((current) => {
-      const nextRows = current.map((row) => (
-        row.id === pasteDraft.createdForRowId
+    if (!pasteDraft) return;
+
+    const created = pasteDraft.createdIngredient || null;
+    const createdForRowId = pasteDraft.createdForRowId || null;
+    const restoredRows = (Array.isArray(pasteDraft.parsedRows) ? pasteDraft.parsedRows : []).map((row) => (
+      created && createdForRowId && row.id === createdForRowId
         ? { ...row, matchedId: created.id, candidateIds: [created.id] }
         : row
-      ));
+    ));
+
+    setShowPaste(Boolean(pasteDraft.showPaste));
+    setPasteText(pasteDraft.pasteText || "");
+    setParsedRows(restoredRows);
+
+    if (created && createdForRowId) {
+      setPasteCatalog((current) => [created, ...current.filter((item) => item.id !== created.id)]);
       onPasteDraftChange?.({
         ...pasteDraft,
-        parsedRows: nextRows,
+        parsedRows: restoredRows,
         createdIngredient: null,
         createdForRowId: null,
       });
-      return nextRows;
-    });
+    }
   }, [onPasteDraftChange, pasteDraft]);
+
+  useEffect(() => {
+    if (!pasteDraft || !Array.isArray(pasteDraft.parsedRows) || !pasteDraft.parsedRows.length) return undefined;
+
+    let active = true;
+    async function restorePasteCatalog() {
+      try {
+        const catalog = await listCatalogItems("ingredient");
+        if (!active) return;
+        const created = pasteDraft.createdIngredient;
+        setPasteCatalog(
+          created
+            ? [created, ...catalog.filter((item) => item.id !== created.id)]
+            : catalog
+        );
+      } catch (error) {
+        if (active) {
+          setPasteError(error.message || "Unable to reload ingredient matches.");
+        }
+      }
+    }
+
+    void restorePasteCatalog();
+    return () => {
+      active = false;
+    };
+  }, [pasteDraft]);
 
   function savePasteDraft(overrides = {}) {
     onPasteDraftChange?.({ showPaste, pasteText, parsedRows, ...overrides });
