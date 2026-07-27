@@ -11,6 +11,7 @@ import {
   normalizeIngredientName,
   parseIngredientList,
 } from "../../utils/ingredientListParser";
+import { saveMealDraftHandoff } from "../../utils/mealDraftHandoff";
 import "./Ingredients.css";
 
 const MASS_UNIT_TO_GRAMS = {
@@ -158,17 +159,23 @@ export default function Ingredients({
 
     const created = pasteDraft.createdIngredient || null;
     const createdForRowId = pasteDraft.createdForRowId || null;
-    const restoredRows = (Array.isArray(pasteDraft.parsedRows) ? pasteDraft.parsedRows : []).map((row) => (
-      created && createdForRowId && row.id === createdForRowId
-        ? { ...row, matchedId: created.id, candidateIds: [created.id] }
-        : row
-    ));
+    const draftRows = Array.isArray(pasteDraft.parsedRows) ? pasteDraft.parsedRows : [];
+    const createdRow = created && createdForRowId
+      ? draftRows.find((row) => row.id === createdForRowId)
+      : null;
+    const restoredRows = createdRow
+      ? draftRows.filter((row) => row.id !== createdForRowId)
+      : draftRows;
 
     setShowPaste(Boolean(pasteDraft.showPaste));
     setPasteText(pasteDraft.pasteText || "");
     setParsedRows(restoredRows);
 
-    if (created && createdForRowId) {
+    if (created && createdRow) {
+      const nextIngredient = ingredientFromPasteRow(created, createdRow);
+      if (!ingredients.some((item) => item.id === created.id)) {
+        pushIngredients([...ingredients, nextIngredient]);
+      }
       setPasteCatalog((current) => [created, ...current.filter((item) => item.id !== created.id)]);
       onPasteDraftChange?.({
         ...pasteDraft,
@@ -177,7 +184,7 @@ export default function Ingredients({
         createdForRowId: null,
       });
     }
-  }, [onPasteDraftChange, pasteDraft]);
+  }, [ingredients, onPasteDraftChange, pasteDraft]);
 
   useEffect(() => {
     if (!pasteDraft || !Array.isArray(pasteDraft.parsedRows) || !pasteDraft.parsedRows.length) return undefined;
@@ -264,17 +271,51 @@ export default function Ingredients({
   }
 
   function addMissingIngredient(row) {
-    navigate("/ingredients/new", {
-      state: {
-        ingredientName: row.name,
-        mealDraft: {
-          ...mealDraft,
-          ingredientPasteDraft: { showPaste: true, pasteText, parsedRows },
-        },
-        returnPasteRowId: row.id,
-        returnTo: location.pathname,
+    const handoff = {
+      ingredientName: row.name,
+      mealDraft: {
+        ...mealDraft,
+        ingredientPasteDraft: { showPaste: true, pasteText, parsedRows },
       },
+      returnPasteRowId: row.id,
+      returnTo: location.pathname,
+    };
+    saveMealDraftHandoff(handoff);
+    navigate("/ingredients/new", {
+      state: handoff,
     });
+  }
+
+  function ingredientFromPasteRow(item, row) {
+    const next = {
+      ...normalizeIngredient(item),
+      qty: row.qty,
+      unit: row.unit,
+      preparation_note: row.note || "",
+    };
+    return {
+      ...next,
+      calories: calculateIngredientCalories(next, next.qty, next.unit),
+    };
+  }
+
+  function addMatchedIngredient(index, itemId) {
+    const row = parsedRows[index];
+    const item = pasteCatalog.find((candidate) => candidate.id === itemId);
+    if (!row || !item) return;
+    if (!(Number(row.qty) > 0)) {
+      setPasteError(`Add an amount for ${row.name} before selecting its match.`);
+      return;
+    }
+
+    const nextIngredient = ingredientFromPasteRow(item, row);
+    const nextRows = parsedRows.filter((_, rowIndex) => rowIndex !== index);
+    if (!ingredients.some((ingredient) => ingredient.id === item.id)) {
+      pushIngredients([...ingredients, nextIngredient]);
+    }
+    setParsedRows(nextRows);
+    savePasteDraft({ showPaste: true, parsedRows: nextRows });
+    setPasteError("");
   }
 
   function addParsedIngredients() {
@@ -396,7 +437,7 @@ export default function Ingredients({
                             type="button"
                             key={id}
                             className={row.matchedId === id ? "is-selected" : ""}
-                            onClick={() => updateParsedRow(index, { matchedId: id })}
+                            onClick={() => addMatchedIngredient(index, id)}
                           >
                             {item.title}
                           </button>

@@ -4,6 +4,10 @@ import NavBar from "../../components/NavBar";
 import { createCatalogItem, updateCatalogItem } from "../../services/catalogClient";
 import { parseNutritionText, scanNutritionLabelFromImage } from "../../utils/nutritionLabelOcr";
 import { toMassValue } from "../../utils/nutrients";
+import {
+  clearMealDraftHandoff,
+  loadMealDraftHandoff,
+} from "../../utils/mealDraftHandoff";
 
 const MACRO_FIELDS = [
   { key: "calories", label: "Calories", unit: "kcal" },
@@ -143,7 +147,8 @@ function readImageAsDataUrl(file) {
 export default function NewIngredientPage({ user }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const returnTo = location.state?.returnTo || "/meals/new";
+  const storedHandoff = loadMealDraftHandoff();
+  const returnTo = location.state?.returnTo || storedHandoff?.returnTo || "/meals/new";
   const existingIngredient = location.state?.ingredient || null;
   const existingServing = existingIngredient?.unit_conversions?.serving_size || {};
   const existingConversions = existingIngredient?.unit_conversions || {};
@@ -152,7 +157,9 @@ export default function NewIngredientPage({ user }) {
   const existingPhoto = existingIngredient?.unit_conversions?.photo_data_url || "";
   const isEditing = Boolean(existingIngredient?.id);
   const photoInputRef = useRef(null);
-  const [name, setName] = useState(existingIngredient?.title || location.state?.ingredientName || "");
+  const [name, setName] = useState(
+    existingIngredient?.title || location.state?.ingredientName || storedHandoff?.ingredientName || ""
+  );
   const [brand, setBrand] = useState(existingIngredient?.unit_conversions?.brand || "");
   const [photoDataUrl, setPhotoDataUrl] = useState(existingPhoto);
   const [servingSize, setServingSize] = useState(
@@ -390,8 +397,8 @@ export default function NewIngredientPage({ user }) {
       const savedIngredient = isEditing
         ? await updateCatalogItem(existingIngredient.id, catalogPayload)
         : await createCatalogItem(catalogPayload);
-      const mealDraft = location.state?.mealDraft || null;
-      const returnPasteRowId = location.state?.returnPasteRowId;
+      const mealDraft = location.state?.mealDraft || storedHandoff?.mealDraft || null;
+      const returnPasteRowId = location.state?.returnPasteRowId || storedHandoff?.returnPasteRowId;
       const returnedMealDraft = returnPasteRowId && mealDraft
         ? {
             ...mealDraft,
@@ -405,6 +412,7 @@ export default function NewIngredientPage({ user }) {
         : mealDraft;
 
       setSaving(false);
+      clearMealDraftHandoff();
       navigate(returnTo, {
         replace: true,
         state: { mealDraft: returnedMealDraft },
@@ -764,10 +772,14 @@ export default function NewIngredientPage({ user }) {
           </button>
           <button
             className="secondary"
-            onClick={() => navigate(returnTo, {
-              replace: true,
-              state: { mealDraft: location.state?.mealDraft || null },
-            })}
+            onClick={() => {
+              const mealDraft = location.state?.mealDraft || storedHandoff?.mealDraft || null;
+              clearMealDraftHandoff();
+              navigate(returnTo, {
+                replace: true,
+                state: { mealDraft },
+              });
+            }}
             style={{
               borderRadius: 999,
               padding: "12px 22px",
