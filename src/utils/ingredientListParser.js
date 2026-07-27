@@ -33,11 +33,19 @@ const UNIT_ALIASES = {
 
 function parseNumber(value) {
   if (!value) return null;
-  if (value.includes("/")) {
-    const [numerator, denominator] = value.split("/").map(Number);
+  const normalized = String(value).trim();
+  const mixedNumber = normalized.match(/^(\d+)\s+(\d+)\/(\d+)$/);
+  if (mixedNumber) {
+    const denominator = Number(mixedNumber[3]);
+    return denominator > 0
+      ? Number(mixedNumber[1]) + (Number(mixedNumber[2]) / denominator)
+      : null;
+  }
+  if (normalized.includes("/")) {
+    const [numerator, denominator] = normalized.split("/").map(Number);
     return denominator > 0 ? numerator / denominator : null;
   }
-  const number = Number(value);
+  const number = Number(normalized);
   return Number.isFinite(number) ? number : null;
 }
 
@@ -69,10 +77,10 @@ export function parseIngredientLine(rawLine, index = 0) {
   if (!cleaned) return null;
 
   const leading = cleaned.match(
-    /^(\d+(?:\.\d+)?|\d+\/\d+)\s*(mg|milligrams?|g|grams?|kg|kilograms?|oz|ounces?|lb|pounds?|ml|milliliters?|cups?|tbsp|tablespoons?|tsp|teaspoons?|pieces?|pcs?)?\s+(.+)$/i
+    /^(\d+\s+\d+\/\d+|\d+(?:\.\d+)?|\d+\/\d+)\s*(mg|milligrams?|g|grams?|kg|kilograms?|oz|ounces?|lb|pounds?|ml|milliliters?|cups?|tbsp|tablespoons?|tsp|teaspoons?|pieces?|pcs?)?\s+(.+)$/i
   );
   const trailing = cleaned.match(
-    /^(.+?)[,\s-]+(\d+(?:\.\d+)?|\d+\/\d+)\s*(mg|milligrams?|g|grams?|kg|kilograms?|oz|ounces?|lb|pounds?|ml|milliliters?|cups?|tbsp|tablespoons?|tsp|teaspoons?|pieces?|pcs?)$/i
+    /^(.+?)[,\s-]+(\d+\s+\d+\/\d+|\d+(?:\.\d+)?|\d+\/\d+)\s*(mg|milligrams?|g|grams?|kg|kilograms?|oz|ounces?|lb|pounds?|ml|milliliters?|cups?|tbsp|tablespoons?|tsp|teaspoons?|pieces?|pcs?)$/i
   );
 
   let amount = null;
@@ -111,31 +119,33 @@ export function parseIngredientList(value) {
 }
 
 export function findBestIngredientMatch(parsed, catalog) {
+  return findIngredientMatches(parsed, catalog, 1)[0] || null;
+}
+
+export function findIngredientMatches(parsed, catalog, limit = 4) {
   const target = parsed.normalizedName;
-  if (!target) return null;
+  if (!target) return [];
   const normalized = catalog.map((item) => ({
     item,
     name: normalizeIngredientName(item.title || item.name),
   }));
   const exact = normalized.find((candidate) => candidate.name === target);
-  if (exact) return exact.item;
-  const contained = normalized.filter(
-    (candidate) => candidate.name.includes(target) || target.includes(candidate.name)
-  );
-  if (contained.length === 1) return contained[0].item;
-
   const targetWords = new Set(target.split(" ").filter((word) => word.length > 1));
-  let best = null;
-  let bestScore = 0;
-  for (const candidate of normalized) {
+  const ranked = normalized.map((candidate) => {
     const words = candidate.name.split(" ");
     const overlap = words.filter((word) => targetWords.has(word)).length;
-    const score = overlap / Math.max(targetWords.size, words.length, 1);
-    if (score > bestScore) {
-      best = candidate.item;
-      bestScore = score;
-    }
-  }
-  return bestScore >= 0.5 ? best : null;
-}
+    const wordScore = overlap / Math.max(targetWords.size, words.length, 1);
+    const contained = candidate.name.includes(target) || target.includes(candidate.name);
+    const score = candidate.name === target ? 1 : Math.max(wordScore, contained ? 0.72 : 0);
+    return { ...candidate, score };
+  })
+    .filter((candidate) => candidate.score >= 0.4)
+    .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
 
+  const matches = ranked.map((candidate) => candidate.item);
+  if (!exact) return matches.slice(0, limit);
+  return [
+    exact.item,
+    ...matches.filter((item) => item.id !== exact.item.id),
+  ].slice(0, limit);
+}

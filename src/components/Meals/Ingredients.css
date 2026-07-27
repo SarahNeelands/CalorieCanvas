@@ -40,6 +40,7 @@
   background:rgba(255,255,255,0.72);
 }
 .ing-paste label{ display:grid; gap:0.35rem; color:var(--cc-ink); font-weight:700; }
+.ing-paste label small{ color:#667268; font-size:0.82rem; font-weight:500; }
 .ing-paste textarea{
   width:100%;
   min-height:8rem;
@@ -55,14 +56,30 @@
 .ing-paste__review{ display:grid; gap:0.55rem; }
 .ing-paste__review-head{ display:flex; justify-content:space-between; gap:1rem; color:#526157; }
 .ing-paste__row{
-  display:grid;
-  grid-template-columns:minmax(8rem, 1fr) minmax(10rem, 1.3fr) 6rem 5rem;
-  gap:0.4rem;
-  align-items:center;
+  display:grid; gap:0.8rem; padding:0.85rem;
+  border:1px solid var(--cc-border); border-radius:12px; background:#fffdf9;
 }
-.ing-paste__source{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#526157; font-size:0.85rem; }
-.ing-paste__row input,
-.ing-paste__row select{
+.ing-paste__row-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; }
+.ing-paste__row-head > div{ display:grid; gap:0.18rem; min-width:0; }
+.ing-paste__row-head strong{ color:var(--cc-ink); }
+.ing-paste__row-head div span{ color:#667268; font-size:0.8rem; overflow-wrap:anywhere; }
+.ing-paste__row-head > span{ flex:none; padding:0.28rem 0.55rem; border-radius:999px; font-size:0.74rem; font-weight:800; }
+.ing-paste__row-head .is-ready{ color:#285b3d; background:#e8f3e8; }
+.ing-paste__row-head .needs-match{ color:#815816; background:#fff2d5; }
+.ing-paste__matches{ display:grid; gap:0.38rem; }
+.ing-paste__field-label{ color:#526157; font-size:0.78rem; font-weight:800; text-transform:uppercase; letter-spacing:0.035em; }
+.ing-paste__suggestions{ display:flex; gap:0.4rem; flex-wrap:wrap; }
+.ing-paste__suggestions button{
+  padding:0.48rem 0.7rem; border:1px solid rgba(22,50,39,0.18); border-radius:999px;
+  background:#fff; color:var(--cc-ink); cursor:pointer; font:inherit; font-size:0.84rem; font-weight:700;
+}
+.ing-paste__suggestions button:hover{ border-color:var(--cc-accent); }
+.ing-paste__suggestions button.is-selected{ color:#fff; background:var(--cc-accent); border-color:var(--cc-accent); }
+.ing-paste__suggestions button.ing-paste__new{ color:var(--cc-accent); background:#eef5e8; }
+.ing-paste__amount{ display:grid; gap:0.38rem; max-width:15rem; }
+.ing-paste__amount > div{ display:grid; grid-template-columns:minmax(0, 1fr) 5.5rem; gap:0.4rem; }
+.ing-paste__amount input,
+.ing-paste__amount select{
   min-width:0;
   width:100%;
   box-sizing:border-box;
@@ -160,13 +177,10 @@
     padding:0.8rem;
   }
   .ing-table-head{ display:none; }
-  .ing-paste__row{
-    grid-template-columns:minmax(0, 1fr) 5.5rem;
-  }
-  .ing-paste__source,
-  .ing-paste__row select:first-of-type{
-    grid-column:1 / -1;
-  }
+  .ing-paste{ padding:0.7rem; }
+  .ing-paste__row{ padding:0.75rem; }
+  .ing-paste__row-head{ gap:0.5rem; }
+  .ing-paste__amount{ max-width:none; }
 
   .ing-controls{
     min-width:0;

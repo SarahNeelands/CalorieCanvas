@@ -19,9 +19,14 @@ jest.mock('./services/authClient', () => ({
 }));
 
 import App from './App';
+import { validateStoredSession } from './services/authClient';
 
 beforeAll(() => {
   window.scrollTo = jest.fn();
+});
+
+beforeEach(() => {
+  jest.clearAllMocks();
 });
 
 test('renders the application router without requiring an authenticated session', async () => {
@@ -32,4 +37,22 @@ test('renders the application router without requiring an authenticated session'
   });
   const { getByTestId } = view;
   expect(getByTestId('application-routes')).toBeInTheDocument();
+});
+
+test('profile draft changes from another tab do not restart authentication', async () => {
+  await act(async () => {
+    render(<App />);
+    await Promise.resolve();
+  });
+  expect(validateStoredSession).toHaveBeenCalledTimes(1);
+
+  await act(async () => {
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: 'profile_setup_progress_v1',
+      newValue: JSON.stringify({ lastStep: '/profile-setup-2' }),
+    }));
+    await Promise.resolve();
+  });
+
+  expect(validateStoredSession).toHaveBeenCalledTimes(1);
 });

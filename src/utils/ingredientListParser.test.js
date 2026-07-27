@@ -1,5 +1,6 @@
 import {
   findBestIngredientMatch,
+  findIngredientMatches,
   parseIngredientList,
 } from "./ingredientListParser";
 
@@ -19,6 +20,16 @@ test("parses common pasted ingredient formats", () => {
   ]);
 });
 
+test("parses the preferred comma format and mixed fractions", () => {
+  expect(parseIngredientList([
+    "Chicken breast, 600 g",
+    "Rice, 1 1/2 cups",
+  ].join("\n"))).toEqual([
+    expect.objectContaining({ name: "Chicken breast", qty: "600", unit: "g" }),
+    expect.objectContaining({ name: "Rice", qty: "1.5", unit: "cup" }),
+  ]);
+});
+
 test("matches normalized catalog names without silently choosing weak matches", () => {
   const catalog = [
     { id: "chicken", title: "Chicken Breast" },
@@ -34,3 +45,14 @@ test("matches normalized catalog names without silently choosing weak matches", 
   )).toBeNull();
 });
 
+test("returns a short ranked list of close ingredient matches", () => {
+  const catalog = [
+    { id: "plain", title: "Greek Yogurt Plain" },
+    { id: "vanilla", title: "Greek Yogurt Vanilla" },
+    { id: "rice", title: "White Rice" },
+  ];
+  expect(findIngredientMatches(
+    parseIngredientList("Greek yogurt, 1 cup")[0],
+    catalog
+  ).map((item) => item.id)).toEqual(["plain", "vanilla"]);
+});

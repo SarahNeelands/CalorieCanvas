@@ -6,7 +6,11 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import IngredientSearch from "./IngredientSearch";
 import { listCatalogItems } from "../../services/catalogClient";
-import { findBestIngredientMatch, parseIngredientList } from "../../utils/ingredientListParser";
+import {
+  findIngredientMatches,
+  normalizeIngredientName,
+  parseIngredientList,
+} from "../../utils/ingredientListParser";
 import "./Ingredients.css";
 
 const MASS_UNIT_TO_GRAMS = {
@@ -118,11 +122,21 @@ function availableUnits(item) {
   return Array.from(units);
 }
 
-export default function Ingredients({ ingredients = [], onIngredientsChange, mealDraft }) {
+const PASTE_UNITS = ["mg", "g", "oz", "lb", "ml", "cup", "tbsp", "tsp", "piece"];
+
+export default function Ingredients({
+  ingredients = [],
+  onIngredientsChange,
+  mealDraft,
+  pasteDraft,
+  onPasteDraftChange,
+}) {
   const [showSearch, setShowSearch] = useState(false);
-  const [showPaste, setShowPaste] = useState(false);
-  const [pasteText, setPasteText] = useState("");
-  const [parsedRows, setParsedRows] = useState([]);
+  const [showPaste, setShowPaste] = useState(Boolean(pasteDraft?.showPaste));
+  const [pasteText, setPasteText] = useState(pasteDraft?.pasteText || "");
+  const [parsedRows, setParsedRows] = useState(
+    Array.isArray(pasteDraft?.parsedRows) ? pasteDraft.parsedRows : []
+  );
   const [pasteCatalog, setPasteCatalog] = useState([]);
   const [pasteLoading, setPasteLoading] = useState(false);
   const [pasteError, setPasteError] = useState("");
@@ -138,6 +152,36 @@ export default function Ingredients({ ingredients = [], onIngredientsChange, mea
       onIngredientsChange?.([]);
     }
   }, [ingredients, onIngredientsChange]);
+
+  useEffect(() => {
+    if (!pasteDraft?.createdIngredient || !pasteDraft?.createdForRowId) return;
+    const created = pasteDraft.createdIngredient;
+    setPasteCatalog((current) => [created, ...current.filter((item) => item.id !== created.id)]);
+    setParsedRows((current) => {
+      const nextRows = current.map((row) => (
+        row.id === pasteDraft.createdForRowId
+        ? { ...row, matchedId: created.id, candidateIds: [created.id] }
+        : row
+      ));
+      onPasteDraftChange?.({
+        ...pasteDraft,
+        parsedRows: nextRows,
+        createdIngredient: null,
+        createdForRowId: null,
+      });
+      return nextRows;
+    });
+  }, [onPasteDraftChange, pasteDraft]);
+
+  function savePasteDraft(overrides = {}) {
+    onPasteDraftChange?.({ showPaste, pasteText, parsedRows, ...overrides });
+  }
+
+  function closePaste() {
+    setShowPaste(false);
+    setPasteError("");
+    onPasteDraftChange?.(null);
+  }
 
   const handleAdd = (ing) => {
     if (ingredients.some((item) => item.id === ing.id)) return;
@@ -156,10 +200,19 @@ export default function Ingredients({ ingredients = [], onIngredientsChange, mea
       setPasteError("");
       const catalog = pasteCatalog.length ? pasteCatalog : await listCatalogItems("ingredient");
       setPasteCatalog(catalog);
-      setParsedRows(parsed.map((row) => ({
-        ...row,
-        matchedId: findBestIngredientMatch(row, catalog)?.id || "",
-      })));
+      const nextRows = parsed.map((row) => {
+        const candidates = findIngredientMatches(row, catalog);
+        const exact = candidates.find((candidate) => (
+          normalizeIngredientName(candidate.title || candidate.name) === row.normalizedName
+        ));
+        return {
+          ...row,
+          matchedId: exact?.id || "",
+          candidateIds: candidates.map((candidate) => candidate.id),
+        };
+      });
+      setParsedRows(nextRows);
+      savePasteDraft({ showPaste: true, parsedRows: nextRows });
     } catch (error) {
       setPasteError(error.message || "Unable to match the ingredient list.");
     } finally {
@@ -168,9 +221,27 @@ export default function Ingredients({ ingredients = [], onIngredientsChange, mea
   }
 
   function updateParsedRow(index, changes) {
-    setParsedRows((current) => current.map((row, rowIndex) => (
-      rowIndex === index ? { ...row, ...changes } : row
-    )));
+    setParsedRows((current) => {
+      const next = current.map((row, rowIndex) => (
+        rowIndex === index ? { ...row, ...changes } : row
+      ));
+      savePasteDraft({ showPaste: true, parsedRows: next });
+      return next;
+    });
+  }
+
+  function addMissingIngredient(row) {
+    navigate("/ingredients/new", {
+      state: {
+        ingredientName: row.name,
+        mealDraft: {
+          ...mealDraft,
+          ingredientPasteDraft: { showPaste: true, pasteText, parsedRows },
+        },
+        returnPasteRowId: row.id,
+        returnTo: location.pathname,
+      },
+    });
   }
 
   function addParsedIngredients() {
@@ -193,6 +264,7 @@ export default function Ingredients({ ingredients = [], onIngredientsChange, mea
     setShowPaste(false);
     setPasteText("");
     setParsedRows([]);
+    onPasteDraftChange?.(null);
   }
 
   function updateIngredient(index, changes) {
@@ -219,7 +291,17 @@ export default function Ingredients({ ingredients = [], onIngredientsChange, mea
         <h3>Add to Meal</h3>
         <div className="ing-actions">
           <button type="button" className="btn" onClick={() => setShowSearch(true)}>Search</button>
-          <button type="button" className="btn btn--ghost" onClick={() => setShowPaste((value) => !value)}>Paste List</button>
+          <button
+            type="button"
+            className="btn btn--ghost"
+            onClick={() => {
+              const next = !showPaste;
+              setShowPaste(next);
+              savePasteDraft({ showPaste: next });
+            }}
+          >
+            Paste List
+          </button>
           <button
             type="button"
             className="btn btn--ghost"
@@ -239,17 +321,21 @@ export default function Ingredients({ ingredients = [], onIngredientsChange, mea
         <div className="ing-paste">
           <label>
             <span>Paste one ingredient per line</span>
+            <small>Use: ingredient name, amount and measurement</small>
             <textarea
               value={pasteText}
-              onChange={(event) => setPasteText(event.target.value)}
-              placeholder={"600g chicken breast\n300 g dry rice\n1 tbsp olive oil\n2 bell peppers"}
+              onChange={(event) => {
+                setPasteText(event.target.value);
+                savePasteDraft({ showPaste: true, pasteText: event.target.value });
+              }}
+              placeholder={"Chicken breast, 600 g\nDry rice, 300 g\nOlive oil, 1 tbsp\nBell pepper, 2 pieces"}
             />
           </label>
           <div className="ing-paste__actions">
             <button type="button" className="btn" onClick={analyzePaste} disabled={pasteLoading}>
               {pasteLoading ? "Matching…" : "Match ingredients"}
             </button>
-            <button type="button" className="btn btn--ghost" onClick={() => setShowPaste(false)}>Cancel</button>
+            <button type="button" className="btn btn--ghost" onClick={closePaste}>Cancel</button>
           </div>
           {pasteError && <p className="ing-paste__error">{pasteError}</p>}
           {parsedRows.length > 0 && (
@@ -260,36 +346,58 @@ export default function Ingredients({ ingredients = [], onIngredientsChange, mea
               </div>
               {parsedRows.map((row, index) => (
                 <div className="ing-paste__row" key={row.id}>
-                  <div className="ing-paste__source">{row.raw}</div>
-                  <select
-                    aria-label={`Catalog match for ${row.name}`}
-                    value={row.matchedId}
-                    onChange={(event) => updateParsedRow(index, { matchedId: event.target.value })}
-                  >
-                    <option value="">Choose ingredient…</option>
-                    {pasteCatalog.map((item) => (
-                      <option value={item.id} key={item.id}>{item.title}</option>
-                    ))}
-                  </select>
-                  <input
-                    aria-label={`Amount for ${row.name}`}
-                    type="number"
-                    min="0"
-                    step="any"
-                    inputMode="decimal"
-                    value={row.qty}
-                    placeholder="Amount"
-                    onChange={(event) => updateParsedRow(index, { qty: event.target.value })}
-                  />
-                  <select
-                    aria-label={`Unit for ${row.name}`}
-                    value={row.unit}
-                    onChange={(event) => updateParsedRow(index, { unit: event.target.value })}
-                  >
-                    {["mg", "g", "oz", "lb", "ml", "cup", "tbsp", "tsp", "piece"].map((option) => (
-                      <option value={option} key={option}>{option}</option>
-                    ))}
-                  </select>
+                  <div className="ing-paste__row-head">
+                    <div><strong>{row.name}</strong><span>{row.raw}</span></div>
+                    <span className={row.matchedId ? "is-ready" : "needs-match"}>
+                      {row.matchedId ? "Ready" : "Needs a match"}
+                    </span>
+                  </div>
+                  <div className="ing-paste__matches">
+                    <span className="ing-paste__field-label">Ingredient match</span>
+                    <div className="ing-paste__suggestions">
+                      {(row.candidateIds || []).map((id) => {
+                        const item = pasteCatalog.find((candidate) => candidate.id === id);
+                        if (!item) return null;
+                        return (
+                          <button
+                            type="button"
+                            key={id}
+                            className={row.matchedId === id ? "is-selected" : ""}
+                            onClick={() => updateParsedRow(index, { matchedId: id })}
+                          >
+                            {item.title}
+                          </button>
+                        );
+                      })}
+                      <button type="button" className="ing-paste__new" onClick={() => addMissingIngredient(row)}>
+                        + Add “{row.name}” as new
+                      </button>
+                    </div>
+                  </div>
+                  <label className="ing-paste__amount">
+                    <span className="ing-paste__field-label">Amount used</span>
+                    <div>
+                      <input
+                        aria-label={`Amount for ${row.name}`}
+                        type="number"
+                        min="0"
+                        step="any"
+                        inputMode="decimal"
+                        value={row.qty}
+                        placeholder="Amount"
+                        onChange={(event) => updateParsedRow(index, { qty: event.target.value })}
+                      />
+                      <select
+                        aria-label={`Unit for ${row.name}`}
+                        value={row.unit}
+                        onChange={(event) => updateParsedRow(index, { unit: event.target.value })}
+                      >
+                        {PASTE_UNITS.map((option) => (
+                          <option value={option} key={option}>{option}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </label>
                 </div>
               ))}
               <button

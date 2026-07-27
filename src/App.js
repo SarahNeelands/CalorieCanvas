@@ -115,7 +115,11 @@ export default function App() {
 
     bootstrapAuth();
 
-    const handleAuthChange = () => {
+    const handleAuthChange = (event) => {
+      if (event.type === 'storage' && event.key !== 'user_id') {
+        return;
+      }
+
       const nextStoredUserId = getStoredUserId() || undefined;
       if (!nextStoredUserId) {
         setCurrentUserId(undefined);

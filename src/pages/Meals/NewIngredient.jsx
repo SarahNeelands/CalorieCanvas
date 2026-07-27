@@ -152,7 +152,7 @@ export default function NewIngredientPage({ user }) {
   const existingPhoto = existingIngredient?.unit_conversions?.photo_data_url || "";
   const isEditing = Boolean(existingIngredient?.id);
   const photoInputRef = useRef(null);
-  const [name, setName] = useState(existingIngredient?.title || "");
+  const [name, setName] = useState(existingIngredient?.title || location.state?.ingredientName || "");
   const [brand, setBrand] = useState(existingIngredient?.unit_conversions?.brand || "");
   const [photoDataUrl, setPhotoDataUrl] = useState(existingPhoto);
   const [servingSize, setServingSize] = useState(
@@ -362,16 +362,27 @@ export default function NewIngredientPage({ user }) {
         },
       };
 
-      if (isEditing) {
-        await updateCatalogItem(existingIngredient.id, catalogPayload);
-      } else {
-        await createCatalogItem(catalogPayload);
-      }
+      const savedIngredient = isEditing
+        ? await updateCatalogItem(existingIngredient.id, catalogPayload)
+        : await createCatalogItem(catalogPayload);
+      const mealDraft = location.state?.mealDraft || null;
+      const returnPasteRowId = location.state?.returnPasteRowId;
+      const returnedMealDraft = returnPasteRowId && mealDraft
+        ? {
+            ...mealDraft,
+            ingredientPasteDraft: {
+              ...mealDraft.ingredientPasteDraft,
+              showPaste: true,
+              createdIngredient: savedIngredient,
+              createdForRowId: returnPasteRowId,
+            },
+          }
+        : mealDraft;
 
       setSaving(false);
       navigate(returnTo, {
         replace: true,
-        state: { mealDraft: location.state?.mealDraft || null },
+        state: { mealDraft: returnedMealDraft },
       });
     } catch (error) {
       setSaving(false);
