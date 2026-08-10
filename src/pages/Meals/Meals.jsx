@@ -16,6 +16,10 @@ export default function Meals({ user }) {
   const [logOpen, setLogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const onSelectToLog = (item) => {
+    if (item?.unit_conversions?.recipe_status === "awaiting_final_weight") {
+      window.alert("Finish this recipe by adding its cooked weight or serving count before logging it.");
+      return;
+    }
     setSelectedItem(item);
     setLogOpen(true);
   };

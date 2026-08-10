@@ -32,6 +32,7 @@ function createEmailDelivery(config, { fetchImpl = global.fetch, logger = consol
     }
 
     const message = buildMessage(kind, config.publicAppOrigin, token);
+    let failureReason = 'unknown error';
     for (let attempt = 1; attempt <= config.maxAttempts; attempt += 1) {
       try {
         const response = await fetchImpl(RESEND_ENDPOINT, {
@@ -44,9 +45,10 @@ function createEmailDelivery(config, { fetchImpl = global.fetch, logger = consol
           signal: AbortSignal.timeout(config.requestTimeoutMs),
         });
         if (response.ok) return true;
+        failureReason = `HTTP ${response.status}`;
         if (response.status < 500 && response.status !== 429) break;
-      } catch {
-        // Provider details are intentionally discarded so secrets and addresses never reach logs.
+      } catch (error) {
+        failureReason = error?.name === 'TimeoutError' ? 'request timeout' : 'network error';
       }
 
       if (attempt < config.maxAttempts) {
@@ -54,7 +56,9 @@ function createEmailDelivery(config, { fetchImpl = global.fetch, logger = consol
       }
     }
 
-    logger.error(`Authentication ${kind} email delivery failed after configured retries.`);
+    logger.error(
+      `Authentication ${kind} email delivery failed after configured retries (${failureReason}).`
+    );
     return false;
   }
 

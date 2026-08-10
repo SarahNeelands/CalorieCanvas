@@ -18,6 +18,7 @@ jest.mock('./catalogClient', () => ({
 
 import {
   createMealLog,
+  createMealLogsBatch,
   deleteMealLog,
   getDailyMealLogSummary,
   getMealLogDay,
@@ -61,6 +62,25 @@ test('Express create preserves entry shape, snapshots the catalog item, and neve
   const shifted = new Date(Date.parse(options.body.logged_at) + options.body.timezone_offset_minutes * 60_000)
     .toISOString().slice(0, 10);
   expect(shifted).toBe(options.body.log_date);
+});
+
+test('batch logging sends one CSRF-protected request and strips ownership from every entry', async () => {
+  const entries = [{ id: 'one' }, { id: 'two' }];
+  mockApiRequest.mockResolvedValue({ payload: { data: entries }, error: null });
+
+  await expect(createMealLogsBatch([
+    payload({ user_id: 'first-forged-user' }),
+    payload({ user_id: 'second-forged-user', qty: 3 }),
+  ])).resolves.toEqual(entries);
+
+  const [path, options] = mockApiRequest.mock.calls[0];
+  expect(path).toBe('/meal-logs/batch');
+  expect(options).toEqual(expect.objectContaining({ method: 'POST', csrf: true }));
+  expect(options.body.entries).toHaveLength(2);
+  options.body.entries.forEach((entry) => {
+    expect(entry.user_id).toBeUndefined();
+    expect(entry.userId).toBeUndefined();
+  });
 });
 
 test('Express list, range, day, and summary calls retain normalized response shapes and date-only serialization', async () => {

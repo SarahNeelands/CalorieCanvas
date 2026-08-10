@@ -17,8 +17,8 @@ async function verifyStaging() {
     sessions: await count(pool, 'sessions'),
   };
   console.info(JSON.stringify(results, null, 2));
-  const expected = results.migrations === 12
-    && results.migrationVersion === 12
+  const expected = results.migrations === 14
+    && results.migrationVersion === 14
     && results.seedLedger === 1
     && results.sharedCatalogItems === 70
     && results.sharedExerciseDefinitions === 5;

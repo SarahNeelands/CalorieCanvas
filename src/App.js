@@ -11,6 +11,7 @@ import Progress from "./pages/Progress/Progress";
 import Profile from "./pages/Profile/Profile";
 import NewIngredient from "./pages/Meals/NewIngredient";
 import LogMeal from "./pages/Meals/LogMeal";
+import DayRecap from "./pages/Meals/DayRecap";
 import SnackDetails  from "./pages/Meals/SnackDetails";
 import DefaultImage from "./components/images/defaultprofile.png"
 import Login from './pages/Authentication/Login';
@@ -114,7 +115,11 @@ export default function App() {
 
     bootstrapAuth();
 
-    const handleAuthChange = () => {
+    const handleAuthChange = (event) => {
+      if (event.type === 'storage' && event.key !== 'user_id') {
+        return;
+      }
+
       const nextStoredUserId = getStoredUserId() || undefined;
       if (!nextStoredUserId) {
         setCurrentUserId(undefined);
@@ -157,11 +162,8 @@ export default function App() {
         <Route path="/exercises/log" element={<ProtectedRoute status={status} userId={currentUserId}><Exercises user={currentUser} /></ProtectedRoute>} />
         <Route path="/progress" element={<ProtectedRoute status={status} userId={currentUserId}><Progress user={currentUser} /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute status={status} userId={currentUserId}><Profile user={currentUser} /></ProtectedRoute>} />
-        <Route path="/meals/log" element={<ProtectedRoute status={status} userId={currentUserId}><LogMeal user={currentUser} /></ProtectedRoute>} />
-        <Route path="/ingredients/new" element={<ProtectedRoute status={status} userId={currentUserId}><NewIngredient user={currentUser} /></ProtectedRoute>} />
-        <Route path="/meals" element={<ProtectedRoute status={status} userId={currentUserId}><Meals user={currentUser} /></ProtectedRoute>} />
-        <Route path="/meals/log" element={<ProtectedRoute status={status} userId={currentUserId}><LogMeal user={currentUser} /></ProtectedRoute>} />         {/* existing builder */}
         <Route path="/meals/new" element={<ProtectedRoute status={status} userId={currentUserId}><LogMeal user={currentUser} /></ProtectedRoute>} />         {/* create new meal via details flow */}
+        <Route path="/day-recap" element={<ProtectedRoute status={status} userId={currentUserId}><DayRecap user={currentUser} /></ProtectedRoute>} />
         <Route path="/ingredients/new" element={<ProtectedRoute status={status} userId={currentUserId}><NewIngredient user={currentUser} /></ProtectedRoute>} />
         <Route path="/snacks/new" element={<ProtectedRoute status={status} userId={currentUserId}><SnackDetails user={currentUser} /></ProtectedRoute>} />
         <Route path="/login" element={<Login />} />

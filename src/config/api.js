@@ -3,7 +3,10 @@ const isLocalDevelopment =
   (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
 function resolveApiBaseUrl(value = process.env.REACT_APP_API_BASE_URL) {
-  const candidate = String(value || (isLocalDevelopment ? 'http://127.0.0.1:3001/api' : '/api')).trim();
+  const localApiUrl = typeof window !== 'undefined'
+    ? `http://${window.location.hostname}:3001/api`
+    : 'http://127.0.0.1:3001/api';
+  const candidate = String(value || (isLocalDevelopment ? localApiUrl : '/api')).trim();
   if (!candidate) throw new Error('The Express API base URL is required.');
   if (candidate.startsWith('/')) return candidate.replace(/\/$/, '');
   let parsed;

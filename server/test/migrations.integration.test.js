@@ -60,6 +60,7 @@ integrationTest('authentication migrations create the required schema and remain
       'exercise_definitions',
       'exercise_logs',
       'exercise_sync_operations',
+      'food_usuals',
       'meal_logs',
       'meals',
       'password_reset_tokens',
@@ -87,6 +88,9 @@ integrationTest('authentication migrations create the required schema and remain
       { version: 10, name: '010_create_exercises.sql' },
       { version: 11, name: '011_preserve_weight_original_unit.sql' },
       { version: 12, name: '012_create_data_seed_ledger.sql' },
+      { version: 13, name: '013_create_food_usuals.sql' },
+      { version: 14, name: '014_require_native_accounts.sql' },
+      { version: 15, name: '015_add_usuals_dashboard_preference.sql' },
     ]);
 
     const sharedSeed = await database.pool.query(
@@ -163,6 +167,7 @@ integrationTest('authentication migrations create the required schema and remain
         'exercise_definitions_user_id_fkey',
         'exercise_logs_user_id_fkey',
         'exercise_sync_operations_user_id_fkey',
+        'food_usuals_user_id_fkey',
         'meal_logs_user_id_fkey',
         'meals_user_id_fkey',
         'password_reset_tokens_user_id_fkey',
@@ -182,7 +187,7 @@ integrationTest('authentication migrations create the required schema and remain
     const userColumnMap = Object.fromEntries(
       userColumns.rows.map((column) => [column.column_name, column.is_nullable])
     );
-    assert.equal(userColumnMap.password_hash, 'YES');
+    assert.equal(userColumnMap.password_hash, 'NO');
     for (const required of [
       'id',
       'email',
@@ -237,6 +242,7 @@ integrationTest('authentication migrations create the required schema and remain
       'exercise_logs_user_source_unique',
       'exercise_logs_user_date_idx',
       'exercise_sync_operations_created_at_idx',
+      'idx_food_usuals_user_position',
     ]) {
       assert.ok(indexes.includes(required), `missing index ${required}`);
     }
@@ -247,7 +253,7 @@ integrationTest('authentication migrations create the required schema and remain
       WHERE tgrelid IN (
         'users'::regclass, 'sessions'::regclass, 'profiles'::regclass,
         'meal_logs'::regclass, 'meals'::regclass, 'shared_catalog_items'::regclass,
-        'weights'::regclass
+        'weights'::regclass, 'food_usuals'::regclass
         , 'exercise_definitions'::regclass, 'exercise_logs'::regclass
       )
         AND NOT tgisinternal
@@ -255,6 +261,7 @@ integrationTest('authentication migrations create the required schema and remain
     assert.deepEqual(triggers, [
       'exercise_definitions_set_updated_at',
       'exercise_logs_set_updated_at',
+      'food_usuals_set_updated_at',
       'meal_logs_set_updated_at',
       'meals_set_updated_at',
       'profiles_set_updated_at',
@@ -264,36 +271,36 @@ integrationTest('authentication migrations create the required schema and remain
       'weights_set_updated_at',
     ]);
 
-    const migratedUserId = crypto.randomUUID();
+    const nativeUserId = crypto.randomUUID();
     await database.pool.query(
       `INSERT INTO users (id, email, password_hash, must_reset_password)
-       VALUES ($1, $2, NULL, true)`,
-      [migratedUserId, 'migrated@example.com']
+       VALUES ($1, $2, $3, false)`,
+      [nativeUserId, 'native@example.com', 'native-password-hash']
     );
-    const migratedUser = await database.pool.query(
+    const nativeUser = await database.pool.query(
       `SELECT id, email, password_hash, must_reset_password, account_status
        FROM users WHERE id = $1`,
-      [migratedUserId]
+      [nativeUserId]
     );
-    assert.deepEqual(migratedUser.rows[0], {
-      id: migratedUserId,
-      email: 'migrated@example.com',
-      password_hash: null,
-      must_reset_password: true,
+    assert.deepEqual(nativeUser.rows[0], {
+      id: nativeUserId,
+      email: 'native@example.com',
+      password_hash: 'native-password-hash',
+      must_reset_password: false,
       account_status: 'active',
     });
 
     await assert.rejects(
       database.pool.query(
-        'INSERT INTO users (id, email) VALUES ($1, $2)',
-        [crypto.randomUUID(), 'Migrated@Example.com']
+        'INSERT INTO users (id, email, password_hash) VALUES ($1, $2, $3)',
+        [crypto.randomUUID(), 'Native@Example.com', 'native-password-hash']
       ),
       (error) => error.code === '23514' && error.constraint === 'users_email_normalized_check'
     );
     await assert.rejects(
       database.pool.query(
-        'INSERT INTO users (id, email) VALUES ($1, $2)',
-        [crypto.randomUUID(), 'migrated@example.com']
+        'INSERT INTO users (id, email, password_hash) VALUES ($1, $2, $3)',
+        [crypto.randomUUID(), 'native@example.com', 'native-password-hash']
       ),
       (error) => error.code === '23505' && error.constraint === 'users_email_normalized_unique'
     );
@@ -303,26 +310,26 @@ integrationTest('authentication migrations create the required schema and remain
          VALUES ($1, $2, NULL, false)`,
         [crypto.randomUUID(), 'invalid-password-state@example.com']
       ),
-      (error) => error.code === '23514' && error.constraint === 'users_password_state_check'
+      (error) => error.code === '23502' && error.column === 'password_hash'
     );
 
     await database.pool.query(
       `INSERT INTO sessions (sid, sess, expire, user_id)
        VALUES ($1, $2, now() + interval '1 day', $3)`,
-      ['d'.repeat(64), JSON.stringify({ cookie: {} }), migratedUserId]
+      ['d'.repeat(64), JSON.stringify({ cookie: {} }), nativeUserId]
     );
 
     const originalUpdatedAt = await database.pool.query(
       'SELECT updated_at FROM users WHERE id = $1',
-      [migratedUserId]
+      [nativeUserId]
     );
     await database.pool.query(
       `UPDATE users SET updated_at = updated_at - interval '1 day' WHERE id = $1`,
-      [migratedUserId]
+      [nativeUserId]
     );
     const triggeredUpdatedAt = await database.pool.query(
       'SELECT updated_at FROM users WHERE id = $1',
-      [migratedUserId]
+      [nativeUserId]
     );
     assert.ok(triggeredUpdatedAt.rows[0].updated_at >= originalUpdatedAt.rows[0].updated_at);
 
@@ -331,7 +338,7 @@ integrationTest('authentication migrations create the required schema and remain
     await database.pool.query(
       `INSERT INTO password_reset_tokens (id, user_id, token_digest, expires_at)
        VALUES ($1, $2, $3, now() + interval '1 hour')`,
-      [passwordTokenId, migratedUserId, passwordDigest]
+      [passwordTokenId, nativeUserId, passwordDigest]
     );
     const firstConsumption = await database.pool.query(
       `UPDATE password_reset_tokens
@@ -358,7 +365,7 @@ integrationTest('authentication migrations create the required schema and remain
       database.pool.query(
         `INSERT INTO password_reset_tokens (id, user_id, token_digest, expires_at)
          VALUES ($1, $2, $3, now() - interval '1 minute')`,
-        [crypto.randomUUID(), migratedUserId, 'b'.repeat(64)]
+        [crypto.randomUUID(), nativeUserId, 'b'.repeat(64)]
       ),
       (error) => error.code === '23514' && error.constraint === 'password_reset_tokens_expiration_check'
     );
@@ -367,7 +374,7 @@ integrationTest('authentication migrations create the required schema and remain
     await database.pool.query(
       `INSERT INTO email_verification_tokens (id, user_id, token_digest, expires_at)
        VALUES ($1, $2, $3, now() + interval '1 day')`,
-      [verificationTokenId, migratedUserId, 'c'.repeat(64)]
+      [verificationTokenId, nativeUserId, 'c'.repeat(64)]
     );
     const verificationToken = await database.pool.query(
       `SELECT consumed_at, revoked_at, expires_at > now() AS active

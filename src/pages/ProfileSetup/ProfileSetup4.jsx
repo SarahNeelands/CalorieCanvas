@@ -17,6 +17,7 @@ export default function ProfileSetup4() {
     show_calories: true,
     show_macros: true,
     show_micros: false,
+    show_usuals: true,
     show_exercise: true,
     show_weight: true,
   });
@@ -55,6 +56,7 @@ export default function ProfileSetup4() {
         pref_show_calories: prefs.show_calories,
         pref_show_macros: prefs.show_macros,
         pref_show_micros: prefs.show_micros,
+        pref_show_usuals: prefs.show_usuals,
         pref_show_exercise: prefs.show_exercise,
         pref_show_weight: prefs.show_weight,
       }, userId);
@@ -89,6 +91,15 @@ export default function ProfileSetup4() {
 
           <form onSubmit={onFinish} className="ps-form" style={{ gap: 18 }}>
             <label className="ps-label">Modules</label>
+
+            <label className="remember">
+              <input
+                type="checkbox"
+                checked={prefs.show_usuals}
+                onChange={() => toggle('show_usuals')}
+              />
+              <span>My Usuals</span>
+            </label>
 
             <label className="remember">
               <input

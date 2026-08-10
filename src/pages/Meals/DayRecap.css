@@ -1,0 +1,189 @@
+.day-recap-page {
+  min-height: 100vh;
+  color: #294639;
+}
+
+.day-recap-shell {
+  width: min(100% - 2rem, 72rem);
+  margin: 0 auto;
+  padding: 0 0 3rem;
+}
+
+.day-recap-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.day-recap-header h1 {
+  margin: 0;
+  font: 700 clamp(1.8rem, 3vw, 2.5rem) Georgia, serif;
+}
+
+.day-recap-header p {
+  max-width: 42rem;
+  margin: 0.35rem 0 0;
+  color: #667260;
+}
+
+.day-recap-header label {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 700;
+}
+
+.day-recap-header input,
+.day-recap-row input,
+.day-recap-row select {
+  min-width: 0;
+  box-sizing: border-box;
+  border: 1px solid rgba(79, 107, 80, 0.22);
+  border-radius: 0.7rem;
+  padding: 0.65rem;
+  background: #fffdf9;
+  color: #294639;
+  font: inherit;
+}
+
+.day-recap-usuals,
+.day-recap-card {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border: 1px solid rgba(176, 152, 121, 0.25);
+  border-radius: 1.1rem;
+  background: rgba(252, 248, 239, 0.92);
+  box-shadow: 0 14px 32px rgba(75, 93, 69, 0.08);
+}
+
+.day-recap-usuals h2,
+.day-recap-card h2 {
+  margin: 0;
+  font: 700 1.25rem Georgia, serif;
+}
+
+.day-recap-usuals > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.75rem;
+}
+
+.day-recap-usuals button,
+.day-recap-card button {
+  border: 1px solid rgba(79, 107, 80, 0.25);
+  border-radius: 0.7rem;
+  padding: 0.55rem 0.75rem;
+  background: rgba(79, 107, 80, 0.08);
+  color: #38563f;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.day-recap-card__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.8rem;
+}
+
+.day-recap-card__heading > div {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.day-recap-rows {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.day-recap-row {
+  display: grid;
+  grid-template-columns: 7.5rem minmax(12rem, 1fr) 6.5rem 6rem 7rem auto;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.7rem;
+  border: 1px solid rgba(79, 107, 80, 0.13);
+  border-radius: 0.85rem;
+  background: rgba(255, 253, 249, 0.72);
+}
+
+.day-recap-row:has(.day-recap-row__food[type="text"]) {
+  grid-template-columns: 7.5rem minmax(12rem, 1fr) 6.5rem 7rem auto;
+}
+
+.day-recap-row__remove {
+  color: #8c4b36 !important;
+}
+
+.day-recap-error {
+  padding: 0.7rem;
+  border-radius: 0.75rem;
+  background: #fff1ef;
+  color: #8c1d18;
+}
+
+.day-recap-save {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+.day-recap-save__primary {
+  background: #4f6b50 !important;
+  color: #fff !important;
+}
+
+@media (max-width: 800px) {
+  .day-recap-shell {
+    width: calc(100% - 1.2rem);
+    padding-bottom: 7rem;
+  }
+
+  .day-recap-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .day-recap-header label {
+    width: min(100%, 14rem);
+  }
+
+  .day-recap-card__heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .day-recap-card__heading > div {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .day-recap-row,
+  .day-recap-row:has(.day-recap-row__food[type="text"]) {
+    grid-template-columns: minmax(0, 1fr) minmax(6.5rem, 0.45fr);
+  }
+
+  .day-recap-row__food {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .day-recap-row > select:first-child {
+    grid-column: 1;
+  }
+
+  .day-recap-row__remove {
+    grid-column: 1 / -1;
+  }
+
+  .day-recap-save {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+  }
+}
+

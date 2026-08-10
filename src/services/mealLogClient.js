@@ -120,6 +120,18 @@ export async function getDailyMealLogSummary({ userId = getStoredUserId(), date 
   return payload?.data;
 }
 
+export async function createMealLogsBatch(payloads) {
+  const userId = await getCurrentUserId();
+  if (!userId) throw new Error('Missing user ID');
+  if (!Array.isArray(payloads) || payloads.length < 1) throw new Error('Add at least one food.');
+  const entries = payloads.map((payload) => buildExpressMealLogPayload(payload, userId));
+  const { payload: response, error } = await apiRequest('/meal-logs/batch', {
+    method: 'POST', csrf: true, body: { entries },
+  });
+  if (error) throw new Error(error.message);
+  return response?.data || [];
+}
+
 export async function getMealLogDay({ userId = getStoredUserId(), date = new Date() } = {}) {
   if (!userId) throw new Error('Missing user ID');
   const localDate = formatLocalDate(date);

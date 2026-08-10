@@ -13,14 +13,19 @@ export default function LineTrendChart({
   onPointClick,
   showArea = false,
   averageValue = null,
+  referenceLabel = 'Average',
 }) {
   const hasData = data.length > 0;
   const points = hasData ? data : labels.map((label) => ({ label, [valueKey]: 0 }));
   const values = points.map((point) => Number(point[valueKey] ?? 0));
   const timestamps = points.map((point, index) => getPointTimestamp(point, index));
   const validTimestamps = timestamps.filter((value) => Number.isFinite(value));
-  const rawMin = Math.min(...values);
-  const rawMax = Math.max(...values);
+  const referenceValue = Number(averageValue);
+  const scaleValues = hasData && Number.isFinite(referenceValue)
+    ? [...values, referenceValue]
+    : values;
+  const rawMin = Math.min(...scaleValues);
+  const rawMax = Math.max(...scaleValues);
   const min = rawMin === rawMax ? rawMin - getValuePadding(rawMin) : rawMin;
   const max = rawMin === rawMax ? rawMax + getValuePadding(rawMax) : rawMax;
   const spread = max - min || 1;
@@ -112,13 +117,23 @@ export default function LineTrendChart({
               </>
             ) : null}
             {hasAverageLine ? (
-              <line
-                className={`line-trend-chart__average line-trend-chart__average--${tone}`}
-                x1={chartLeft}
-                y1={averageY}
-                x2={chartRight}
-                y2={averageY}
-              />
+              <>
+                <line
+                  className={`line-trend-chart__average line-trend-chart__average--${tone}`}
+                  x1={chartLeft}
+                  y1={averageY}
+                  x2={chartRight}
+                  y2={averageY}
+                />
+                <text
+                  className={`line-trend-chart__reference-label line-trend-chart__reference-label--${tone}`}
+                  x={chartRight - 0.8}
+                  y={Math.max(chartTop + 3, averageY - 2)}
+                  textAnchor="end"
+                >
+                  {referenceLabel}
+                </text>
+              </>
             ) : null}
             {lineSegments.map((segment, index) => (
               <line

@@ -17,6 +17,9 @@
   },
   "scripts": {
     "start": "react-scripts start",
+    "local:up": "docker compose -f deploy/local/compose.yml up --build",
+    "local:email:up": "docker compose --env-file .env.production --env-file .env.production.local -f deploy/local/compose.yml up --build",
+    "local:down": "docker compose -f deploy/local/compose.yml down",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "build:frontend": "react-scripts build",

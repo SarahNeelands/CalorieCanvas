@@ -51,11 +51,11 @@ export default function MealDetails({
       </label>
 
       <label className="md-field">
-        <span>Total Weight (g)</span>
+        <span>Final Cooked Weight (g)</span>
         <input
           type="number"
           inputMode="decimal"
-          placeholder="e.g., 350"
+          placeholder="Add after cooking"
           value={totalWeight}
           onChange={(e) => onTotalWeightChange?.(e.target.value)}
         />
@@ -74,7 +74,7 @@ export default function MealDetails({
         />
       </label>
       <p style={{ margin: 0, color: "#667268", fontSize: 14 }}>
-        Enter total weight or servings. If you use servings, recipe weight will be inferred from the ingredients when possible.
+        Add the cooked weight after preparing the recipe, or enter a serving count. Leave both blank to save a draft and finish it later.
       </p>
     </div>
   );

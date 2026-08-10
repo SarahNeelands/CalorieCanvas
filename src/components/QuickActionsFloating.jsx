@@ -13,7 +13,7 @@ export default function QuickActionsFloating(){
     return window.matchMedia("(max-width: 980px)").matches;
   });
 
-  const quickActionPaths = new Set(["/", "/meals", "/exercises", "/progress", "/profile"]);
+  const quickActionPaths = new Set(["/", "/meals", "/exercises", "/progress", "/profile", "/day-recap"]);
   const shouldRender = isPhone && quickActionPaths.has(location.pathname);
 
   useEffect(()=>{
@@ -55,6 +55,7 @@ export default function QuickActionsFloating(){
       {open && (
         <div className="qa-floating-menu" role="menu">
           <button className="qa-floating-item" onClick={()=>{ setOpen(false); navigate('/meals', {state:{openLogMeal:true}}); }}>Log Meal</button>
+          <button className="qa-floating-item" onClick={()=>{ setOpen(false); navigate('/day-recap'); }}>Rebuild Day</button>
           <button className="qa-floating-item" onClick={()=>{ setOpen(false); navigate('/exercises', {state:{openLog:true}}); }}>Log Exercise</button>
           <button className="qa-floating-item" onClick={()=>{ setOpen(false); navigate('/progress', {state:{openWeight:true}}); }}>Log Weight</button>
         </div>

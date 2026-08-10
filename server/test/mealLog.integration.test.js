@@ -265,6 +265,48 @@ integrationTest('meal-log updates, moves, ordering, deletion, validation, isolat
       body: entryInput({ user_id: second.userId }),
     })).status, 400);
 
+    const otherMealId = crypto.randomUUID();
+    await harness.pool.query(
+      `INSERT INTO meals (id, user_id, title, type) VALUES ($1, $2, 'Private Other Meal', 'meal')`,
+      [otherMealId, second.userId]
+    );
+    const failedBatch = await request(harness.baseUrl, '/api/meal-logs/batch', {
+      method: 'POST', cookie: first.cookie, csrfToken: first.csrfToken,
+      body: {
+        entries: [
+          entryInput({ item_snapshot: snapshot({ title: 'Batch Must Roll Back' }) }),
+          entryInput({ meal_id: otherMealId, item_snapshot: undefined }),
+        ],
+      },
+    });
+    assert.equal(failedBatch.status, 400);
+    const rolledBackBatch = await harness.pool.query(
+      `SELECT count(*)::integer AS count FROM meal_logs
+       WHERE user_id = $1 AND item_snapshot->>'title' = 'Batch Must Roll Back'`,
+      [first.userId]
+    );
+    assert.equal(rolledBackBatch.rows[0].count, 0);
+
+    const successfulBatch = await request(harness.baseUrl, '/api/meal-logs/batch', {
+      method: 'POST', cookie: first.cookie, csrfToken: first.csrfToken,
+      body: {
+        entries: [
+          entryInput({ item_snapshot: snapshot({ title: 'Batch Breakfast' }) }),
+          entryInput({
+            item_snapshot: snapshot({ title: 'Batch Snack', type: 'snack', item_type: 'snack' }),
+            meal_type: 'snack',
+          }),
+        ],
+      },
+    });
+    assert.equal(successfulBatch.status, 201);
+    const successfulBatchEntries = (await successfulBatch.json()).data;
+    assert.equal(successfulBatchEntries.length, 2);
+    await harness.pool.query(
+      'DELETE FROM meal_logs WHERE user_id = $1 AND id = ANY($2::uuid[])',
+      [first.userId, successfulBatchEntries.map((entry) => entry.id)]
+    );
+
     const updated = await request(harness.baseUrl, `/api/meal-logs/entries/${one.id}`, {
       method: 'PUT', cookie: first.cookie, csrfToken: first.csrfToken,
       body: { qty: 2, unit_code: 'oz', grams_resolved: 56.699, kcal: 56 },

@@ -59,6 +59,7 @@ test('delivery retries transient failures and logs only a sanitized failure', as
   assert.equal(await delivery.sendEmailVerification({ email: 'private@example.test', token: 'secret' }), false);
   assert.equal(attempts, 2);
   assert.equal(logs.length, 1);
+  assert.match(logs[0], /HTTP 503/);
   assert.doesNotMatch(logs[0], /private|secret|provider-secret/);
 });
 

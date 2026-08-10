@@ -46,7 +46,7 @@ export default function RecentMealsLogged({ userId, limit = 3, title = "Recent M
       setError(null);
       if (!userId) throw new Error("Missing user ID");
       const data = await listMealLogs({ userId, limit });
-      setRows(data ?? []);
+      setRows((data ?? []).slice(0, limit));
     } catch (e) {
       setError(e);
     } finally {
@@ -87,7 +87,9 @@ export default function RecentMealsLogged({ userId, limit = 3, title = "Recent M
               <div className="item__left">
                 <div className="meal-row">
                   <h4 className="item__title" style={{ margin: 0 }}>{getDisplayTitle(r)}</h4>
-                  <p className="item__time" style={{ margin: 0 }}>{formatDateTime(r.logged_at)}</p>
+                  <p className="item__time" style={{ margin: 0 }}>
+                    {formatDateTime(r.logged_at)}
+                  </p>
                 </div>
                 {getDisplayBrand(r) && (
                   <div className="item__meta item__meta--brand">{getDisplayBrand(r)}</div>

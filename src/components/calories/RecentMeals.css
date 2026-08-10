@@ -109,6 +109,15 @@
   color: #8c4b36;
   border-color: rgba(177, 131, 101, 0.32);
 }
+.item__draft-badge{
+  border:1px solid rgba(157,116,39,0.25);
+  border-radius:999px;
+  padding:0.3rem 0.6rem;
+  background:#fff6df;
+  color:#765b23;
+  font-size:0.78rem;
+  font-weight:800;
+}
 
 /* Layout of content inside the card:
    [ left chunk      ][   kcal ]

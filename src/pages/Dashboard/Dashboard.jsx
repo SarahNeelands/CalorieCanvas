@@ -5,10 +5,11 @@ import MacrosSummary from "../../components/calories/MacrosSummary";
 import MicrosSummary from "../../components/calories/MicrosSummary";
 import QuickActions from "../../components/QuickActions";
 import RecentMealsLogged from "../../components/RecentMealsLogged";
+import MyUsuals from "../../components/MyUsuals";
 import { macroTargetsByProfile, microTargetsByProfile } from "../../components/calories/nutrientTargets";
 import { getCurrentUserId } from "../../services/authClient";
 import { getDailyMealLogSummary } from "../../services/mealLogClient";
-import { calculateDailyCalorieGoal, getProfile } from "../../services/profileClient";
+import { getCachedProfile, getProfile, resolveDailyCalorieGoal } from "../../services/profileClient";
 import "./Dashboard.css";
 
 
@@ -19,6 +20,7 @@ export default function Dashboard({ user }) {
   const [showCalories, setShowCalories] = React.useState(true);
   const [showMacros, setShowMacros] = React.useState(true);
   const [showMicros, setShowMicros] = React.useState(false);
+  const [showUsuals, setShowUsuals] = React.useState(true);
   const [eaten, setEaten] = React.useState(0);
   const [macros, setMacros] = React.useState({
     protein_g: 0,
@@ -59,16 +61,19 @@ export default function Dashboard({ user }) {
       if (profileResult.status === "fulfilled") {
         const profile = profileResult.value;
         setProfile(profile || null);
-        setGoal(Number(profile?.calorie_goal) > 0 ? Number(profile.calorie_goal) : calculateDailyCalorieGoal(profile));
+        setGoal(resolveDailyCalorieGoal(profile));
         setShowCalories(profile?.pref_show_calories !== false);
         setShowMacros(profile?.pref_show_macros !== false);
         setShowMicros(Boolean(profile?.pref_show_micros));
+        setShowUsuals(profile?.pref_show_usuals !== false);
       } else {
-        setProfile(null);
-        setGoal(null);
-        setShowCalories(true);
-        setShowMacros(true);
-        setShowMicros(false);
+        const cachedProfile = getCachedProfile(userId);
+        setProfile(cachedProfile);
+        setGoal(resolveDailyCalorieGoal(cachedProfile));
+        setShowCalories(cachedProfile?.pref_show_calories !== false);
+        setShowMacros(cachedProfile?.pref_show_macros !== false);
+        setShowMicros(Boolean(cachedProfile?.pref_show_micros));
+        setShowUsuals(cachedProfile?.pref_show_usuals !== false);
       }
 
       if (summaryResult.status === "fulfilled") {
@@ -156,6 +161,11 @@ export default function Dashboard({ user }) {
                 />
               </div>
             )}
+          </div>
+        )}
+        {showUsuals && (
+          <div className="dashboard-usuals">
+            <MyUsuals userId={resolvedUserId} />
           </div>
         )}
         <div className="dashboard-recent">

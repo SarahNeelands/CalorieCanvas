@@ -1,8 +1,8 @@
 # Calorie Canvas deployment operations
 
-This runbook is exclusively for `https://caloriecanvas.serenx.net` and a fresh,
-empty PostgreSQL database. Do not run Supabase export/import tooling and do not
-import the retained SQLite database.
+This runbook is exclusively for `https://caloriecanvas.serenx.net` and its
+PostgreSQL database. Accounts are created natively by this application; legacy
+account imports are not supported.
 
 ## Install and configure
 
@@ -20,10 +20,9 @@ docker network inspect shared-net >/dev/null
 
 Use the existing Resend key, a verified sender, and only approved recipients. The
 database password in `DATABASE_URL` must be the URL-encoded form of
-`POSTGRES_PASSWORD`. `EMAIL_VERIFICATION_REQUIRED=false` temporarily signs new
-accounts in immediately; change it to `true` to restore verification before login.
-Password-reset delivery still requires the email provider while verification is
-paused.
+`POSTGRES_PASSWORD`. Keep `EMAIL_VERIFICATION_REQUIRED=true` so new accounts must
+verify their email before login. Password-reset delivery also requires the email
+provider.
 
 ## Validate, build, migrate, and start
 
@@ -32,12 +31,16 @@ cd /opt/caloriecanvas
 docker compose --env-file .env.production -f deploy/production/compose.yml config --quiet
 docker compose --env-file .env.production -f deploy/production/compose.yml build --pull app
 docker compose --env-file .env.production -f deploy/production/compose.yml up -d db
-docker compose --profile tools --env-file .env.production -f deploy/production/compose.yml run --rm migrate
+docker compose --env-file .env.production -f deploy/production/compose.yml run --rm migrate
 docker compose --profile tools --env-file .env.production -f deploy/production/compose.yml run --rm app node server/scripts/verify-staging.js
 docker compose --env-file .env.production -f deploy/production/compose.yml up -d app
 ```
 
-Verification must report 12 migrations, latest version 12, one seed ledger row,
+The app also depends on a successful, idempotent migration run. This prevents a
+new application image from starting against an older schema if the explicit
+migration command is accidentally omitted.
+
+Verification must report 15 migrations, latest version 15, one seed ledger row,
 70 shared catalog items, five shared exercise definitions, zero users, and zero
 sessions before application testing.
 

@@ -29,7 +29,7 @@ COPY --chown=node:node server/utils ./server/utils
 COPY --chown=node:node server/migrations ./server/migrations
 COPY --chown=node:node server/seeds ./server/seeds
 COPY --chown=node:node server/scripts ./server/scripts
-COPY --chown=node:node server/migration-tooling/lib/sharedCatalog.js ./server/migration-tooling/lib/sharedCatalog.js
+COPY --chown=node:node server/seeds/sharedCatalogLoader.js ./server/seeds/sharedCatalogLoader.js
 COPY --chown=node:node src/services/builtInIngredients.js ./src/services/builtInIngredients.js
 COPY --from=server-dependencies --chown=node:node /build/server/node_modules ./server/node_modules
 COPY --from=frontend-build --chown=node:node /build/build ./public

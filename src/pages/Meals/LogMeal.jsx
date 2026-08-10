@@ -162,6 +162,7 @@ export default function LogMeal({ user }) {
   const [savingMeal, setSavingMeal] = useState(false);
   const [saveError, setSaveError] = useState(null);
   const [editingMealId, setEditingMealId] = useState(null);
+  const [ingredientPasteDraft, setIngredientPasteDraft] = useState(null);
 
   useEffect(() => {
     if (!location.state?.resetIngredients) return;
@@ -172,6 +173,7 @@ export default function LogMeal({ user }) {
     setTotalWeight("");
     setServingCount("");
     setEditingMealId(null);
+    setIngredientPasteDraft(null);
     navigate(location.pathname, { replace: true, state: {} });
   }, [location.pathname, location.state, navigate]);
 
@@ -193,6 +195,7 @@ export default function LogMeal({ user }) {
         : String(draft.servingCount)
     );
     setEditingMealId(draft.editingMealId || null);
+    setIngredientPasteDraft(draft.ingredientPasteDraft || null);
 
     navigate(location.pathname, { replace: true, state: {} });
   }, [location.pathname, location.state, navigate]);
@@ -228,6 +231,7 @@ export default function LogMeal({ user }) {
     setTotalWeight(restoredWeight === "" ? "" : String(restoredWeight));
     setServingCount(restoredServingCount === "" ? "" : String(restoredServingCount));
     setEditingMealId(editMeal.id || null);
+    setIngredientPasteDraft(null);
 
     navigate(location.pathname, { replace: true, state: {} });
   }, [location.pathname, location.state, navigate]);
@@ -239,10 +243,12 @@ export default function LogMeal({ user }) {
     totalWeight,
     servingCount,
     editingMealId,
+    ingredientPasteDraft,
   };
 
   const inferredTotalWeight = estimateRecipeWeightGrams(ingredients);
   const effectiveTotalWeight = Number(totalWeight || 0) > 0 ? Number(totalWeight) : inferredTotalWeight;
+  const recipeComplete = Number(totalWeight || 0) > 0 || Number(servingCount || 0) > 0;
 
   async function saveMeal({ openLogAfterSave = false } = {}) {
     setSavingMeal(true);
@@ -256,18 +262,24 @@ export default function LogMeal({ user }) {
       if (!ingredients.length) {
         throw new Error("Add at least one ingredient before saving.");
       }
+      if (ingredients.some((ingredient) => !(Number(ingredient.qty) > 0))) {
+        throw new Error("Enter an amount for every ingredient before saving.");
+      }
 
       const enteredTotalWeight = Number(totalWeight || 0);
       const enteredServingCount = Number(servingCount || 0);
       if (enteredTotalWeight > 0 && enteredServingCount > 0) {
         throw new Error("Enter either total weight or servings, not both.");
       }
-      if (!(enteredTotalWeight > 0) && !(enteredServingCount > 0)) {
-        throw new Error("Enter total weight or servings before saving.");
+      const isDraft = !(enteredTotalWeight > 0) && !(enteredServingCount > 0);
+      if (openLogAfterSave && isDraft) {
+        throw new Error("Add the final cooked weight or servings before logging a portion.");
       }
 
-      const numericTotalWeight = enteredTotalWeight > 0 ? enteredTotalWeight : estimateRecipeWeightGrams(ingredients);
-      if (!(numericTotalWeight > 0)) {
+      const numericTotalWeight = enteredTotalWeight > 0
+        ? enteredTotalWeight
+        : estimateRecipeWeightGrams(ingredients);
+      if (!isDraft && !(numericTotalWeight > 0)) {
         throw new Error("Unable to derive total weight from the ingredients. Enter a total weight instead.");
       }
 
@@ -307,7 +319,7 @@ export default function LogMeal({ user }) {
         }
       );
 
-      const scale = 100 / numericTotalWeight;
+      const scale = isDraft ? 0 : 100 / numericTotalWeight;
       const gramsPerServing = numericServingCount ? numericTotalWeight / numericServingCount : null;
       const round2 = (value) => Math.round((value + Number.EPSILON) * 100) / 100;
 
@@ -315,10 +327,10 @@ export default function LogMeal({ user }) {
         title: mealName.trim(),
         item_type: "meal",
         created_at: timestamp ? new Date(timestamp).toISOString() : undefined,
-        kcal_per_100g: round2(totals.calories * scale),
-        protein_g_per_100g: round2(totals.protein * scale),
-        carbs_g_per_100g: round2(totals.carbs * scale),
-        fat_g_per_100g: round2(totals.fat * scale),
+        kcal_per_100g: isDraft ? 0 : round2(totals.calories * scale),
+        protein_g_per_100g: isDraft ? 0 : round2(totals.protein * scale),
+        carbs_g_per_100g: isDraft ? 0 : round2(totals.carbs * scale),
+        fat_g_per_100g: isDraft ? 0 : round2(totals.fat * scale),
         unit_conversions: {
           quantity: gramsPerServing ? round2(gramsPerServing) : null,
           quantity_label: gramsPerServing ? "serving" : null,
@@ -336,11 +348,16 @@ export default function LogMeal({ user }) {
             vitaminC: round2(totals.vitaminC * scale),
           },
           serving_size: {
-            qty: gramsPerServing ? round2(gramsPerServing) : numericTotalWeight,
+            qty: isDraft ? null : (gramsPerServing ? round2(gramsPerServing) : numericTotalWeight),
             unit: gramsPerServing ? "serving" : "g",
           },
-          total_weight_g: numericTotalWeight,
+          total_weight_g: isDraft ? null : numericTotalWeight,
+          estimated_raw_weight_g: round2(inferredTotalWeight),
           servings_count: numericServingCount ? round2(numericServingCount) : null,
+          recipe_status: isDraft ? "awaiting_final_weight" : "complete",
+          recipe_totals: Object.fromEntries(
+            Object.entries(totals).map(([key, value]) => [key, round2(value)])
+          ),
           ingredients: ingredients.map((ingredient) => ({
             ...ingredient,
             name: ingredient.name || ingredient.title,
@@ -418,6 +435,8 @@ export default function LogMeal({ user }) {
                 ingredients={ingredients}
                 onIngredientsChange={setIngredients}
                 mealDraft={mealDraft}
+                pasteDraft={ingredientPasteDraft}
+                onPasteDraftChange={setIngredientPasteDraft}
               />
             </div>
           </section>
@@ -428,6 +447,7 @@ export default function LogMeal({ user }) {
               ingredients={ingredients}
               totalWeight={effectiveTotalWeight}
               servingCount={Number(servingCount || 0)}
+              recipeComplete={recipeComplete}
               saving={savingMeal}
               error={saveError}
               onSave={handleSaveMeal}

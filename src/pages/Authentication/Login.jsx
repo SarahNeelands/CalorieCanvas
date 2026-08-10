@@ -33,7 +33,7 @@ export default function Login() {
 
     setLoading(false);
     if (error) {
-      setMsg('Unable to sign in. If your account was migrated, use Forgot password to create a new password.');
+      setMsg('Unable to sign in. Check your email and password, or use Forgot password.');
       return;
     }
 

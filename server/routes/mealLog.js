@@ -46,6 +46,19 @@ function createMealLogRouter({ pool }) {
     res.status(201).json({ data: entry, error: null });
   });
 
+  router.post('/batch', requireCsrf, async (req, res) => {
+    if (!req.body || typeof req.body !== 'object' || Array.isArray(req.body)
+        || Object.keys(req.body).some((key) => key !== 'entries')
+        || !Array.isArray(req.body.entries)
+        || req.body.entries.length < 1
+        || req.body.entries.length > 50) {
+      throw validationError('entries must contain between 1 and 50 meal logs.');
+    }
+    const inputs = req.body.entries.map((entry) => validateMealLogInput(entry));
+    const entries = await mealLogModel.createMealLogsBatch(pool, req.auth.user.id, inputs);
+    res.status(201).json({ data: entries, error: null });
+  });
+
   router.put('/entries/:entryId', requireCsrf, async (req, res) => {
     const entryId = validateEntryId(req.params.entryId);
     const patch = validateMealLogInput(req.body, { partial: true });
