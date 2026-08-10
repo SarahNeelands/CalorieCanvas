@@ -34,31 +34,6 @@ function getDisplayAmount(row) {
   return `${row.qty} ${row.unit_code}`;
 }
 
-function groupRecentRows(rows, limit) {
-  const groups = new Map();
-  for (const row of rows) {
-    const date = row.log_date || new Date(row.logged_at).toLocaleDateString("en-CA");
-    const identity = row.meal_id || row.food_id || row.meal?.title || row.id;
-    const key = `${date}:${identity}`;
-    const existing = groups.get(key);
-    if (!existing) {
-      groups.set(key, { ...row, entries: [row], occurrenceCount: 1 });
-      continue;
-    }
-    existing.entries.push(row);
-    existing.occurrenceCount += 1;
-    existing.kcal = Number(existing.kcal || 0) + Number(row.kcal || 0);
-    existing.grams_resolved = Number(existing.grams_resolved || 0) + Number(row.grams_resolved || 0);
-    if (existing.unit_code === row.unit_code) {
-      existing.qty = Number(existing.qty || 0) + Number(row.qty || 0);
-    } else {
-      existing.qty = existing.grams_resolved;
-      existing.unit_code = "g";
-    }
-  }
-  return Array.from(groups.values()).slice(0, limit);
-}
-
 export default function RecentMealsLogged({ userId, limit = 3, title = "Recent Meals" }) {
   const [rows, setRows] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
@@ -70,8 +45,8 @@ export default function RecentMealsLogged({ userId, limit = 3, title = "Recent M
       setLoading(true);
       setError(null);
       if (!userId) throw new Error("Missing user ID");
-      const data = await listMealLogs({ userId, limit: Math.max(50, limit * 20) });
-      setRows(groupRecentRows(data ?? [], limit));
+      const data = await listMealLogs({ userId, limit });
+      setRows((data ?? []).slice(0, limit));
     } catch (e) {
       setError(e);
     } finally {
@@ -114,7 +89,6 @@ export default function RecentMealsLogged({ userId, limit = 3, title = "Recent M
                   <h4 className="item__title" style={{ margin: 0 }}>{getDisplayTitle(r)}</h4>
                   <p className="item__time" style={{ margin: 0 }}>
                     {formatDateTime(r.logged_at)}
-                    {r.occurrenceCount > 1 ? ` · ${r.occurrenceCount} times today` : ""}
                   </p>
                 </div>
                 {getDisplayBrand(r) && (
@@ -127,10 +101,8 @@ export default function RecentMealsLogged({ userId, limit = 3, title = "Recent M
                   {Number(r.kcal || 0)} <span>kcal</span>
                 </div>
                 <div className="item__actions--inline">
-                  <button type="button" className="item__quick-btn item__quick-btn--soft" onClick={() => setEditingRow(r.entries?.[0] || r)}>Edit last</button>
-                  <button type="button" className="item__quick-btn item__quick-btn--soft" onClick={() => handleDelete(r.entries?.[0] || r)}>
-                    {r.occurrenceCount > 1 ? "Undo last" : "Delete"}
-                  </button>
+                  <button type="button" className="item__quick-btn item__quick-btn--soft" onClick={() => setEditingRow(r)}>Edit</button>
+                  <button type="button" className="item__quick-btn item__quick-btn--soft" onClick={() => handleDelete(r)}>Delete</button>
                 </div>
               </div>
             </div>

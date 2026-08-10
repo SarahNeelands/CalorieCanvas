@@ -20,6 +20,7 @@ export default function Dashboard({ user }) {
   const [showCalories, setShowCalories] = React.useState(true);
   const [showMacros, setShowMacros] = React.useState(true);
   const [showMicros, setShowMicros] = React.useState(false);
+  const [showUsuals, setShowUsuals] = React.useState(true);
   const [eaten, setEaten] = React.useState(0);
   const [macros, setMacros] = React.useState({
     protein_g: 0,
@@ -64,12 +65,14 @@ export default function Dashboard({ user }) {
         setShowCalories(profile?.pref_show_calories !== false);
         setShowMacros(profile?.pref_show_macros !== false);
         setShowMicros(Boolean(profile?.pref_show_micros));
+        setShowUsuals(profile?.pref_show_usuals !== false);
       } else {
         setProfile(null);
         setGoal(null);
         setShowCalories(true);
         setShowMacros(true);
         setShowMicros(false);
+        setShowUsuals(true);
       }
 
       if (summaryResult.status === "fulfilled") {
@@ -159,9 +162,11 @@ export default function Dashboard({ user }) {
             )}
           </div>
         )}
-        <div className="dashboard-usuals">
-          <MyUsuals userId={resolvedUserId} />
-        </div>
+        {showUsuals && (
+          <div className="dashboard-usuals">
+            <MyUsuals userId={resolvedUserId} />
+          </div>
+        )}
         <div className="dashboard-recent">
           <RecentMealsLogged userId={resolvedUserId} />
         </div>

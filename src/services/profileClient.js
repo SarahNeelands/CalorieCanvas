@@ -98,6 +98,7 @@ function normalizeProfileShape(profile, draft, userId) {
     pref_show_calories: profile?.pref_show_calories ?? true,
     pref_show_macros: profile?.pref_show_macros ?? true,
     pref_show_micros: profile?.pref_show_micros ?? false,
+    pref_show_usuals: profile?.pref_show_usuals ?? true,
     pref_show_exercise: profile?.pref_show_exercise ?? true,
     pref_show_weight: profile?.pref_show_weight ?? true,
   };
@@ -139,6 +140,7 @@ export async function updateProfile(profile, userIdArg) {
     pref_show_calories: normalizedProfile.pref_show_calories,
     pref_show_macros: normalizedProfile.pref_show_macros,
     pref_show_micros: normalizedProfile.pref_show_micros,
+    pref_show_usuals: normalizedProfile.pref_show_usuals,
     pref_show_exercise: normalizedProfile.pref_show_exercise,
     pref_show_weight: normalizedProfile.pref_show_weight,
   };

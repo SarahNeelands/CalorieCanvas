@@ -142,13 +142,14 @@ integrationTest('profile routes enforce authentication, CSRF, ownership, validat
       method: 'PUT',
       cookie: first.cookie,
       csrfToken: first.csrfToken,
-      body: { display_name: 'Alice Updated', pref_show_micros: true },
+      body: { display_name: 'Alice Updated', pref_show_micros: true, pref_show_usuals: false },
     });
     assert.equal(updated.status, 200);
     const updatedProfile = (await updated.json()).data;
     assert.equal(updatedProfile.display_name, 'Alice Updated');
     assert.equal(updatedProfile.weight_kg, 70.25);
     assert.equal(updatedProfile.pref_show_micros, true);
+    assert.equal(updatedProfile.pref_show_usuals, false);
 
     const setupDraft = {
       name: 'Alice Updated',

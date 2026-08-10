@@ -34,13 +34,20 @@ export default function MyUsuals({ userId }) {
   const [undoEntry, setUndoEntry] = React.useState(null);
 
   const refresh = React.useCallback(async () => {
-    if (!userId) return;
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       setError("");
-      const [usualRows, day] = await Promise.all([listUsuals(), getMealLogDay({ userId })]);
-      setUsuals(usualRows);
-      setDayEntries(flattenDayEntries(day));
+      const [usualResult, dayResult] = await Promise.allSettled([
+        listUsuals(),
+        getMealLogDay({ userId }),
+      ]);
+      if (usualResult.status === "rejected") throw usualResult.reason;
+      setUsuals(usualResult.value);
+      setDayEntries(dayResult.status === "fulfilled" ? flattenDayEntries(dayResult.value) : []);
     } catch (err) {
       setError(err.message || "Unable to load My Usuals.");
     } finally {

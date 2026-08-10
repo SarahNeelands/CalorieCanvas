@@ -90,6 +90,7 @@ integrationTest('authentication migrations create the required schema and remain
       { version: 12, name: '012_create_data_seed_ledger.sql' },
       { version: 13, name: '013_create_food_usuals.sql' },
       { version: 14, name: '014_require_native_accounts.sql' },
+      { version: 15, name: '015_add_usuals_dashboard_preference.sql' },
     ]);
 
     const sharedSeed = await database.pool.query(

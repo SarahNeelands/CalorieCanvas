@@ -124,8 +124,9 @@ The dashboard includes account-scoped **My Usuals** shortcuts. A usual stores a
 catalog item plus the signed-in user's default portion (for example, two chocolate
 squares or 25 g of Cheetos). One tap creates a normal PostgreSQL meal-log row,
 updates daily totals, and offers immediate undo. Repeated logs remain separate
-events for timestamps and undo, while the recent-food interface groups them into a
-single daily total.
+events, including in Recent Meals, so each timestamp can be edited or deleted
+independently. My Usuals can be hidden through the profile's Dashboard Modules
+settings without deleting any saved usuals.
 
 **Rebuild My Day** supports transactional bulk entry of saved foods and
 calorie-only estimates. The server validates every row before committing the
@@ -138,8 +139,9 @@ one editable list. Recipes may be saved as drafts while awaiting their final coo
 weight. Drafts cannot be logged or pinned as usuals until a final weight or serving
 count makes portion nutrition calculable.
 
-Migrations `013_create_food_usuals.sql` and `014_require_native_accounts.sql` add
-the user-owned shortcut table and enforce fresh application-owned accounts. Run
+Migrations `013_create_food_usuals.sql`, `014_require_native_accounts.sql`, and
+`015_add_usuals_dashboard_preference.sql` add the user-owned shortcut table,
+enforce fresh application-owned accounts, and add the Usuals dashboard preference. Run
 the normal migration command before testing against an existing development
 database.
 
