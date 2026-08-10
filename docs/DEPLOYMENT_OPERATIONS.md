@@ -31,10 +31,14 @@ cd /opt/caloriecanvas
 docker compose --env-file .env.production -f deploy/production/compose.yml config --quiet
 docker compose --env-file .env.production -f deploy/production/compose.yml build --pull app
 docker compose --env-file .env.production -f deploy/production/compose.yml up -d db
-docker compose --profile tools --env-file .env.production -f deploy/production/compose.yml run --rm migrate
+docker compose --env-file .env.production -f deploy/production/compose.yml run --rm migrate
 docker compose --profile tools --env-file .env.production -f deploy/production/compose.yml run --rm app node server/scripts/verify-staging.js
 docker compose --env-file .env.production -f deploy/production/compose.yml up -d app
 ```
+
+The app also depends on a successful, idempotent migration run. This prevents a
+new application image from starting against an older schema if the explicit
+migration command is accidentally omitted.
 
 Verification must report 15 migrations, latest version 15, one seed ledger row,
 70 shared catalog items, five shared exercise definitions, zero users, and zero

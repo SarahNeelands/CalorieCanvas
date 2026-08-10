@@ -67,6 +67,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     networks:
       database:
       shared-net:
@@ -93,7 +95,6 @@ services:
 
   migrate:
     <<: *app-image
-    profiles: ["tools"]
     environment:
       NODE_ENV: migration
       DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}

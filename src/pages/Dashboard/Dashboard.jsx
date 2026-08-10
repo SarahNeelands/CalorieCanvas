@@ -9,7 +9,7 @@ import MyUsuals from "../../components/MyUsuals";
 import { macroTargetsByProfile, microTargetsByProfile } from "../../components/calories/nutrientTargets";
 import { getCurrentUserId } from "../../services/authClient";
 import { getDailyMealLogSummary } from "../../services/mealLogClient";
-import { getProfile, resolveDailyCalorieGoal } from "../../services/profileClient";
+import { getCachedProfile, getProfile, resolveDailyCalorieGoal } from "../../services/profileClient";
 import "./Dashboard.css";
 
 
@@ -67,12 +67,13 @@ export default function Dashboard({ user }) {
         setShowMicros(Boolean(profile?.pref_show_micros));
         setShowUsuals(profile?.pref_show_usuals !== false);
       } else {
-        setProfile(null);
-        setGoal(null);
-        setShowCalories(true);
-        setShowMacros(true);
-        setShowMicros(false);
-        setShowUsuals(true);
+        const cachedProfile = getCachedProfile(userId);
+        setProfile(cachedProfile);
+        setGoal(resolveDailyCalorieGoal(cachedProfile));
+        setShowCalories(cachedProfile?.pref_show_calories !== false);
+        setShowMacros(cachedProfile?.pref_show_macros !== false);
+        setShowMicros(Boolean(cachedProfile?.pref_show_micros));
+        setShowUsuals(cachedProfile?.pref_show_usuals !== false);
       }
 
       if (summaryResult.status === "fulfilled") {
