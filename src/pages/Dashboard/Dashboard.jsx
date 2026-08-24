@@ -8,7 +8,7 @@ import RecentMealsLogged from "../../components/RecentMealsLogged";
 import { macroTargetsByProfile, microTargetsByProfile } from "../../components/calories/nutrientTargets";
 import { getCurrentUserId } from "../../services/authClient";
 import { getDailyMealLogSummary, getMealLogDailyTotals } from "../../services/mealLogClient";
-import { calculateDailyCalorieGoal, getProfile } from "../../services/profileClient";
+import { calculateDailyCalorieGoal, getLatestWeightKg, getProfile } from "../../services/profileClient";
 import "./Dashboard.css";
 
 
@@ -51,8 +51,9 @@ export default function Dashboard({ user }) {
       }
       setResolvedUserId(userId);
 
-      const [profileResult, summaryResult, dailyTotalsResult] = await Promise.allSettled([
+      const [profileResult, latestWeightResult, summaryResult, dailyTotalsResult] = await Promise.allSettled([
         getProfile(userId),
+        getLatestWeightKg(userId),
         getDailyMealLogSummary({ userId }),
         getMealLogDailyTotals({ userId }),
       ]);
@@ -61,8 +62,13 @@ export default function Dashboard({ user }) {
 
       if (profileResult.status === "fulfilled") {
         const profile = profileResult.value;
-        setProfile(profile || null);
-        setGoal(Number(profile?.calorie_goal) > 0 ? Number(profile.calorie_goal) : calculateDailyCalorieGoal(profile));
+        const latestWeightKg = latestWeightResult.status === "fulfilled" ? latestWeightResult.value : null;
+        const goalProfile = {
+          ...(profile || {}),
+          weight_kg: latestWeightKg ?? profile?.weight_kg ?? null,
+        };
+        setProfile(profile ? goalProfile : null);
+        setGoal(Number(profile?.calorie_goal) > 0 ? Number(profile.calorie_goal) : calculateDailyCalorieGoal(goalProfile));
         setShowCalories(profile?.pref_show_calories !== false);
         setShowMacros(profile?.pref_show_macros !== false);
         setShowMicros(Boolean(profile?.pref_show_micros));
