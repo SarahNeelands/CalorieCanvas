@@ -1,7 +1,7 @@
 import React from "react";
 import "./CalorieSummary.css";
 
-export default function CalorieSummary({ goal, eaten }) {
+export default function CalorieSummary({ goal, eaten, averages = null }) {
   const hasGoal = Number.isFinite(goal) && goal > 0;
   const left = hasGoal ? goal - eaten : null;
   const pct = hasGoal ? Math.max(0, Math.min(100, (eaten / goal) * 100)) : 0;
@@ -26,6 +26,13 @@ export default function CalorieSummary({ goal, eaten }) {
         <span>Goal: {hasGoal ? `${goal} kcal` : "Unavailable"}</span>
         <span>{eaten} kcal eaten</span>
       </div>
+
+      {averages && (
+        <div className="summary-averages" aria-label="Calorie averages">
+          <span>Weekly avg: {averages.weekly ?? "--"} kcal</span>
+          <span>Monthly avg: {averages.monthly ?? "--"} kcal</span>
+        </div>
+      )}
     </section>
   );
 }

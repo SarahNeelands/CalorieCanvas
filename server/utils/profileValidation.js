@@ -15,6 +15,7 @@ const PROFILE_FIELDS = new Set([
   'pref_show_micros',
   'pref_show_exercise',
   'pref_show_weight',
+  'pref_show_calorie_average',
 ]);
 const OWNER_FIELDS = new Set(['id', 'user_id', 'userId', 'owner_id', 'ownerId']);
 const SETUP_PATHS = new Set([
@@ -114,6 +115,7 @@ function validateProfilePatch(body) {
     pref_show_micros: (value) => optionalBoolean(value, 'pref_show_micros'),
     pref_show_exercise: (value) => optionalBoolean(value, 'pref_show_exercise'),
     pref_show_weight: (value) => optionalBoolean(value, 'pref_show_weight'),
+    pref_show_calorie_average: (value) => optionalBoolean(value, 'pref_show_calorie_average'),
   };
 
   return Object.fromEntries(keys.map((key) => [key, validators[key](body[key])]));

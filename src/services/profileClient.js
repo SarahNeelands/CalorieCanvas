@@ -100,6 +100,7 @@ function normalizeProfileShape(profile, draft, userId) {
     pref_show_micros: profile?.pref_show_micros ?? false,
     pref_show_exercise: profile?.pref_show_exercise ?? true,
     pref_show_weight: profile?.pref_show_weight ?? true,
+    pref_show_calorie_average: profile?.pref_show_calorie_average ?? true,
   };
 }
 
@@ -141,6 +142,7 @@ export async function updateProfile(profile, userIdArg) {
     pref_show_micros: normalizedProfile.pref_show_micros,
     pref_show_exercise: normalizedProfile.pref_show_exercise,
     pref_show_weight: normalizedProfile.pref_show_weight,
+    pref_show_calorie_average: normalizedProfile.pref_show_calorie_average,
   };
 
   const result = await apiRequest('/profile', { method: 'PUT', csrf: true, body: payload });

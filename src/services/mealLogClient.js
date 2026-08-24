@@ -120,6 +120,14 @@ export async function getDailyMealLogSummary({ userId = getStoredUserId(), date 
   return payload?.data;
 }
 
+export async function getMealLogDailyTotals({ userId = getStoredUserId() } = {}) {
+  if (!userId) throw new Error('Missing user ID');
+
+  const { payload, error } = await apiRequest('/meal-logs/summary');
+  if (error) throw new Error(error.message);
+  return payload?.data || [];
+}
+
 export async function getMealLogDay({ userId = getStoredUserId(), date = new Date() } = {}) {
   if (!userId) throw new Error('Missing user ID');
   const localDate = formatLocalDate(date);
@@ -141,4 +149,55 @@ export async function listMealLogRange({
   const { payload, error } = await apiRequest(`/meal-logs?${query.toString()}`);
   if (error) throw new Error(error.message);
   return payload?.data || [];
+}
+
+export async function deleteMealLogDay({ userId = getStoredUserId(), date } = {}) {
+  if (!userId) throw new Error('Missing user ID');
+  if (!date) throw new Error('Missing meal-log day');
+  const localDate = formatLocalDate(date);
+  const { error } = await apiRequest(`/meal-logs/day/${encodeURIComponent(localDate)}`, {
+    method: 'DELETE', csrf: true,
+  });
+  if (error) throw new Error(error.message);
+}
+
+export async function createGuestimateMealLog({
+  userId = getStoredUserId(),
+  calories,
+  date = new Date(),
+  loggedAt,
+} = {}) {
+  if (!userId) throw new Error('Missing user ID');
+  const numericCalories = Number(calories);
+  if (!(numericCalories > 0)) throw new Error('Enter calories greater than 0.');
+  const localDate = formatLocalDate(date);
+  const timestamp = loggedAt || new Date(`${localDate}T12:00:00`).toISOString();
+  return createMealLog({
+    item_snapshot: {
+      id: null,
+      title: 'Guestimate Meal',
+      type: 'meal',
+      item_type: 'meal',
+      unit_conversions: {},
+      food_id: null,
+      kcal_per_100g: numericCalories,
+      protein_g_per_100g: 0,
+      carbs_g_per_100g: 0,
+      fat_g_per_100g: 0,
+    },
+    qty: 1,
+    unit_code: 'quantity',
+    grams_resolved: null,
+    logged_at: timestamp,
+    log_date: localDate,
+    meal_type: 'other',
+    kcal: numericCalories,
+    protein_g: 0,
+    carbs_g: 0,
+    fat_g: 0,
+    fiber_g: 0,
+    sugar_g: 0,
+    cholesterol_mg: 0,
+    micros: { sodium: 0, potassium: 0, calcium: 0, iron: 0, vitaminA: 0, vitaminC: 0 },
+  });
 }

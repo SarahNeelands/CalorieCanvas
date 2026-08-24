@@ -11,6 +11,7 @@ import {
   fetchWeightSummary,
   getLocalWeightImportState,
   importLocalWeightHistory,
+  replaceCalorieDayTotal,
 } from './progressService';
 
 beforeEach(() => {
@@ -94,6 +95,18 @@ test('calorie progress reads and deletes through Express without a browser or Su
 
   mockApiRequest.mockResolvedValueOnce({ payload: null, error: { message: 'API failed' } });
   await expect(fetchCalorieSeries('ignored-owner')).rejects.toThrow('API failed');
+});
+
+test('editing a calorie day to zero deletes it without creating a replacement entry', async () => {
+  mockApiRequest.mockResolvedValueOnce({ payload: null, error: null });
+  await expect(replaceCalorieDayTotal('session-user', {
+    date: '2025-01-03',
+    calories: 0,
+  })).resolves.toBeNull();
+  expect(mockApiRequest).toHaveBeenCalledTimes(1);
+  expect(mockApiRequest).toHaveBeenCalledWith('/meal-logs/day/2025-01-03', {
+    method: 'DELETE', csrf: true,
+  });
 });
 
 test('Express exercise progress merges stable local/server IDs without doubling minutes', async () => {

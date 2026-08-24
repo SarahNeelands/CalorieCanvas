@@ -87,6 +87,7 @@ integrationTest('authentication migrations create the required schema and remain
       { version: 10, name: '010_create_exercises.sql' },
       { version: 11, name: '011_preserve_weight_original_unit.sql' },
       { version: 12, name: '012_create_data_seed_ledger.sql' },
+      { version: 13, name: '013_add_calorie_average_preference.sql' },
     ]);
 
     const sharedSeed = await database.pool.query(

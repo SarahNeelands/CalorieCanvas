@@ -7,7 +7,7 @@ import QuickActions from "../../components/QuickActions";
 import RecentMealsLogged from "../../components/RecentMealsLogged";
 import { macroTargetsByProfile, microTargetsByProfile } from "../../components/calories/nutrientTargets";
 import { getCurrentUserId } from "../../services/authClient";
-import { getDailyMealLogSummary } from "../../services/mealLogClient";
+import { getDailyMealLogSummary, getMealLogDailyTotals } from "../../services/mealLogClient";
 import { calculateDailyCalorieGoal, getProfile } from "../../services/profileClient";
 import "./Dashboard.css";
 
@@ -19,6 +19,8 @@ export default function Dashboard({ user }) {
   const [showCalories, setShowCalories] = React.useState(true);
   const [showMacros, setShowMacros] = React.useState(true);
   const [showMicros, setShowMicros] = React.useState(false);
+  const [showCalorieAverage, setShowCalorieAverage] = React.useState(true);
+  const [calorieAverages, setCalorieAverages] = React.useState(null);
   const [eaten, setEaten] = React.useState(0);
   const [macros, setMacros] = React.useState({
     protein_g: 0,
@@ -49,9 +51,10 @@ export default function Dashboard({ user }) {
       }
       setResolvedUserId(userId);
 
-      const [profileResult, summaryResult] = await Promise.allSettled([
+      const [profileResult, summaryResult, dailyTotalsResult] = await Promise.allSettled([
         getProfile(userId),
         getDailyMealLogSummary({ userId }),
+        getMealLogDailyTotals({ userId }),
       ]);
 
       if (!active) return;
@@ -63,12 +66,14 @@ export default function Dashboard({ user }) {
         setShowCalories(profile?.pref_show_calories !== false);
         setShowMacros(profile?.pref_show_macros !== false);
         setShowMicros(Boolean(profile?.pref_show_micros));
+        setShowCalorieAverage(profile?.pref_show_calorie_average !== false);
       } else {
         setProfile(null);
         setGoal(null);
         setShowCalories(true);
         setShowMacros(true);
         setShowMicros(false);
+        setShowCalorieAverage(true);
       }
 
       if (summaryResult.status === "fulfilled") {
@@ -109,6 +114,21 @@ export default function Dashboard({ user }) {
           vitamin_c_mg: 0,
         });
       }
+
+      if (dailyTotalsResult.status === "fulfilled") {
+        const tracked = (dailyTotalsResult.value || [])
+          .map((row) => ({ date: row.date, calories: Number(row.total_kcal || 0) }))
+          .filter((row) => row.calories > 0)
+          .sort((a, b) => String(b.date).localeCompare(String(a.date)));
+        const average = (days) => {
+          const items = tracked.slice(0, days);
+          if (!items.length) return null;
+          return Math.round(items.reduce((total, item) => total + item.calories, 0) / items.length);
+        };
+        setCalorieAverages({ weekly: average(7), monthly: average(30) });
+      } else {
+        setCalorieAverages(null);
+      }
     }
 
     loadSummary();
@@ -130,7 +150,13 @@ export default function Dashboard({ user }) {
       <main className="container">
         <div className="grid">
           <div className="dashboard-primary">
-            {showCalories && <CalorieSummary goal={goal} eaten={eaten} />}
+            {showCalories && (
+              <CalorieSummary
+                goal={goal}
+                eaten={eaten}
+                averages={showCalorieAverage ? calorieAverages : null}
+              />
+            )}
           </div>
           <div>
             <QuickActions />

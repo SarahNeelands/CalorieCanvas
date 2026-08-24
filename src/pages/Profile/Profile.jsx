@@ -139,6 +139,7 @@ export default function Profile({ user }) {
   const [showCalories, setShowCalories] = React.useState(true);
   const [showMacros, setShowMacros] = React.useState(true);
   const [showMicros, setShowMicros] = React.useState(false);
+  const [showCalorieAverage, setShowCalorieAverage] = React.useState(true);
   const accountLabel = formatAccountLabel({
     accountEmail,
   });
@@ -160,6 +161,7 @@ export default function Profile({ user }) {
     setShowCalories(profile.pref_show_calories !== false);
     setShowMacros(profile.pref_show_macros !== false);
     setShowMicros(Boolean(profile.pref_show_micros));
+    setShowCalorieAverage(profile.pref_show_calorie_average !== false);
 
     if (profile.height_cm) {
       setHeightCm(String(profile.height_cm));
@@ -290,6 +292,7 @@ export default function Profile({ user }) {
       pref_show_calories: showCalories,
       pref_show_macros: showMacros,
       pref_show_micros: showMicros,
+      pref_show_calorie_average: showCalorieAverage,
     };
 
     try {
@@ -321,6 +324,7 @@ export default function Profile({ user }) {
     setShowCalories(savedProfile.pref_show_calories !== false);
     setShowMacros(savedProfile.pref_show_macros !== false);
     setShowMicros(Boolean(savedProfile.pref_show_micros));
+    setShowCalorieAverage(savedProfile.pref_show_calorie_average !== false);
     setHeightUnit("cm");
     setWeightUnit("kg");
     setHeightCm(savedProfile.height_cm ? String(savedProfile.height_cm) : "");
@@ -453,6 +457,7 @@ export default function Profile({ user }) {
                       showCalories ? "Calories" : null,
                       showMacros ? "Macros" : null,
                       showMicros ? "Micros" : null,
+                      showCalorieAverage ? "Calorie Average" : null,
                     ].filter(Boolean).join(", ") || "Nothing selected"}
                   </strong>
                 </div>
@@ -646,6 +651,14 @@ export default function Profile({ user }) {
                         onChange={() => setShowMicros((current) => !current)}
                       />
                       <span>Micros</span>
+                    </label>
+                    <label className="profile-module-option">
+                      <input
+                        type="checkbox"
+                        checked={showCalorieAverage}
+                        onChange={() => setShowCalorieAverage((current) => !current)}
+                      />
+                      <span>Calorie average</span>
                     </label>
                   </div>
                 </div>

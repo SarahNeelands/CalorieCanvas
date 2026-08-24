@@ -4,8 +4,8 @@ const PROFILE_COLUMNS = `
   user_id, display_name, dob, gender, height_cm, weight_kg, activity_level,
   goal_weight_intent, goal_muscle_intent, calorie_goal, target_weight_kg,
   target_body_fat_pct, pref_show_calories, pref_show_macros, pref_show_micros,
-  pref_show_exercise, pref_show_weight, setup_completed, setup_last_step,
-  setup_draft, created_at, updated_at
+  pref_show_exercise, pref_show_weight, pref_show_calorie_average,
+  setup_completed, setup_last_step, setup_draft, created_at, updated_at
 `;
 const NUMERIC_PROFILE_FIELDS = [
   'height_cm', 'weight_kg', 'target_weight_kg', 'target_body_fat_pct',

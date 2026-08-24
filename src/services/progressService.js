@@ -1,4 +1,5 @@
 import { apiRequest } from './apiClient';
+import { createGuestimateMealLog, deleteMealLogDay, getMealLogDailyTotals } from './mealLogClient';
 import { deleteExerciseDay, listExerciseLogs } from './exerciseClient';
 
 const EXERCISE_STORAGE_KEY = 'exercise_page_state_v3';
@@ -264,10 +265,16 @@ export async function deleteWeightEntry(userId, point) {
 export async function deleteCalorieEntry(userId, point) {
   if (!userId || !point?.date) return;
 
-  const { error } = await apiRequest(`/meal-logs/day/${encodeURIComponent(point.date)}`, {
-    method: 'DELETE', csrf: true,
-  });
-  throwApiError(error);
+  await deleteMealLogDay({ userId, date: point.date });
+}
+
+export async function replaceCalorieDayTotal(userId, { date, calories }) {
+  if (!userId || !date) return null;
+
+  const numericCalories = Math.round(Number(calories || 0));
+  await deleteMealLogDay({ userId, date });
+  if (!(numericCalories > 0)) return null;
+  return createGuestimateMealLog({ userId, date, calories: numericCalories });
 }
 
 export async function deleteExerciseEntry(userId, point) {
@@ -294,14 +301,16 @@ export async function fetchWeightSeries(userId, scope = 'all') {
 
 export async function fetchCalorieSeries(userId, scope = 'all') {
   if (!userId) return [];
-  const { payload, error } = await apiRequest('/meal-logs/summary');
-  throwApiError(error);
-  return sortAscending(applyScope((payload.data || []).map((row) => ({
-    date: row.date,
-    label: dayLabel(row.date),
-    value: Number(row.total_kcal),
-    extra: { calories: Number(row.total_kcal) },
-  })), scope));
+  const totals = await getMealLogDailyTotals({ userId });
+  return sortAscending(applyScope(totals
+    .map((row) => ({ ...row, total_kcal: Number(row.total_kcal) }))
+    .filter((row) => row.total_kcal > 0)
+    .map((row) => ({
+      date: row.date,
+      label: dayLabel(row.date),
+      value: row.total_kcal,
+      extra: { calories: row.total_kcal },
+    })), scope));
 }
 
 export async function fetchExerciseSeries(userId, scope = 'all') {

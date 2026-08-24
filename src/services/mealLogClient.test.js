@@ -18,8 +18,11 @@ jest.mock('./catalogClient', () => ({
 
 import {
   createMealLog,
+  createGuestimateMealLog,
   deleteMealLog,
+  deleteMealLogDay,
   getDailyMealLogSummary,
+  getMealLogDailyTotals,
   getMealLogDay,
   listMealLogRange,
   listMealLogs,
@@ -85,6 +88,33 @@ test('Express list, range, day, and summary calls retain normalized response sha
   ]);
 });
 
+test('Guestimate Meal creates a one-time ad hoc calorie-only entry', async () => {
+  const entry = { id: 'guestimate-entry', kcal: 650, meal: { title: 'Guestimate Meal' } };
+  mockApiRequest.mockResolvedValue({ payload: { data: entry }, error: null });
+
+  await expect(createGuestimateMealLog({
+    userId: 'session-user',
+    calories: 650,
+    date: '2026-03-08',
+    loggedAt: '2026-03-08T17:00:00.000Z',
+  })).resolves.toEqual(entry);
+
+  const [, options] = mockApiRequest.mock.calls[0];
+  expect(options.body.meal_id).toBeUndefined();
+  expect(options.body.item_snapshot).toEqual(expect.objectContaining({
+    title: 'Guestimate Meal',
+    type: 'meal',
+    kcal_per_100g: 650,
+  }));
+  expect(options.body.qty).toBe(1);
+  expect(options.body.unit_code).toBe('quantity');
+  expect(options.body.kcal).toBe(650);
+  expect(options.body.protein_g).toBe(0);
+  expect(options.body.carbs_g).toBe(0);
+  expect(options.body.fat_g).toBe(0);
+  expect(options.body.meal_type).toBe('other');
+});
+
 test('Express update and delete use CSRF and ignore caller-supplied user IDs', async () => {
   mockApiRequest
     .mockResolvedValueOnce({ payload: { data: { id: 'entry-id', qty: 3 } }, error: null })
@@ -101,4 +131,18 @@ test('Express update and delete use CSRF and ignore caller-supplied user IDs', a
     '/meal-logs/entries/entry-id',
     expect.objectContaining({ method: 'DELETE', csrf: true }),
   ]);
+});
+
+test('summary helpers expose authoritative daily totals and day deletion', async () => {
+  mockApiRequest
+    .mockResolvedValueOnce({ payload: { data: [{ date: '2026-03-08', total_kcal: 650 }] }, error: null })
+    .mockResolvedValueOnce({ payload: null, error: null });
+
+  await expect(getMealLogDailyTotals()).resolves.toEqual([{ date: '2026-03-08', total_kcal: 650 }]);
+  await deleteMealLogDay({ date: '2026-03-08' });
+  expect(mockApiRequest.mock.calls.map((call) => call[0])).toEqual([
+    '/meal-logs/summary',
+    '/meal-logs/day/2026-03-08',
+  ]);
+  expect(mockApiRequest.mock.calls[1][1]).toEqual({ method: 'DELETE', csrf: true });
 });

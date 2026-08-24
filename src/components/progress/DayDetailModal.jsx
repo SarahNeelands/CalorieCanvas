@@ -9,14 +9,63 @@ export default function DayDetailModal({ open, onClose, detail }) {
   const exerciseTypes = detail?.exerciseTypes || [];
   const deleteLabel = detail?.deleteLabel || 'Delete Entry';
   const onDelete = detail?.onDelete;
+  const onSaveCalories = detail?.onSaveCalories;
+  const [calorieValue, setCalorieValue] = React.useState('');
+
+  React.useEffect(() => {
+    setCalorieValue(typeof calories === 'number' ? String(Math.round(calories)) : '');
+  }, [calories, open]);
+
+  const saveCalories = () => {
+    const nextCalories = Number(calorieValue || 0);
+    if (!Number.isFinite(nextCalories) || nextCalories < 0) return;
+    onSaveCalories?.(nextCalories);
+  };
 
   return (
-    <Modal open={open} onClose={onClose} title={`Details • ${dateLabel ?? ''}`}>
+    <Modal open={open} onClose={onClose} title={`Details - ${dateLabel ?? ''}`}>
       <div>
         {typeof calories === 'number' && (
           <div style={{ marginBottom: 16 }}>
             <div style={{ fontSize: 13, opacity: 0.7 }}>Calories</div>
             <div style={{ fontSize: 28, fontWeight: 600 }}>{calories} cal</div>
+            {onSaveCalories ? (
+              <div style={{ display: 'grid', gap: 8, marginTop: 12 }}>
+                <label style={{ display: 'grid', gap: 6, fontSize: 13, color: '#35574d', fontWeight: 600 }}>
+                  Day calorie total
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    inputMode="numeric"
+                    value={calorieValue}
+                    onChange={(event) => setCalorieValue(event.target.value)}
+                    style={{
+                      border: '1px solid rgba(20, 61, 51, 0.14)',
+                      borderRadius: 12,
+                      padding: '0.72rem 0.85rem',
+                      fontSize: '1rem',
+                    }}
+                  />
+                </label>
+                <button
+                  type="button"
+                  onClick={saveCalories}
+                  style={{
+                    border: 'none',
+                    background: '#2c5b49',
+                    color: '#fff',
+                    borderRadius: 12,
+                    padding: '0.7rem 0.95rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    justifySelf: 'start',
+                  }}
+                >
+                  Save Day Total
+                </button>
+              </div>
+            ) : null}
           </div>
         )}
         {typeof weight === 'number' && (

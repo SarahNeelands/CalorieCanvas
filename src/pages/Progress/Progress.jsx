@@ -15,7 +15,9 @@ import {
   deleteWeightEntry,
   getLocalWeightImportState,
   importLocalWeightHistory,
+  replaceCalorieDayTotal,
 } from '../../services/progressService';
+import { getProfile } from '../../services/profileClient';
 import './Progress.css';
 
 export default function Progress({ user }) {
@@ -26,6 +28,7 @@ export default function Progress({ user }) {
   const [reloadKey, setReloadKey] = useState(0);
   const [localImport, setLocalImport] = useState({ available: false, count: 0 });
   const [importStatus, setImportStatus] = useState('');
+  const [showCalorieAverage, setShowCalorieAverage] = useState(true);
   const location = useLocation();
   const navigate = useNavigate();
   const userId = resolvedUserId;
@@ -48,6 +51,23 @@ export default function Progress({ user }) {
 
   React.useEffect(() => {
     setLocalImport(getLocalWeightImportState(userId));
+  }, [userId]);
+
+  React.useEffect(() => {
+    let active = true;
+    async function loadProfilePreference() {
+      if (!userId) return;
+      try {
+        const profile = await getProfile(userId);
+        if (active) setShowCalorieAverage(profile?.pref_show_calorie_average !== false);
+      } catch {
+        if (active) setShowCalorieAverage(true);
+      }
+    }
+    loadProfilePreference();
+    return () => {
+      active = false;
+    };
   }, [userId]);
 
   async function handleSaveWeight({ value, unit, date }) {
@@ -80,6 +100,12 @@ export default function Progress({ user }) {
 
   async function handleDeleteCalories(point) {
     await deleteCalorieEntry(userId, point);
+    setDetail(null);
+    setReloadKey((value) => value + 1);
+  }
+
+  async function handleSaveCalories(point, calories) {
+    await replaceCalorieDayTotal(userId, { date: point.date, calories });
     setDetail(null);
     setReloadKey((value) => value + 1);
   }
@@ -140,9 +166,11 @@ export default function Progress({ user }) {
             key={`calories-${scope}-${reloadKey}`}
             userId={userId}
             scope={scope}
+            showAverage={showCalorieAverage}
             onDayClick={(point) => openDetail({
               ...point,
               onDelete: () => handleDeleteCalories(point),
+              onSaveCalories: (calories) => handleSaveCalories(point, calories),
               deleteLabel: 'Delete Day Calories',
             })}
           />
