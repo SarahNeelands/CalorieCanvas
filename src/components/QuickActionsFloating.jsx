@@ -55,6 +55,7 @@ export default function QuickActionsFloating(){
       {open && (
         <div className="qa-floating-menu" role="menu">
           <button className="qa-floating-item" onClick={()=>{ setOpen(false); navigate('/meals', {state:{openLogMeal:true}}); }}>Log Meal</button>
+          <button className="qa-floating-item" onClick={()=>{ setOpen(false); navigate('/meals', {state:{openGuestimateMeal:true}}); }}>Guestimate Meal</button>
           <button className="qa-floating-item" onClick={()=>{ setOpen(false); navigate('/exercises', {state:{openLog:true}}); }}>Log Exercise</button>
           <button className="qa-floating-item" onClick={()=>{ setOpen(false); navigate('/progress', {state:{openWeight:true}}); }}>Log Weight</button>
         </div>

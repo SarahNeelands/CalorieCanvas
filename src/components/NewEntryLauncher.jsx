@@ -12,6 +12,11 @@ export default function NewEntryLauncher() {
     navigate(path);
   }
 
+  function openGuestimate() {
+    setOpen(false);
+    navigate("/meals", { state: { openGuestimateMeal: true } });
+  }
+
   return (
     <div className="new-entry-launcher">
       <button
@@ -30,6 +35,9 @@ export default function NewEntryLauncher() {
           </button>
           <button type="button" onClick={() => go("/snacks/new")} aria-label="New snack">
             Snack
+          </button>
+          <button type="button" onClick={openGuestimate} aria-label="Guestimate meal">
+            Guestimate
           </button>
         </div>
       )}

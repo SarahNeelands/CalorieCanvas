@@ -60,6 +60,13 @@ export default function Meals({ user }) {
         navigate(location.pathname, { replace: true, state: {} });
       } catch (e) {}
     }
+    if (location?.state?.openGuestimateMeal) {
+      openGuestimate();
+      try {
+        navigate(location.pathname, { replace: true, state: {} });
+      } catch (e) {}
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location, navigate]);
 
   const mealAddButton = (

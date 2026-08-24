@@ -33,6 +33,9 @@ export default function QuickActions() {
           <button className="btn btn-soft text-center" onClick={() => navigate('/meals/log')}>
             Log Meal
           </button>
+          <button className="btn btn-soft text-center" onClick={() => navigate('/meals', { state: { openGuestimateMeal: true } })}>
+            Guestimate Meal
+          </button>
           <button className="btn btn-soft text-center" onClick={() => navigate('/exercises', { state: { openLog: true } })}>
             Log Exercise
           </button>
