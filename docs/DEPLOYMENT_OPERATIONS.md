@@ -37,7 +37,7 @@ docker compose --profile tools --env-file .env.production -f deploy/production/c
 docker compose --env-file .env.production -f deploy/production/compose.yml up -d app
 ```
 
-Verification must report 13 migrations, latest version 13, one seed ledger row,
+Verification must report 16 migrations, latest version 16, one seed ledger row,
 70 shared catalog items, five shared exercise definitions, zero users, and zero
 sessions before application testing.
 

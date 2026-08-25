@@ -13,6 +13,7 @@ const PROFILE_FIELDS = new Set([
   'pref_show_calories',
   'pref_show_macros',
   'pref_show_micros',
+  'pref_show_usuals',
   'pref_show_exercise',
   'pref_show_weight',
   'pref_show_calorie_average',
@@ -113,6 +114,7 @@ function validateProfilePatch(body) {
     pref_show_calories: (value) => optionalBoolean(value, 'pref_show_calories'),
     pref_show_macros: (value) => optionalBoolean(value, 'pref_show_macros'),
     pref_show_micros: (value) => optionalBoolean(value, 'pref_show_micros'),
+    pref_show_usuals: (value) => optionalBoolean(value, 'pref_show_usuals'),
     pref_show_exercise: (value) => optionalBoolean(value, 'pref_show_exercise'),
     pref_show_weight: (value) => optionalBoolean(value, 'pref_show_weight'),
     pref_show_calorie_average: (value) => optionalBoolean(value, 'pref_show_calorie_average'),
@@ -132,7 +134,7 @@ function boundedDraftNumber(value, name, minimum, maximum) {
 
 function validatePreferences(value) {
   requireObject(value, 'setup_draft.prefs must be an object.');
-  const allowed = new Set(['show_calories', 'show_macros', 'show_micros', 'show_exercise', 'show_weight']);
+  const allowed = new Set(['show_calories', 'show_macros', 'show_micros', 'show_usuals', 'show_exercise', 'show_weight']);
   const unsupported = Object.keys(value).find((key) => !allowed.has(key));
   if (unsupported) throw validationError(`Unsupported setup preference: ${unsupported}.`);
   Object.entries(value).forEach(([key, item]) => optionalBoolean(item, `prefs.${key}`));

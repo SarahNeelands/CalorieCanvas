@@ -5,10 +5,11 @@ import MacrosSummary from "../../components/calories/MacrosSummary";
 import MicrosSummary from "../../components/calories/MicrosSummary";
 import QuickActions from "../../components/QuickActions";
 import RecentMealsLogged from "../../components/RecentMealsLogged";
+import MyUsuals from "../../components/MyUsuals";
 import { macroTargetsByProfile, microTargetsByProfile } from "../../components/calories/nutrientTargets";
 import { getCurrentUserId } from "../../services/authClient";
 import { getDailyMealLogSummary, getMealLogDailyTotals } from "../../services/mealLogClient";
-import { calculateDailyCalorieGoal, getLatestWeightKg, getProfile } from "../../services/profileClient";
+import { getLatestWeightKg, getProfile, resolveDailyCalorieGoal } from "../../services/profileClient";
 import "./Dashboard.css";
 
 
@@ -19,6 +20,7 @@ export default function Dashboard({ user }) {
   const [showCalories, setShowCalories] = React.useState(true);
   const [showMacros, setShowMacros] = React.useState(true);
   const [showMicros, setShowMicros] = React.useState(false);
+  const [showUsuals, setShowUsuals] = React.useState(true);
   const [showCalorieAverage, setShowCalorieAverage] = React.useState(true);
   const [calorieAverages, setCalorieAverages] = React.useState(null);
   const [eaten, setEaten] = React.useState(0);
@@ -68,10 +70,11 @@ export default function Dashboard({ user }) {
           weight_kg: latestWeightKg ?? profile?.weight_kg ?? null,
         };
         setProfile(profile ? goalProfile : null);
-        setGoal(Number(profile?.calorie_goal) > 0 ? Number(profile.calorie_goal) : calculateDailyCalorieGoal(goalProfile));
+        setGoal(resolveDailyCalorieGoal(goalProfile));
         setShowCalories(profile?.pref_show_calories !== false);
         setShowMacros(profile?.pref_show_macros !== false);
         setShowMicros(Boolean(profile?.pref_show_micros));
+        setShowUsuals(profile?.pref_show_usuals !== false);
         setShowCalorieAverage(profile?.pref_show_calorie_average !== false);
       } else {
         setProfile(null);
@@ -79,6 +82,7 @@ export default function Dashboard({ user }) {
         setShowCalories(true);
         setShowMacros(true);
         setShowMicros(false);
+        setShowUsuals(true);
         setShowCalorieAverage(true);
       }
 
@@ -188,6 +192,11 @@ export default function Dashboard({ user }) {
                 />
               </div>
             )}
+          </div>
+        )}
+        {showUsuals && (
+          <div className="dashboard-usuals">
+            <MyUsuals userId={resolvedUserId} />
           </div>
         )}
         <div className="dashboard-recent">

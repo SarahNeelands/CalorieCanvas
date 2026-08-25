@@ -24,6 +24,7 @@ test('Express profile writes preserve the service shape without sending an owner
         goal_weight_intent: 'maintain',
         goal_muscle_intent: 'maintain',
         pref_show_calories: true,
+        pref_show_usuals: true,
         pref_show_macros: true,
         pref_show_micros: false,
         pref_show_exercise: true,
@@ -44,6 +45,7 @@ test('Express profile writes preserve the service shape without sending an owner
   const requestBody = mockApiRequest.mock.calls[0][1].body;
   expect(requestBody.user_id).toBeUndefined();
   expect(requestBody.display_name).toBe('Alice');
+  expect(requestBody.pref_show_usuals).toBe(true);
   expect(requestBody.pref_show_calorie_average).toBe(true);
 });
 
