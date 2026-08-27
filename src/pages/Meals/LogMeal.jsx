@@ -162,6 +162,7 @@ export default function LogMeal({ user }) {
   const [savingMeal, setSavingMeal] = useState(false);
   const [saveError, setSaveError] = useState(null);
   const [editingMealId, setEditingMealId] = useState(null);
+  const [ingredientPasteDraft, setIngredientPasteDraft] = useState(null);
 
   useEffect(() => {
     if (!location.state?.resetIngredients) return;
@@ -172,6 +173,7 @@ export default function LogMeal({ user }) {
     setTotalWeight("");
     setServingCount("");
     setEditingMealId(null);
+    setIngredientPasteDraft(null);
     navigate(location.pathname, { replace: true, state: {} });
   }, [location.pathname, location.state, navigate]);
 
@@ -193,6 +195,7 @@ export default function LogMeal({ user }) {
         : String(draft.servingCount)
     );
     setEditingMealId(draft.editingMealId || null);
+    setIngredientPasteDraft(draft.ingredientPasteDraft || null);
 
     navigate(location.pathname, { replace: true, state: {} });
   }, [location.pathname, location.state, navigate]);
@@ -228,6 +231,7 @@ export default function LogMeal({ user }) {
     setTotalWeight(restoredWeight === "" ? "" : String(restoredWeight));
     setServingCount(restoredServingCount === "" ? "" : String(restoredServingCount));
     setEditingMealId(editMeal.id || null);
+    setIngredientPasteDraft(null);
 
     navigate(location.pathname, { replace: true, state: {} });
   }, [location.pathname, location.state, navigate]);
@@ -239,6 +243,7 @@ export default function LogMeal({ user }) {
     totalWeight,
     servingCount,
     editingMealId,
+    ingredientPasteDraft,
   };
 
   const inferredTotalWeight = estimateRecipeWeightGrams(ingredients);
@@ -418,6 +423,8 @@ export default function LogMeal({ user }) {
                 ingredients={ingredients}
                 onIngredientsChange={setIngredients}
                 mealDraft={mealDraft}
+                pasteDraft={ingredientPasteDraft}
+                onPasteDraftChange={setIngredientPasteDraft}
               />
             </div>
           </section>

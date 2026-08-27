@@ -2,8 +2,12 @@ import React, { useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import { createCatalogItem, updateCatalogItem } from "../../services/catalogClient";
-import { scanNutritionLabelFromImage } from "../../utils/nutritionLabelOcr";
+import { parseNutritionText, scanNutritionLabelFromImage } from "../../utils/nutritionLabelOcr";
 import { toMassValue } from "../../utils/nutrients";
+import {
+  clearMealDraftHandoff,
+  loadMealDraftHandoff,
+} from "../../utils/mealDraftHandoff";
 
 const MACRO_FIELDS = [
   { key: "calories", label: "Calories", unit: "kcal" },
@@ -143,7 +147,8 @@ function readImageAsDataUrl(file) {
 export default function NewIngredientPage({ user }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const returnTo = location.state?.returnTo || "/meals/new";
+  const storedHandoff = loadMealDraftHandoff();
+  const returnTo = location.state?.returnTo || storedHandoff?.returnTo || "/meals/new";
   const existingIngredient = location.state?.ingredient || null;
   const existingServing = existingIngredient?.unit_conversions?.serving_size || {};
   const existingConversions = existingIngredient?.unit_conversions || {};
@@ -152,7 +157,9 @@ export default function NewIngredientPage({ user }) {
   const existingPhoto = existingIngredient?.unit_conversions?.photo_data_url || "";
   const isEditing = Boolean(existingIngredient?.id);
   const photoInputRef = useRef(null);
-  const [name, setName] = useState(existingIngredient?.title || "");
+  const [name, setName] = useState(
+    existingIngredient?.title || location.state?.ingredientName || storedHandoff?.ingredientName || ""
+  );
   const [brand, setBrand] = useState(existingIngredient?.unit_conversions?.brand || "");
   const [photoDataUrl, setPhotoDataUrl] = useState(existingPhoto);
   const [servingSize, setServingSize] = useState(
@@ -181,6 +188,7 @@ export default function NewIngredientPage({ user }) {
   const [msg, setMsg] = useState(null);
   const [saving, setSaving] = useState(false);
   const [scanningPhoto, setScanningPhoto] = useState(false);
+  const [nutritionPaste, setNutritionPaste] = useState("");
 
   function updateMacro(key, value) {
     setMacros((current) => ({ ...current, [key]: value }));
@@ -212,6 +220,56 @@ export default function NewIngredientPage({ user }) {
     setMeasureRows((current) => current.filter((_, i) => i !== index));
   }
 
+  function applyParsedNutrition(parsed) {
+    if (parsed?.serving?.qty) {
+      setServingSize(String(parsed.serving.qty));
+    }
+    if (parsed?.serving?.unit && SERVING_UNITS.includes(parsed.serving.unit)) {
+      setServingUnit(parsed.serving.unit);
+    }
+
+    setMacros((current) => ({
+      ...current,
+      ...Object.fromEntries(
+        MACRO_FIELDS
+          .filter((field) => parsed?.macros?.[field.key] != null)
+          .map((field) => [field.key, String(parsed.macros[field.key])])
+      ),
+    }));
+
+    setMicros((current) => ({
+      ...current,
+      ...Object.fromEntries(
+        MICRO_FIELDS
+          .filter((field) => parsed?.micros?.[field.key]?.value != null)
+          .map((field) => [
+            field.key,
+            {
+              value: String(parsed.micros[field.key].value),
+              unit: parsed.micros[field.key].unit,
+            },
+          ])
+      ),
+    }));
+  }
+
+  function handleNutritionPaste() {
+    const parsed = parseNutritionText(nutritionPaste);
+    const recognizedMacros = MACRO_FIELDS.filter((field) => parsed?.macros?.[field.key] != null);
+    const recognizedMicros = MICRO_FIELDS.filter((field) => parsed?.micros?.[field.key]?.value != null);
+    const recognizedCount = recognizedMacros.length + recognizedMicros.length + (parsed?.serving?.qty ? 1 : 0);
+
+    if (!recognizedCount) {
+      setMsg('No labeled nutrition values were recognized. Try lines like "Protein 12 g" or "Sodium: 300 mg".');
+      return;
+    }
+
+    applyParsedNutrition(parsed);
+    setMsg(
+      `Filled ${recognizedCount} nutrition ${recognizedCount === 1 ? "value" : "values"}. Review them before saving.`
+    );
+  }
+
   async function handlePhotoChange(event) {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -221,34 +279,7 @@ export default function NewIngredientPage({ user }) {
       const dataUrl = await readImageAsDataUrl(file);
       setPhotoDataUrl(dataUrl);
       const parsed = await scanNutritionLabelFromImage(dataUrl);
-
-      if (parsed?.serving?.qty) {
-        setServingSize(String(parsed.serving.qty));
-      }
-      if (parsed?.serving?.unit) {
-        setServingUnit(parsed.serving.unit);
-      }
-
-      setMacros((current) => ({
-        ...current,
-        calories: parsed?.macros?.calories != null ? String(parsed.macros.calories) : current.calories,
-        protein: parsed?.macros?.protein != null ? String(parsed.macros.protein) : current.protein,
-        carbs: parsed?.macros?.carbs != null ? String(parsed.macros.carbs) : current.carbs,
-        fat: parsed?.macros?.fat != null ? String(parsed.macros.fat) : current.fat,
-        fiber: parsed?.macros?.fiber != null ? String(parsed.macros.fiber) : current.fiber,
-        sugar: parsed?.macros?.sugar != null ? String(parsed.macros.sugar) : current.sugar,
-        cholesterol: parsed?.macros?.cholesterol != null ? String(parsed.macros.cholesterol) : current.cholesterol,
-      }));
-
-      setMicros((current) => ({
-        ...current,
-        sodium: parsed?.micros?.sodium ? { value: String(parsed.micros.sodium.value), unit: parsed.micros.sodium.unit } : current.sodium,
-        potassium: parsed?.micros?.potassium ? { value: String(parsed.micros.potassium.value), unit: parsed.micros.potassium.unit } : current.potassium,
-        calcium: parsed?.micros?.calcium ? { value: String(parsed.micros.calcium.value), unit: parsed.micros.calcium.unit } : current.calcium,
-        iron: parsed?.micros?.iron ? { value: String(parsed.micros.iron.value), unit: parsed.micros.iron.unit } : current.iron,
-        vitaminA: parsed?.micros?.vitaminA ? { value: String(parsed.micros.vitaminA.value), unit: parsed.micros.vitaminA.unit } : current.vitaminA,
-        vitaminC: parsed?.micros?.vitaminC ? { value: String(parsed.micros.vitaminC.value), unit: parsed.micros.vitaminC.unit } : current.vitaminC,
-      }));
+      applyParsedNutrition(parsed);
 
       setMsg("Nutrition label scanned. Review the values before saving.");
     } catch (error) {
@@ -362,16 +393,28 @@ export default function NewIngredientPage({ user }) {
         },
       };
 
-      if (isEditing) {
-        await updateCatalogItem(existingIngredient.id, catalogPayload);
-      } else {
-        await createCatalogItem(catalogPayload);
-      }
+      const savedIngredient = isEditing
+        ? await updateCatalogItem(existingIngredient.id, catalogPayload)
+        : await createCatalogItem(catalogPayload);
+      const mealDraft = location.state?.mealDraft || storedHandoff?.mealDraft || null;
+      const returnPasteRowId = location.state?.returnPasteRowId || storedHandoff?.returnPasteRowId;
+      const returnedMealDraft = returnPasteRowId && mealDraft
+        ? {
+            ...mealDraft,
+            ingredientPasteDraft: {
+              ...mealDraft.ingredientPasteDraft,
+              showPaste: true,
+              createdIngredient: savedIngredient,
+              createdForRowId: returnPasteRowId,
+            },
+          }
+        : mealDraft;
 
       setSaving(false);
+      clearMealDraftHandoff();
       navigate(returnTo, {
         replace: true,
-        state: { mealDraft: location.state?.mealDraft || null },
+        state: { mealDraft: returnedMealDraft },
       });
     } catch (error) {
       setSaving(false);
@@ -481,6 +524,61 @@ export default function NewIngredientPage({ user }) {
               ) : null}
             </div>
           </Field>
+        </Section>
+
+        <Section title="Paste Nutrition Values">
+          <div style={{ display: "grid", gap: 12 }}>
+            <p style={{ margin: 0, color: "#5f6f64" }}>
+              Paste the nutrition values for this ingredient in any order. You can copy a nutrition label, use commas, or put one value on each line.
+            </p>
+            <textarea
+              style={{
+                ...baseInputStyle(),
+                minHeight: 150,
+                resize: "vertical",
+                lineHeight: 1.5,
+              }}
+              value={nutritionPaste}
+              onChange={(event) => setNutritionPaste(event.target.value)}
+              placeholder={"Serving size: 30 g\nProtein 12 g, Calories 180\nSodium: 300 mg\nCarbs 8 g\nFat 9 g"}
+              aria-label="Paste nutrition values"
+            />
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <button
+                type="button"
+                onClick={handleNutritionPaste}
+                disabled={!nutritionPaste.trim()}
+                style={{
+                  borderRadius: 999,
+                  padding: "12px 18px",
+                  background: nutritionPaste.trim() ? "#163227" : "#9aa59f",
+                  color: "#fff",
+                  border: 0,
+                  fontWeight: 700,
+                  cursor: nutritionPaste.trim() ? "pointer" : "not-allowed",
+                }}
+              >
+                Fill Nutrition Fields
+              </button>
+              {nutritionPaste ? (
+                <button
+                  type="button"
+                  onClick={() => setNutritionPaste("")}
+                  style={{
+                    borderRadius: 999,
+                    padding: "12px 18px",
+                    background: "transparent",
+                    color: "#163227",
+                    border: "1px solid rgba(22,50,39,0.18)",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  Clear
+                </button>
+              ) : null}
+            </div>
+          </div>
         </Section>
 
         <Section title="Serving Size">
@@ -675,7 +773,7 @@ export default function NewIngredientPage({ user }) {
             className="secondary"
             onClick={() => navigate(returnTo, {
               replace: true,
-              state: { mealDraft: location.state?.mealDraft || null },
+              state: { mealDraft: location.state?.mealDraft || storedHandoff?.mealDraft || null },
             })}
             style={{
               borderRadius: 999,

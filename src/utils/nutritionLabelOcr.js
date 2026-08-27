@@ -215,10 +215,12 @@ function extractSpecificNutrientValue(text, labels, options = {}) {
 
   for (const rawLine of lines) {
     const line = normalizeLineForMatching(rawLine);
-    const labelFound = normalizedLabels.some((label) => line.includes(label));
-    if (!labelFound) continue;
+    const matchingLabel = normalizedLabels.find((label) => line.includes(label));
+    if (!matchingLabel) continue;
 
-    const amountMatch = line.match(/(\d+(?:\.\d+)?)\s*(mg|g|mcg|%)?/i);
+    const labelIndex = line.indexOf(matchingLabel);
+    const amountText = line.slice(labelIndex + matchingLabel.length);
+    const amountMatch = amountText.match(/(\d+(?:\.\d+)?)\s*(mg|g|mcg|%)?/i);
     if (!amountMatch) continue;
 
     const value = toNumber(amountMatch[1]);
@@ -273,7 +275,7 @@ function extractFromPatterns(text, patterns, unit = "mg") {
   return null;
 }
 
-function parseNutritionText(rawText) {
+export function parseNutritionText(rawText) {
   const text = normalizeText(rawText);
   const flatText = flattenText(rawText);
   const serving = extractServing(text);
