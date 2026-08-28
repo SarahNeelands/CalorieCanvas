@@ -1,14 +1,23 @@
 import React from "react";
 import LogMealModal from "./Meals/LogMealModal.jsx";
 import "../components/calories/RecentMeals.css";
-import { deleteMealLog, listMealLogs } from "../services/mealLogClient";
+import { deleteMealLog, getMealLogDay } from "../services/mealLogClient";
 
-function formatDateTime(iso) {
+function formatDate(iso) {
   if (!iso) return "";
-  const d = new Date(iso);
-  const date = d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
-  const time = d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
-  return `${date} · ${time}`;
+  return new Date(iso).toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function formatTime(iso) {
+  if (!iso) return "";
+  return new Date(iso).toLocaleTimeString(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+  });
 }
 
 function getDisplayTitle(row) {
@@ -34,7 +43,47 @@ function getDisplayAmount(row) {
   return `${row.qty} ${row.unit_code}`;
 }
 
-export default function RecentMealsLogged({ userId, limit = 3, title = "Recent Meals" }) {
+function flattenMealLogDay(day) {
+  return (day?.meals || []).flatMap((section) => section.entries || []);
+}
+
+function getGroupKey(row) {
+  const meal = row.meal || {};
+  const identity = row.meal_id || meal.id || `${meal.type || meal.item_type || "meal"}:${getDisplayTitle(row).toLowerCase()}`;
+  return `${row.log_date || ""}:${identity}`;
+}
+
+export function groupMealLogsForRecent(rows = []) {
+  const groups = new Map();
+
+  for (const row of rows) {
+    const key = getGroupKey(row);
+    const current = groups.get(key) || {
+      key,
+      title: getDisplayTitle(row),
+      brand: getDisplayBrand(row),
+      latestLoggedAt: row.logged_at,
+      totalKcal: 0,
+      entries: [],
+    };
+
+    current.entries.push(row);
+    current.totalKcal += Number(row.kcal || 0);
+    if (!current.latestLoggedAt || Date.parse(row.logged_at) > Date.parse(current.latestLoggedAt)) {
+      current.latestLoggedAt = row.logged_at;
+    }
+    groups.set(key, current);
+  }
+
+  return Array.from(groups.values())
+    .map((group) => ({
+      ...group,
+      entries: group.entries.sort((a, b) => Date.parse(b.logged_at) - Date.parse(a.logged_at)),
+    }))
+    .sort((a, b) => Date.parse(b.latestLoggedAt) - Date.parse(a.latestLoggedAt));
+}
+
+export default function RecentMealsLogged({ userId, title = "Recent Meals" }) {
   const [rows, setRows] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState(null);
@@ -45,14 +94,14 @@ export default function RecentMealsLogged({ userId, limit = 3, title = "Recent M
       setLoading(true);
       setError(null);
       if (!userId) throw new Error("Missing user ID");
-      const data = await listMealLogs({ userId, limit });
-      setRows(data ?? []);
+      const day = await getMealLogDay({ userId });
+      setRows(flattenMealLogDay(day));
     } catch (e) {
       setError(e);
     } finally {
       setLoading(false);
     }
-  }, [userId, limit]);
+  }, [userId]);
 
   React.useEffect(() => {
     refetch();
@@ -74,33 +123,45 @@ export default function RecentMealsLogged({ userId, limit = 3, title = "Recent M
     }
   }
 
+  const groups = groupMealLogsForRecent(rows);
+
   return (
     <section className="recent-meals">
       <h3 className="recent-meals__title">{title}</h3>
       {loading && <div style={{ padding: "0.5rem 0" }}>Loading...</div>}
       {error && <div style={{ color: "#b00020" }}>Failed to load: {String(error.message || error)}</div>}
-      {!loading && !rows.length && <div>No recent meals yet.</div>}
+      {!loading && !rows.length && <div>No meals logged today.</div>}
       <div className="list">
-        {rows.map((r) => (
-          <div key={r.id} className="item">
+        {groups.map((group) => (
+          <div key={group.key} className="item">
             <div className="item__content item__content--padded">
               <div className="item__left">
                 <div className="meal-row">
-                  <h4 className="item__title" style={{ margin: 0 }}>{getDisplayTitle(r)}</h4>
-                  <p className="item__time" style={{ margin: 0 }}>{formatDateTime(r.logged_at)}</p>
+                  <h4 className="item__title" style={{ margin: 0 }}>{group.title}</h4>
+                  <p className="item__time" style={{ margin: 0 }}>{formatDate(group.latestLoggedAt)}</p>
                 </div>
-                {getDisplayBrand(r) && (
-                  <div className="item__meta item__meta--brand">{getDisplayBrand(r)}</div>
+                {group.brand && (
+                  <div className="item__meta item__meta--brand">{group.brand}</div>
                 )}
-                <div className="item__meta">{getDisplayAmount(r)}</div>
+                <div className="recent-meals__entries">
+                  {group.entries.map((entry) => (
+                    <div className="recent-meals__entry" key={entry.id}>
+                      <div className="recent-meals__entry-main">
+                        <span className="item__time">{formatTime(entry.logged_at)}</span>
+                        <span className="item__meta">{getDisplayAmount(entry)}</span>
+                        <span className="recent-meals__entry-kcal">{Number(entry.kcal || 0)} kcal</span>
+                      </div>
+                      <div className="item__actions--inline">
+                        <button type="button" className="item__quick-btn item__quick-btn--soft" onClick={() => setEditingRow(entry)}>Edit</button>
+                        <button type="button" className="item__quick-btn item__quick-btn--soft" onClick={() => handleDelete(entry)}>Delete</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
               <div className="item__right">
                 <div className="kcal">
-                  {Number(r.kcal || 0)} <span>kcal</span>
-                </div>
-                <div className="item__actions--inline">
-                  <button type="button" className="item__quick-btn item__quick-btn--soft" onClick={() => setEditingRow(r)}>Edit</button>
-                  <button type="button" className="item__quick-btn item__quick-btn--soft" onClick={() => handleDelete(r)}>Delete</button>
+                  {Number(group.totalKcal.toFixed(2))} <span>kcal</span>
                 </div>
               </div>
             </div>

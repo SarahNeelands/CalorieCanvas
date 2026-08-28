@@ -231,6 +231,45 @@
   color: #667260;
 }
 
+.recent-meals__entries {
+  display: grid;
+  gap: 0.4rem;
+  margin-top: 0.55rem;
+}
+
+.recent-meals__entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.45rem 0;
+  border-top: 1px solid rgba(178, 166, 143, 0.18);
+}
+
+.recent-meals__entry:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.recent-meals__entry-main {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.75rem;
+  min-width: 0;
+}
+
+.recent-meals__entry-main .item__meta {
+  margin-top: 0;
+}
+
+.recent-meals__entry-kcal {
+  color: #4a4336;
+  font-size: 0.86rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
 /* kcal on the far right */
 .kcal {
   font-family: 'Georgia', serif;
@@ -305,6 +344,12 @@
 
   .item__actions--inline {
     justify-content: flex-start;
+  }
+
+  .recent-meals__entry {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.35rem;
   }
 
   .item__title {
