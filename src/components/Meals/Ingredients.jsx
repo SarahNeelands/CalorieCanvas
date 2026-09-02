@@ -12,91 +12,19 @@ import {
   parseIngredientList,
 } from "../../utils/ingredientListParser";
 import { saveMealDraftHandoff } from "../../utils/mealDraftHandoff";
+import {
+  availableCatalogUnits,
+  calculateCatalogMacro,
+  getDefaultCatalogUsage,
+} from "../../utils/catalogItemUsage";
 import "./Ingredients.css";
 
-const MASS_UNIT_TO_GRAMS = {
-  mg: 0.001,
-  g: 1,
-  oz: 28.3495,
-  lb: 453.592,
-};
-
-const VOLUME_UNIT_TO_ML = {
-  ml: 1,
-  tsp: 4.92892,
-  tbsp: 14.7868,
-  cup: 236.588,
-};
-
-function toComparableAmount(item, qty, unit) {
-  if (!unit) return null;
-  const gramsPerUnit = Number(item?.unit_conversions?.[unit] || 0);
-  if (gramsPerUnit > 0) {
-    return { value: Number(qty || 0) * gramsPerUnit, kind: "mass" };
-  }
-  if (MASS_UNIT_TO_GRAMS[unit]) {
-    return { value: Number(qty || 0) * MASS_UNIT_TO_GRAMS[unit], kind: "mass" };
-  }
-  if (VOLUME_UNIT_TO_ML[unit]) {
-    return { value: Number(qty || 0) * VOLUME_UNIT_TO_ML[unit], kind: "volume" };
-  }
-  if (unit === "piece") {
-    return { value: Number(qty || 0), kind: "count" };
-  }
-  return null;
-}
-
-function getServingSize(item) {
-  return item?.unit_conversions?.serving_size || null;
-}
-
 function getDefaultUsage(item) {
-  const serving = getServingSize(item);
-
-  if (serving?.unit) {
-    return {
-      qty: "",
-      unit: serving.unit,
-    };
-  }
-
-  return { qty: "", unit: "g" };
-}
-
-function calculateRatio(item, qty, unit) {
-  const serving = getServingSize(item);
-  if (!serving?.qty || !serving?.unit) {
-    if (unit === "g") return (Number(qty) || 0) / 100;
-    return 0;
-  }
-
-  const actual = toComparableAmount(item, qty, unit);
-  const base = toComparableAmount(item, serving.qty, serving.unit);
-
-  if (actual && base && actual.kind === base.kind && base.value > 0) {
-    return actual.value / base.value;
-  }
-
-  if (unit === serving.unit && Number(serving.qty) > 0) {
-    return (Number(qty) || 0) / Number(serving.qty);
-  }
-
-  return 0;
+  return getDefaultCatalogUsage(item);
 }
 
 function calculateIngredientCalories(item, qty, unit) {
-  const macros = item?.unit_conversions?.macros;
-  const ratio = calculateRatio(item, qty, unit);
-
-  if (macros && typeof macros.calories === "number") {
-    return macros.calories * ratio;
-  }
-
-  if (unit === "g") {
-    return (Number(item?.kcal_per_100g) || 0) * ((Number(qty) || 0) / 100);
-  }
-
-  return 0;
+  return calculateCatalogMacro(item, qty, unit, "calories");
 }
 
 function normalizeIngredient(item) {
@@ -112,18 +40,18 @@ function normalizeIngredient(item) {
 }
 
 function availableUnits(item) {
-  const units = new Set(["g", "mg", "oz", "lb"]);
-  for (const unit of ["ml", "cup", "tbsp", "tsp", "piece"]) {
-    if (Number(item?.unit_conversions?.[unit] || 0) > 0) {
-      units.add(unit);
-    }
-  }
-  const serving = getServingSize(item);
-  if (serving?.unit) units.add(serving.unit);
-  return Array.from(units);
+  return availableCatalogUnits(item);
 }
 
 const PASTE_UNITS = ["mg", "g", "oz", "lb", "ml", "cup", "tbsp", "tsp", "piece"];
+
+async function listComposableCatalog(excludedItemId = null) {
+  const [catalogIngredients, catalogMeals] = await Promise.all([
+    listCatalogItems("ingredient"),
+    listCatalogItems("meal"),
+  ]);
+  return [...catalogIngredients, ...catalogMeals].filter((item) => item.id !== excludedItemId);
+}
 
 export default function Ingredients({
   ingredients = [],
@@ -192,7 +120,7 @@ export default function Ingredients({
     let active = true;
     async function restorePasteCatalog() {
       try {
-        const catalog = await listCatalogItems("ingredient");
+        const catalog = await listComposableCatalog(mealDraft?.editingMealId);
         if (!active) return;
         const created = pasteDraft.createdIngredient;
         setPasteCatalog(
@@ -211,7 +139,7 @@ export default function Ingredients({
     return () => {
       active = false;
     };
-  }, [pasteDraft]);
+  }, [mealDraft?.editingMealId, pasteDraft]);
 
   function savePasteDraft(overrides = {}) {
     onPasteDraftChange?.({ showPaste, pasteText, parsedRows, ...overrides });
@@ -239,7 +167,9 @@ export default function Ingredients({
     try {
       setPasteLoading(true);
       setPasteError("");
-      const catalog = pasteCatalog.length ? pasteCatalog : await listCatalogItems("ingredient");
+      const catalog = pasteCatalog.length
+        ? pasteCatalog
+        : await listComposableCatalog(mealDraft?.editingMealId);
       setPasteCatalog(catalog);
       const nextRows = parsed.map((row) => {
         const candidates = findIngredientMatches(row, catalog);
@@ -539,6 +469,7 @@ export default function Ingredients({
           onClose={() => setShowSearch(false)}
           selectedIds={ingredients.map((ingredient) => ingredient.id)}
           mealDraft={mealDraft}
+          excludedItemId={mealDraft?.editingMealId || null}
         />
       )}
     </section>

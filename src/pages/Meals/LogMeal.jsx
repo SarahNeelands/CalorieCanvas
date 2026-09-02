@@ -16,6 +16,11 @@ import {
   parsedMealNutritionPatch,
 } from "../../utils/directMealNutrition";
 import "./LogMeal.css";
+import {
+  calculateCatalogMacro,
+  calculateCatalogMicro,
+  catalogUsageWeightGrams,
+} from "../../utils/catalogItemUsage";
 
 const MASS_UNIT_TO_GRAMS = {
   mg: 0.001,
@@ -53,66 +58,17 @@ function getServingSize(item) {
   return item?.unit_conversions?.serving_size || null;
 }
 
-function calculateRatio(item, qty, unit) {
-  const serving = getServingSize(item);
-  if (!serving?.qty || !serving?.unit) {
-    if (unit === "g") return (Number(qty) || 0) / 100;
-    return 0;
-  }
-
-  const actual = toComparableAmount(item, qty, unit);
-  const base = toComparableAmount(item, serving.qty, serving.unit);
-
-  if (actual && base && actual.kind === base.kind && base.value > 0) {
-    return actual.value / base.value;
-  }
-
-  if (unit === serving.unit && Number(serving.qty) > 0) {
-    return (Number(qty) || 0) / Number(serving.qty);
-  }
-
-  return 0;
-}
-
 function calculateIngredientMacro(item, qty, unit, key) {
-  const macros = item?.unit_conversions?.macros;
-  const ratio = calculateRatio(item, qty, unit);
-
-  if (macros && typeof macros[key] === "number") {
-    return macros[key] * ratio;
-  }
-
-  if (unit === "g" && key === "calories") {
-    return (Number(item?.kcal_per_100g) || 0) * ((Number(qty) || 0) / 100);
-  }
-
-  if (unit === "g" && key === "protein") {
-    return (Number(item?.protein_g_per_100g) || 0) * ((Number(qty) || 0) / 100);
-  }
-
-  if (unit === "g" && key === "carbs") {
-    return (Number(item?.carbs_g_per_100g) || 0) * ((Number(qty) || 0) / 100);
-  }
-
-  if (unit === "g" && key === "fat") {
-    return (Number(item?.fat_g_per_100g) || 0) * ((Number(qty) || 0) / 100);
-  }
-
-  return 0;
+  return calculateCatalogMacro(item, qty, unit, key);
 }
 
 function calculateIngredientMicro(item, qty, unit, key) {
-  const micros = item?.unit_conversions?.micros;
-  const ratio = calculateRatio(item, qty, unit);
-
-  if (micros && typeof micros[key]?.value === "number") {
-    return micros[key].value * ratio;
-  }
-
-  return 0;
+  return calculateCatalogMicro(item, qty, unit, key);
 }
 
 function estimateIngredientWeightGrams(item, qty, unit) {
+  const directWeight = catalogUsageWeightGrams(item, qty, unit);
+  if (directWeight > 0) return directWeight;
   const numericQty = Number(qty || 0);
   if (!(numericQty > 0)) return 0;
 

@@ -32,8 +32,11 @@ function mergeIngredientResults(current, incoming) {
   return Array.from(merged.values());
 }
 
-export default function IngredientSearch({ onSelect, onClose, mealDraft }) {
-  const initialResults = getCachedCatalogItems("ingredient").map(mapIngredientResult);
+export default function IngredientSearch({ onSelect, onClose, mealDraft, excludedItemId = null }) {
+  const initialResults = [
+    ...getCachedCatalogItems("ingredient"),
+    ...getCachedCatalogItems("meal"),
+  ].filter((item) => item.id !== excludedItemId).map(mapIngredientResult);
   const [q, setQ] = useState("");
   const [allResults, setAllResults] = useState(initialResults);
   const [results, setResults] = useState(initialResults);
@@ -56,13 +59,18 @@ export default function IngredientSearch({ onSelect, onClose, mealDraft }) {
       setLoading(true);
       setError("");
       try {
-        const data = await listCatalogItems("ingredient");
+        const [ingredients, meals] = await Promise.all([
+          listCatalogItems("ingredient"),
+          listCatalogItems("meal"),
+        ]);
         if (cancelled) return;
-        const mapped = (data || []).map(mapIngredientResult);
+        const mapped = [...(ingredients || []), ...(meals || [])]
+          .filter((item) => item.id !== excludedItemId)
+          .map(mapIngredientResult);
         setAllResults((current) => mergeIngredientResults(current, mapped));
       } catch (err) {
         if (cancelled) return;
-        setError(err.message || "Failed to load ingredients.");
+        setError(err.message || "Failed to load ingredients and meals.");
       } finally {
         if (!cancelled) {
           setLoading(false);
@@ -75,7 +83,7 @@ export default function IngredientSearch({ onSelect, onClose, mealDraft }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [excludedItemId]);
 
   useEffect(() => {
     const normalizedQuery = q.trim().toLowerCase();
@@ -91,6 +99,7 @@ export default function IngredientSearch({ onSelect, onClose, mealDraft }) {
 
   function handleEdit(item) {
     onClose?.();
+    if ((item.item_type || item.type) === "meal") return;
     navigate("/ingredients/new", {
       state: {
         ingredient: item,
@@ -101,7 +110,7 @@ export default function IngredientSearch({ onSelect, onClose, mealDraft }) {
   }
 
   return (
-    <Modal open title="Find an ingredient" onClose={onClose}>
+    <Modal open title="Add an ingredient or meal" onClose={onClose}>
       <div className="ingredient-search-modal" ref={boxRef}>
         <div className="ingredient-search-modal__toolbar">
           <div className="ingredient-search-modal__search">
@@ -109,7 +118,7 @@ export default function IngredientSearch({ onSelect, onClose, mealDraft }) {
               autoFocus
               className="ingredient-search-modal__input"
               type="search"
-              placeholder="Search ingredients..."
+              placeholder="Search ingredients and meals..."
               value={q}
               onChange={(e) => setQ(e.target.value)}
             />
@@ -133,7 +142,7 @@ export default function IngredientSearch({ onSelect, onClose, mealDraft }) {
             <p className="muted">No results for "{q}".</p>
           )}
           {!loading && !error && !q && results.length === 0 && (
-            <p className="muted">No ingredients yet. Add one first.</p>
+            <p className="muted">No ingredients or meals yet. Add one first.</p>
           )}
           {results.length > 0 && (
             <ul className="is-list">
@@ -146,14 +155,15 @@ export default function IngredientSearch({ onSelect, onClose, mealDraft }) {
                 }}>
                   <div className="is-main">
                     <span className="name">{r.name}</span>
+                    <small>{(r.item_type || r.type) === "meal" ? "Meal" : "Ingredient"}</small>
                   </div>
                   <div className="is-actions">
-                    <button className="edit" onClick={(e) => {
+                    {(r.item_type || r.type) !== "meal" && <button className="edit" onClick={(e) => {
                       e.stopPropagation();
                       handleEdit(r);
                     }} type="button">
                       Edit
-                    </button>
+                    </button>}
                     <button className="add" onClick={(e) => {
                       e.stopPropagation();
                       onSelect?.(r);
