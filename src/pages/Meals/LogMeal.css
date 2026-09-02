@@ -189,6 +189,126 @@ html, body, #root {
   gap: 0.125rem;
 }
 
+.meal-entry-mode {
+  display: grid;
+  gap: 0.9rem;
+  min-width: 0;
+}
+
+.meal-entry-mode__tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.35rem;
+  padding: 0.3rem;
+  border: 1px solid rgba(22, 50, 39, 0.14);
+  border-radius: 0.8rem;
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.meal-entry-mode__tabs button {
+  min-height: 2.35rem;
+  border: 0;
+  border-radius: 0.6rem;
+  background: transparent;
+  color: #4a564d;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.meal-entry-mode__tabs button.is-active {
+  background: var(--cc-accent);
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(79, 107, 80, 0.16);
+}
+
+.direct-nutrition {
+  display: grid;
+  gap: 0.9rem;
+  min-width: 0;
+}
+
+.direct-nutrition__paste {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--cc-ink);
+  font-weight: 800;
+}
+
+.direct-nutrition__paste small {
+  color: #667268;
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+.direct-nutrition__paste textarea {
+  width: 100%;
+  min-height: 8.5rem;
+  resize: vertical;
+  border: 1px solid rgba(22, 50, 39, 0.16);
+  border-radius: 0.75rem;
+  padding: 0.75rem 0.85rem;
+  background: #fff;
+  color: var(--cc-ink);
+  font: inherit;
+  line-height: 1.45;
+  box-sizing: border-box;
+}
+
+.direct-nutrition__actions {
+  display: flex;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.direct-nutrition__message {
+  margin: 0;
+  color: #526157;
+  font-size: 0.9rem;
+}
+
+.direct-nutrition__fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10.75rem, 1fr));
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.direct-nutrition__field {
+  display: grid;
+  gap: 0.38rem;
+  min-width: 0;
+  color: var(--cc-ink);
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.direct-nutrition__field > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(3.25rem, auto);
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.direct-nutrition__field input,
+.direct-nutrition__field select {
+  width: 100%;
+  min-width: 0;
+  min-height: 2.5rem;
+  border: 1px solid rgba(22, 50, 39, 0.16);
+  border-radius: 0.7rem;
+  padding: 0.55rem 0.65rem;
+  background: #fff;
+  color: var(--cc-ink);
+  font: inherit;
+  box-sizing: border-box;
+}
+
+.direct-nutrition__field small {
+  color: #516257;
+  font-weight: 800;
+}
+
 .muted {
   color: #5f6a61;
 }

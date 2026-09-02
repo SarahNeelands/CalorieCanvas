@@ -14,6 +14,7 @@ export default function MealDetails({
   onTimestampChange,
   onTotalWeightChange,
   onServingCountChange,
+  allowTotalWeightAndServings = false,
 }) {
   const [initialTimestamp, setInitialTimestamp] = useState("");
 
@@ -74,7 +75,9 @@ export default function MealDetails({
         />
       </label>
       <p style={{ margin: 0, color: "#667268", fontSize: 14 }}>
-        Enter total weight or servings. If you use servings, recipe weight will be inferred from the ingredients when possible.
+        {allowTotalWeightAndServings
+          ? "Enter the weight the nutrition values refer to. Add servings if you want to log this meal by portion."
+          : "Enter total weight or servings. If you use servings, recipe weight will be inferred from the ingredients when possible."}
       </p>
     </div>
   );
